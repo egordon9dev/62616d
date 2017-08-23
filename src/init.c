@@ -16,7 +16,7 @@ int eArmGet() {
      return 56 - encoderGet(eArm);
 }
 int eChainGet() {
-     return encoderGet(eChain) + 80;
+     return encoderGet(eChain) + 180;
 }
 /*
  * The purpose of this function is solely to set the default pin modes (pinMode()) and port
