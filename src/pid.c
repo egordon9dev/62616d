@@ -17,48 +17,46 @@ PidVars pidDef = {
      .kp = 0.0, .ki = 0.0, .kd = 0.0,
      .prevTime = 0
 };
-//proportional control
+//proportional control feedback
 double updateP(PidVars pidVars) {
      return (pidVars.target - pidVars.sensVal) * pidVars.kp;
 }
-//proportional + integral control
-double updatePI(PidVars pidVars) {
+//get integral component
+double getI(PidVars pidVars, double dt) {
      double err = pidVars.target - pidVars.sensVal;
      if(abs(err) < pidVars.INTEGRAL_ACTIVE_ZONE) {
           pidVars.errTot += err;
      } else {
           pidVars.errTot = 0;
      }
-     double dt = (millis() - pidVars.prevTime) / 1000.0;
-     double i = pidVars.errTot * pidVars.ki * dt;
+     double i = pidVars.errTot * dt * pidVars.ki;
      if(i > pidVars.maxIntegral) {
           i = pidVars.maxIntegral;
      }
-     return (err * pidVars.kp) + i;
+     return i;
 }
-//proportional + derivative control
-double updatePD(PidVars pidVars) {
+//get derivative component
+double getD(PidVars pidVars, double dt) {
      double err = pidVars.target - pidVars.sensVal;
-     pidVars.prevErr = err;
-     double dt = (millis() - pidVars.prevTime) / 1000.0;
-     pidVars.prevTime = millis();
-     return (err * pidVars.kp) + ((err - pidVars.prevErr) * pidVars.kd)/dt;
-}
-//proportional + integral + derivative control
-double updatePID(PidVars pidVars) {
-     double err = pidVars.target - pidVars.sensVal;
-     if(abs(err) < pidVars.INTEGRAL_ACTIVE_ZONE) {
-          pidVars.errTot += err;
-     } else {
-          pidVars.errTot = 0;
-     }
-     double dt = (millis() - pidVars.prevTime) / 1000.0;
-     pidVars.prevTime = millis();
-     double i = pidVars.errTot * pidVars.ki * dt;
-     if(i > pidVars.maxIntegral) {
-          i = pidVars.maxIntegral;
-     }
      double d = ((err - pidVars.prevErr) * pidVars.kd) / dt;
      pidVars.prevErr = err;
-     return (err * pidVars.kp) + i + d;
+     return d;
+}
+//proportional + integral control feedback
+double updatePI(PidVars pidVars) {
+     double dt = (millis() - pidVars.prevTime) / 1000.0;
+     pidVars.prevTime = millis();
+     return updateP(pidVars) + getI(pidVars, dt);
+}
+//proportional + derivative control feedback
+double updatePD(PidVars pidVars) {
+     double dt = (millis() - pidVars.prevTime) / 1000.0;
+     pidVars.prevTime = millis();
+     return updateP(pidVars) + getD(pidVars, dt);
+}
+//proportional + integral + derivative control feedback
+double updatePID(PidVars pidVars) {
+     double dt = (millis() - pidVars.prevTime) / 1000.0;
+     pidVars.prevTime = millis();
+     return updateP(pidVars) + getI(pidVars, dt) + getD(pidVars, dt);
 }

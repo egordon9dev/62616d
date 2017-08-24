@@ -23,13 +23,13 @@ int getLimMotorVal(int n) {
 }
 void setDL(int n) {
 	limMotorVal(&n);
-	motorSet(9, n);
-	motorSet(8, n);
+	motorSet(9, -n);
+	motorSet(8, -n);
 }
 void setDR(int n) {
 	limMotorVal(&n);
-	motorSet(7, -n);
-	motorSet(6, -n);
+	motorSet(7, n);
+	motorSet(6, n);
 }
 void setArm(int n) {
 	limMotorVal(&n);
@@ -49,22 +49,23 @@ void setMGL(int n) {
 	motorSet(2, n);
 }
 //----- Chain-Bar -----//
-void updateManualCB(int grav_out) {
+void updateManualCB() {
 	if(joystickGetDigital(1, 5, JOY_UP)) {
-		setCB(70);
+		setCB(-80);
 	} else if(joystickGetDigital(1, 5, JOY_DOWN)) {
-		setCB(-70);
+		setCB(80);
 	} else {
-		setCB(grav_out);
+		//rubber bands cancel out gravity
+		setCB(0);
 	}
 }
 //----- updates Arm then Chain-Bar-----//
 bool cbManualMode = true;
-void updateArm(PidVars cb_pid, PidVars grav_pid) {
+void updateArm(PidVars cb_pid) {
 	//----- update toggle -----//
 	if(joystickGetDigital(1, 7, JOY_UP)) {
 		cbManualMode = true;
-	} else if(joystickGetDigital(1, 7, JOY_UP)) {
+	} else if(joystickGetDigital(1, 7, JOY_DOWN)) {
 		cbManualMode = false;
 	}
 	//----- manual arm -----//
@@ -76,16 +77,13 @@ void updateArm(PidVars cb_pid, PidVars grav_pid) {
 		//rubber bands cancel out gravity for the arm
 		setArm(0);
 	}
-	//----- proportional control: cancel out gravity for the Chain-Bar -----//
-	grav_pid.sensVal = eChainGet();
-	double grav_out = sin( (grav_pid.sensVal/360.0) * 2.0*M_PI ) * grav_pid.kp;
 	if(!cbManualMode) {
 		//----- proportional + integral control: CB angle -> arm angle -----//
 		cb_pid.target = eArmGet();
 		cb_pid.sensVal = eChainGet();
-		setCB(getLimMotorVal(updatePI(cb_pid) + grav_out));
+		setCB(getLimMotorVal(updatePID(cb_pid)));
 	} else {
-		updateManualCB(grav_out);
+		updateManualCB();
 	}
 }
 void printEnc() {
@@ -100,12 +98,8 @@ void operatorControl() {
 	cb_pid.INTEGRAL_ACTIVE_ZONE = 30;
 	cb_pid.maxIntegral = 50;
 
-	PidVars grav_pid = pidDef;
-	grav_pid.kp = 0.0;
-	grav_pid.target = 180;
-
 	while (true) {
-		updateArm(cb_pid, grav_pid);
+		updateArm(cb_pid);
 		printEnc();
 
 		//----- mobile-goal lift -----//
@@ -124,6 +118,7 @@ void operatorControl() {
 			//close
 			setClaw(60);
 		} else {
+			//rubber bands cancel out gravity
 			setClaw(0);
 		}
 		//----- drive -----//
@@ -131,8 +126,8 @@ void operatorControl() {
 		int j3 = joystickGetAnalog(1, 3);
 		int j4 = joystickGetAnalog(1, 4);
 		if((abs(j3) > td) || (abs(j4) > td)) {
-			setDL(j3+j4);
-			setDR(j3-j4);
+			setDL(j3 + j4);
+			setDR(j3 - j4);
 		} else {
 			setDL(0);
 			setDR(0);
