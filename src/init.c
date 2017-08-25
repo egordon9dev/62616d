@@ -24,8 +24,6 @@ int eChainGet() {
  * configure a UART port (usartOpen()) but cannot set up an LCD (lcdInit()).
  */
 void initializeIO() {
-     pinMode(2, OUTPUT);
-     digitalWrite(2, LOW);
 }
 /*
  * Runs user initialization code. This function will be started in its own task with the default

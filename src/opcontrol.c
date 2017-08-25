@@ -7,7 +7,7 @@
 #include "main.h"
 #include "pid.h"
 #include "encoders.h"
-#include "math.h"
+#include <math.h>
 
 const int MAX_POWER = 127;
 bool wtf = false;
@@ -19,7 +19,7 @@ void limMotorVal(int* n) {
 int getLimMotorVal(int n) {
 	if(n > MAX_POWER) return MAX_POWER;
 	if(n < -MAX_POWER) return -MAX_POWER;
-	else return n;
+	return n;
 }
 void setDL(int n) {
 	limMotorVal(&n);
@@ -61,7 +61,7 @@ void updateManualCB() {
 }
 //----- updates Arm then Chain-Bar-----//
 bool cbManualMode = true;
-void updateArm(PidVars cb_pid) {
+void updateArm(PidVars* cb_pid) {
 	//----- update toggle -----//
 	if(joystickGetDigital(1, 7, JOY_UP)) {
 		cbManualMode = true;
@@ -70,7 +70,7 @@ void updateArm(PidVars cb_pid) {
 	}
 	//----- manual arm -----//
 	const int t = 15;
-	int j2 = joystickGetAnalog(1, 2);
+	int j2 = -joystickGetAnalog(1, 2);
 	if(abs(j2) > t) {
 		setArm(j2);
 	} else {
@@ -79,9 +79,9 @@ void updateArm(PidVars cb_pid) {
 	}
 	if(!cbManualMode) {
 		//----- proportional + integral control: CB angle -> arm angle -----//
-		cb_pid.target = eArmGet();
-		cb_pid.sensVal = eChainGet();
-		setCB(getLimMotorVal(updatePID(cb_pid)));
+		cb_pid->target = eArmGet();
+		cb_pid->sensVal = eChainGet();
+		setCB(updatePID(cb_pid));
 	} else {
 		updateManualCB();
 	}
@@ -92,14 +92,14 @@ void printEnc() {
 void operatorControl() {
 	//----- arm and chain-bar setup-----//
 	PidVars cb_pid = pidDef;
-	cb_pid.kp = 1.0;//1.75
-	cb_pid.ki = 0.0;//0.0025
-	cb_pid.kd = 0.0;//18.0
-	cb_pid.INTEGRAL_ACTIVE_ZONE = 30;
+	cb_pid.kp = 2.475;//1.75
+	cb_pid.ki = 0.002;//0.0025
+	cb_pid.kd = 300.0;//18.0
+	cb_pid.INTEGRAL_ACTIVE_ZONE = 20;
 	cb_pid.maxIntegral = 50;
-
+	cb_pid.prevTime = millis();
 	while (true) {
-		updateArm(cb_pid);
+		updateArm(&cb_pid);
 		printEnc();
 
 		//----- mobile-goal lift -----//
@@ -124,7 +124,7 @@ void operatorControl() {
 		//----- drive -----//
 		const int td = 15;
 		int j3 = joystickGetAnalog(1, 3);
-		int j4 = joystickGetAnalog(1, 4);
+		int j4 = -joystickGetAnalog(1, 4);
 		if((abs(j3) > td) || (abs(j4) > td)) {
 			setDL(j3 + j4);
 			setDR(j3 - j4);

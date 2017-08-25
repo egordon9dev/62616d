@@ -15,12 +15,12 @@ extern PidVars pidDef;
 double updateP(PidVars pidVars);
 
 //----- proportional + integral control feedback -----//
-double updatePI(PidVars pidVars);
+double updatePI(PidVars* pidVars);
 
 //----- proportional + derivative control feedback -----//
-double updatePD(PidVars pidVars);
+double updatePD(PidVars* pidVars);
 
 //----- proportional + integral + derivative control feedback -----//
-double updatePID(PidVars pidVars);
+double updatePID(PidVars* pidVars);
 
 #endif
