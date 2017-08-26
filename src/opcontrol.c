@@ -8,6 +8,7 @@
 #include "pid.h"
 #include "encoders.h"
 #include <math.h>
+#include "ports.h"
 
 const int MAX_POWER = 127;
 bool wtf = false;
@@ -23,30 +24,30 @@ int getLimMotorVal(int n) {
 }
 void setDL(int n) {
 	limMotorVal(&n);
-	motorSet(9, -n);
-	motorSet(8, -n);
+	motorSet(M9, -n);
+	motorSet(M8, -n);
 }
 void setDR(int n) {
 	limMotorVal(&n);
-	motorSet(7, n);
-	motorSet(6, n);
+	motorSet(M7, n);
+	motorSet(M6, n);
 }
 void setArm(int n) {
 	limMotorVal(&n);
-	motorSet(4, -n);
-	motorSet(5, n);
+	motorSet(M4, -n);
+	motorSet(M5, n);
 }
 void setCB(int n) {
 	limMotorVal(&n);
-	motorSet(3, n);
+	motorSet(M3, n);
 }
 void setClaw(int n) {
 	limMotorVal(&n);
-	motorSet(1, n);
+	motorSet(M1, n);
 }
 void setMGL(int n) {
 	limMotorVal(&n);
-	motorSet(2, n);
+	motorSet(M2, n);
 }
 //----- Chain-Bar -----//
 void updateManualCB() {
@@ -93,18 +94,23 @@ void operatorControl() {
 	//----- arm and chain-bar setup-----//
 	PidVars cb_pid = pidDef;
 	cb_pid.kp = 2.475;//1.75
-	cb_pid.ki = 0.002;//0.0025
+	cb_pid.ki = 0.00;//0.0025
 	cb_pid.kd = 300.0;//18.0
 	cb_pid.INTEGRAL_ACTIVE_ZONE = 20;
 	cb_pid.maxIntegral = 50;
 	cb_pid.prevTime = millis();
+	bool clawOpen = true;
 	while (true) {
 		updateArm(&cb_pid);
 		printEnc();
 
 		//----- mobile-goal lift -----//
 		if(joystickGetDigital(1, 8, JOY_UP)) {
-			setMGL(-127);
+			if(digitalRead(MGL_LIM)) {
+				setMGL(-127);
+			} else {
+				setMGL(0);
+			}
 		} else if(joystickGetDigital(1, 8, JOY_DOWN)) {
 			setMGL(127);
 		} else {
@@ -113,13 +119,19 @@ void operatorControl() {
 		//----- claw -----//
 		if(joystickGetDigital(1, 6, JOY_UP)) {
 			//open
+			clawOpen = true;
 			setClaw(-60);
 		}	else if(joystickGetDigital(1, 6, JOY_DOWN)) {
 			//close
+			clawOpen = false;
 			setClaw(60);
 		} else {
 			//rubber bands cancel out gravity
-			setClaw(0);
+			if(clawOpen == true) {
+				setClaw(-15);
+			} else {
+				setClaw(35);
+			}
 		}
 		//----- drive -----//
 		const int td = 15;

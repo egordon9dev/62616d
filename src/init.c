@@ -5,10 +5,7 @@
  */
 #include "main.h"
 
-#define CHAIN_ENC_TOP 11
-#define CHAIN_ENC_BOT 12
-#define ARM_ENC_TOP 4
-#define ARM_ENC_BOT 3
+#include "ports.h"
 
 static Encoder eArm, eChain;
 int eArmGet() {
@@ -24,6 +21,7 @@ int eChainGet() {
  * configure a UART port (usartOpen()) but cannot set up an LCD (lcdInit()).
  */
 void initializeIO() {
+     pinMode(MGL_LIM, INPUT);
 }
 /*
  * Runs user initialization code. This function will be started in its own task with the default
