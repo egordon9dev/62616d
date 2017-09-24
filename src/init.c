@@ -7,13 +7,21 @@
 
 #include "ports.h"
 
-static Encoder eArm, eChain;
+static Encoder eArm, eCB, eDL, eDR;
 int eArmGet() {
      //90 - 34 = 56
-     return 56 - encoderGet(eArm);
+     //56 + (90-77)  = 56 + 13 = 69
+     return 69 - encoderGet(eArm);
 }
-int eChainGet() {
-     return encoderGet(eChain) + 180;
+int eCBGet() {
+     // 315 to 79
+     return encoderGet(eCB) + 315;
+}
+int eDLGet() {
+     return encoderGet(eDL);
+}
+int eDRGet() {
+     return encoderGet(eDR);
 }
 /*
  * The purpose of this function is solely to set the default pin modes (pinMode()) and port
@@ -38,7 +46,11 @@ void initializeIO() {
  */
 void initialize() {
      eArm = encoderInit(ARM_ENC_TOP, ARM_ENC_BOT, false);
-     eChain = encoderInit(CHAIN_ENC_TOP, CHAIN_ENC_BOT, false);
+     eCB = encoderInit(CHAIN_ENC_TOP, CHAIN_ENC_BOT, false);
+     eDL = encoderInit(DRIVE_L_ENC_TOP, DRIVE_L_ENC_BOT, false);
+     eDR = encoderInit(DRIVE_R_ENC_TOP, DRIVE_R_ENC_BOT, false);
      encoderReset(eArm);
-     encoderReset(eChain);
+     encoderReset(eCB);
+     encoderReset(eDL);
+     encoderReset(eDR);
 }
