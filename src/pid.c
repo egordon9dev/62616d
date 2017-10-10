@@ -12,75 +12,79 @@
 */
 #define MASSIVE 2000111000
 PidVars pidDef = {
-     .doneTime = 0, .DONE_ZONE = 10,
+     .doneTime = MASSIVE, .DONE_ZONE = 10,
      .DERIVATIVE_ACTIVE_ZONE = DBL_MAX,
      .INTEGRAL_ACTIVE_ZONE = DBL_MAX, .maxIntegral = DBL_MAX,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
      .kp = 0.0, .ki = 0.0, .kd = 0.0,
-     .prevTime = MASSIVE
+     .prevTime = 0
 };
 PidVars arm_pid = {
-     .doneTime = 0, .DONE_ZONE = 10,
+     .doneTime = MASSIVE, .DONE_ZONE = 10,
      .DERIVATIVE_ACTIVE_ZONE = 20,
      .INTEGRAL_ACTIVE_ZONE = 20, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
      .kp = 7.0, .ki = 0.01, .kd = 300.0,
-     .prevTime = MASSIVE
+     .prevTime = 0
 };
 PidVars cb_pid = {
-     .doneTime = 0, .DONE_ZONE = 10,
+     .doneTime = MASSIVE, .DONE_ZONE = 10,
      .DERIVATIVE_ACTIVE_ZONE = 60,
      .INTEGRAL_ACTIVE_ZONE = 20, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
      .kp = 2.55, .ki = 0.0, .kd = 220.0,
-     .prevTime = MASSIVE
+     .prevTime = 0
 };
 PidVars DL_pid = {
-     .doneTime = 0, .DONE_ZONE = 75,
+     .doneTime = MASSIVE, .DONE_ZONE = 75,
      .DERIVATIVE_ACTIVE_ZONE = 300,
      .INTEGRAL_ACTIVE_ZONE = 1000, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
      .kp = 0.35, .ki = 0.0, .kd = 50.0,
-     .prevTime = MASSIVE
+     .prevTime = 0
 };
 PidVars DR_pid = {
-     .doneTime = 0, .DONE_ZONE = 75,
+     .doneTime = MASSIVE, .DONE_ZONE = 75,
      .DERIVATIVE_ACTIVE_ZONE = 300,
      .INTEGRAL_ACTIVE_ZONE = 1000, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
      .kp = 0.35, .ki = 0.0, .kd = 50.0,
-     .prevTime = MASSIVE
+     .prevTime = 0
 };
 PidVars DLturn_pid = {
-     .doneTime = 0, .DONE_ZONE = 45,
+     .doneTime = MASSIVE, .DONE_ZONE = 45,
      .DERIVATIVE_ACTIVE_ZONE = 200,
      .INTEGRAL_ACTIVE_ZONE = 400, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
      .kp = 1.24, .ki = 0.0, .kd = 90.0,
-     .prevTime = MASSIVE
+     .prevTime = 0
 };
 PidVars DRturn_pid = {
-     .doneTime = 0, .DONE_ZONE = 45,
+     .doneTime = MASSIVE, .DONE_ZONE = 45,
      .DERIVATIVE_ACTIVE_ZONE = 200,
      .INTEGRAL_ACTIVE_ZONE = 400, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
      .kp = 1.24, .ki = 0.0, .kd = 90.0,
-     .prevTime = MASSIVE
+     .prevTime = 0
 };
 //proportional control feedback
 double updateP(PidVars* pidVars) {
      double err = pidVars->target - pidVars->sensVal;
-     if(err < pidVars->DONE_ZONE && pidVars->doneTime < millis() - 500) {
+     if(abs(err) < pidVars->DONE_ZONE && pidVars->doneTime > millis()) {
           pidVars->doneTime = millis();
+          printf("DONE\n");
      }
      return err * pidVars->kp;
+}
+void resetDone(PidVars* pidVars) {
+     pidVars->doneTime = MASSIVE;
 }
 //get integral component
 double getI(PidVars* pidVars, double dt) {

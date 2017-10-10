@@ -36,6 +36,6 @@ int eCBGet();
 int eDRGet();
 int eDLGet();
 void resetMotors();
-void resetDrive();
+void resetDriveEnc();
 
 #endif

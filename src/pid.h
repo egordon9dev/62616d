@@ -10,6 +10,8 @@ typedef struct PidVars {
 
 extern PidVars pidDef, arm_pid, cb_pid, DL_pid, DR_pid, DLturn_pid, DRturn_pid;
 #define MASSIVE 2000111000
+void resetDone(PidVars* pidVars);
+
 //----- proportional control feedback -----//
 double updateP(PidVars* pidVars);
 

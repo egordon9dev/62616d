@@ -23,7 +23,7 @@ int eDLGet() {
 int eDRGet() {
      return encoderGet(eDR);
 }
-void resetDrive() {
+void resetDriveEnc() {
      encoderReset(eDL);
      encoderReset(eDR);
 }

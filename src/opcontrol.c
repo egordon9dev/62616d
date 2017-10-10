@@ -37,6 +37,13 @@ void setDR(int n) {//	set right drive motors
 	motorSet(M3_4, -n);
 	motorSet(M5, -n);
 }
+void resetDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid) {
+	resetDriveEnc();
+	DL_pid->doneTime = MASSIVE;
+	DR_pid->doneTime = MASSIVE;
+	DLturn_pid->doneTime = MASSIVE;
+	DRturn_pid->doneTime = MASSIVE;
+}
 // if turning, dist is in degrees
 // if not turning, dist is in inches
 void pidDrive(double dist, PidVars* left, PidVars* right, bool turning) {
@@ -114,7 +121,7 @@ void updateLift(PidVars* arm_pid, PidVars* cb_pid) {
 	}
 	if(joystickGetDigital(1, 7, JOY_UP)) {
 		// insert auto stack code here..............
-		// .........................................
+		//c .........................................
 		return;
 	}
 	//----- update arm -----//
@@ -137,8 +144,8 @@ void updateLift(PidVars* arm_pid, PidVars* cb_pid) {
 void printEnc() {
 	printf("Arm: %d\tCB: %d\tDL: %d\tDR: %d\n", eArmGet(), eCBGet(), eDLGet(), eDRGet());
 }
-void printEnc_pidDrive(PidVars* DR_pid, PidVars* DL_pid, PidVars* DRturn_pid, PidVars* DLturn_pid) {
-	printf("DL: %d/%d\tDR: %d/%d\tDLt: %d/%d\tDRt: %d/%d\n", (int)DL_pid->sensVal, (int)DL_pid->target, (int)DR_pid->sensVal, (int)DR_pid->target, (int)DLturn_pid->sensVal, (int)DLturn_pid->target, (int)DRturn_pid->sensVal, (int)DRturn_pid->target);
+void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid) {
+	printf("DL: %d/%d\tDR: %d/%d\tDLt: %d/%d\tDRt: %d/%d\tt: %ld\tdnR: %ld\tdnL: %ld\tdnRt: %ld\tdnLt: %ld\n", (int)DL_pid->sensVal, (int)DL_pid->target, (int)DR_pid->sensVal, (int)DR_pid->target, (int)DLturn_pid->sensVal, (int)DLturn_pid->target, (int)DRturn_pid->sensVal, (int)DRturn_pid->target, millis(), DL_pid->doneTime, DR_pid->doneTime, DLturn_pid->doneTime, DRturn_pid->doneTime);
 }
 void printEnc_pidArmCB(PidVars* arm_pid, PidVars* cb_pid) {
 	printf("arm: %d/%d\tcb: %d/%d\t", (int)arm_pid->sensVal, (int)arm_pid->target, (int)cb_pid->sensVal, (int)cb_pid->target);
@@ -147,43 +154,42 @@ void printEnc_pidArmCB(PidVars* arm_pid, PidVars* cb_pid) {
 	pid1 = left pid for drive or drive turning
 	pid2 = right pid for drive or drive turning
 */
-int autonDrive(double dist, PidVars* pid1, PidVars* pid2, bool turning) {
-	if((abs(pid1->sensVal - pid1->target) > pid1->DONE_ZONE || abs(pid2->sensVal - pid2->target) > pid2->DONE_ZONE) ||
-	(pid1->doneTime + 300 < millis() && pid2->doneTime + 300 < millis())) {
-		pidDrive(dist, pid1, pid2, turning);
-		return 0;
-	} else {
-		pid1->doneTime = MASSIVE;
-		pid2->doneTime = MASSIVE;
+int autonDrive(double dist, PidVars* left, PidVars* right, bool turning) {
+	pidDrive(dist, left, right, turning);
+	if(left->doneTime + 700 < millis() && right->doneTime + 700 < millis()) {
+		left->doneTime = MASSIVE;
+		right->doneTime = MASSIVE;
 		return 1;
 	}
+	return 0;
 }
 void auton1(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid, PidVars* arm_pid, PidVars* cb_pid) {
 	//autonDrive(-10, DL_pid, DR_pid, false);
 	unsigned long t0 = millis();
+	double cbAngle = 180, armAngle = 69;
 	int step = 0;
-	while(true) {
-		autonDrive(10, DLturn_pid, DRturn_pid, true);
-		printEnc_pidDrive();
-	}
 	while(digitalRead(MGL_LIM)) {
 		setMGL(-127);
+		delay(20);
 	}
 	resetMotors();
-	resetDrive();
+	resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+	delay(2000);
 	t0 = millis();
-	while (true) {
+	while (true) {/*
 		if(!joystickGetDigital(1, 6, JOY_DOWN)) {
 			resetMotors();
 			resetDrive();
 			t0 = millis();
 			continue;
-		}
+		}*/
+		pidArm(arm_pid, armAngle);
+		pidCB(cb_pid, cbAngle);
 		switch(step) {
 			case 0:
-				pidArm(arm_pid, 69);
-				pidCB(cb_pid, 130);
-				if(millis()-t0 < 2500) {
+				cbAngle = 130;
+				armAngle = 69;
+				if(millis()-t0 < 3000) {
 					setMGL(127);
 				} else {
 					setMGL(0);
@@ -192,11 +198,11 @@ void auton1(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRtu
 				}
 				break;
 			case 1:
-				step += autonDrive(-45, DL_pid, DR_pid, false);
+				step += autonDrive(-41, DL_pid, DR_pid, false);
 				if(step == 2) {
-					resetDrive();
+					resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
 				}
-				if(millis()-t0 < 500) {
+				if(millis()-t0 < 100) {
 					setMGL(127);
 				} else {
 					setMGL(0);
@@ -204,19 +210,29 @@ void auton1(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRtu
 				setClaw(-20);
 				break;
 			case 2:
-				step += autonDrive(10, DLturn_pid, DRturn_pid, true);
+				step += autonDrive(-180, DLturn_pid, DRturn_pid, true);
 				if(step == 3) {
-					resetDrive();
+					resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
 				}
-			case 3:
-				//then raise mobile goal lift
 				if(digitalRead(MGL_LIM)) {
 					setMGL(-127);
 				} else {
 					setMGL(0);
-					step++;
 				}
-				break;/*
+				break;
+			case 3:
+				//finish lifting mobile goal
+				if(digitalRead(MGL_LIM)) {
+					setMGL(-127);
+				} else {
+					setMGL(0);
+				}
+				step += autonDrive(-50, DL_pid, DR_pid, false);
+				if(step == 4) {
+					resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+				}
+				break;
+			/*
 			case 3:
 				stack(arm_pid, cb_pid, 0);
 				step += autonDrive(180, DL_pid, DR_pid, true);
@@ -236,7 +252,7 @@ void auton1(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRtu
 				step += autonDrive(-20, DL_pid, DR_pid, false);
 				break;*/
 		}
-		printf("arm: %d/%d\tcb: %d/%d\tDL: %d/%d\tDR: %d/%d\tDLt: %d/%d\tDRt: %d/%d\n", (int)arm_pid->sensVal, (int)arm_pid->target, (int)cb_pid->sensVal, (int)cb_pid->target, (int)DL_pid->sensVal, (int)DL_pid->target, (int)DR_pid->sensVal, (int)DR_pid->target, (int)DLturn_pid->sensVal, (int)DLturn_pid->target, (int)DRturn_pid->sensVal, (int)DRturn_pid->target);
+		printEnc_pidDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
 		delay(20);
 	}
 }
