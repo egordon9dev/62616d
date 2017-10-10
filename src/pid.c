@@ -128,3 +128,53 @@ double updatePID(PidVars* pidVars) {
      pidVars->prevTime = millis();
      return updateP(pidVars) + getI(pidVars, dt) + getD(pidVars, dt);
 }
+
+
+
+
+void pidCB(PidVars* cb_pid, double a) { // set chain-bar angle with PID
+	cb_pid->target = a;
+	cb_pid->sensVal = eCBGet();
+	setCB(updatePID(cb_pid));
+}
+void pidArm(PidVars* arm_pid, double a) { // set arm angle with PID
+	arm_pid->target = a;
+	arm_pid->sensVal = eArmGet();
+	setArm(updatePID(arm_pid));
+}
+//set chain bar and arm with PID to stack given cone
+void stack(PidVars* arm_pid, PidVars* cb_pid, int cone) {
+	pidCB(cb_pid, stackAngles[cone][CB]);
+	pidArm(arm_pid, stackAngles[cone][ARM]);
+}
+//return lift to pick up cones
+void returnLift(PidVars* arm_pid, PidVars* cb_pid) {
+	pidCB(cb_pid, returnAngle[CB]);
+	pidArm(arm_pid, returnAngle[ARM]);
+}
+// if turning, dist is in degrees
+// if not turning, dist is in inches
+void pidDrive(double dist, PidVars* left, PidVars* right, bool turning) {
+	left->sensVal = eDLGet();
+	right->sensVal = eDRGet();
+	if(turning) {
+		left->target = dist * -3.5610;
+		int leftPow = updatePID(left);
+		limMotorVal(&leftPow);
+		setDL(leftPow);
+		right->target = dist * 3.5610;
+		int rightPow = updatePID(right);
+		limMotorVal(&rightPow);
+		setDR(rightPow);
+	} else {
+		//89 inches = 2457 ticks : 2457.0/89.0 = 27.6067
+		left->target = dist * 27.6067;
+		int leftPow = updatePID(left);
+		limMotorVal(&leftPow);
+		setDL(leftPow);
+		right->target = dist * 27.6067;
+		int rightPow = updatePID(right);
+		limMotorVal(&rightPow);
+		setDR(rightPow);
+	}
+}

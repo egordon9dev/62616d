@@ -1,37 +1,6 @@
-/** @file init.c
- * @brief File for initialization code
- * PROS contains FreeRTOS (http://www.freertos.org) whose source code may be
- * obtained from http://sourceforge.net/projects/freertos/files/ or on request.
- */
 #include "main.h"
-
-#include "ports.h"
-
-static Encoder eArm, eCB, eDL, eDR;
-int eArmGet() {
-     //90 - 34 = 56
-     //56 + (90-77)  = 56 + 13 = 69
-     return 69 - encoderGet(eArm);
-}
-int eCBGet() {
-     // 315 to 79
-     return encoderGet(eCB) + 291;
-}
-int eDLGet() {
-     return encoderGet(eDL);
-}
-int eDRGet() {
-     return encoderGet(eDR);
-}
-void resetDriveEnc() {
-     encoderReset(eDL);
-     encoderReset(eDR);
-}
-void resetMotors() {
-     for(int i = 1; i <= 10; i++) {
-          motorSet(i, 0);
-     }
-}
+#include "pid.h"
+#include "setup.h"
 /*
  * The purpose of this function is solely to set the default pin modes (pinMode()) and port
  * states (digitalWrite()) of limit switches, push buttons, and solenoids. It can also safely
@@ -54,12 +23,5 @@ void initializeIO() {
  * can be implemented in this task if desired.
  */
 void initialize() {
-     eArm = encoderInit(ARM_ENC_TOP, ARM_ENC_BOT, false);
-     eCB = encoderInit(CHAIN_ENC_TOP, CHAIN_ENC_BOT, false);
-     eDL = encoderInit(DRIVE_L_ENC_TOP, DRIVE_L_ENC_BOT, false);
-     eDR = encoderInit(DRIVE_R_ENC_TOP, DRIVE_R_ENC_BOT, false);
-     encoderReset(eArm);
-     encoderReset(eCB);
-     encoderReset(eDL);
-     encoderReset(eDR);
+     setupEnc();
 }

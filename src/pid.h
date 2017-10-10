@@ -1,6 +1,5 @@
 #ifndef PID_H
 #define PID_H
-#include <float.h>
 
 //----- variables to be entered into P, PD, or PID function -----//
 typedef struct PidVars {
@@ -24,5 +23,22 @@ double updatePD(PidVars* pidVars);
 
 //----- proportional + integral + derivative control feedback -----//
 double updatePID(PidVars* pidVars);
+
+
+// set chain-bar angle with PID
+void pidCB(PidVars* cb_pid, double a);
+
+// set arm angle with PID
+void pidArm(PidVars* arm_pid, double a);
+
+//set chain bar and arm with PID to stack given cone
+void stack(PidVars* arm_pid, PidVars* cb_pid, int cone);
+
+//return lift to pick up cones
+void returnLift(PidVars* arm_pid, PidVars* cb_pid);
+
+// if turning, dist is in degrees
+// if not turning, dist is in inches
+void pidDrive(double dist, PidVars* left, PidVars* right, bool turning);
 
 #endif
