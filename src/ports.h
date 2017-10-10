@@ -2,14 +2,14 @@
 #define PORTS_H
 
 //------- Digital -------
-#define DRIVE_L_ENC_BOT 12
-#define DRIVE_L_ENC_TOP 11
+#define DRIVE_R_ENC_BOT 12
+#define DRIVE_R_ENC_TOP 11
 #define CHAIN_ENC_TOP 7
 #define CHAIN_ENC_BOT 8
 #define ARM_ENC_TOP 6
 #define ARM_ENC_BOT 5
-#define DRIVE_R_ENC_BOT 3
-#define DRIVE_R_ENC_TOP 4
+#define DRIVE_L_ENC_TOP 4
+#define DRIVE_L_ENC_BOT 2
 
 #define MGL_LIM 1
 
@@ -35,5 +35,7 @@ int eArmGet();
 int eCBGet();
 int eDRGet();
 int eDLGet();
+void resetMotors();
+void resetDrive();
 
 #endif

@@ -15,13 +15,22 @@ int eArmGet() {
 }
 int eCBGet() {
      // 315 to 79
-     return encoderGet(eCB) + 315;
+     return encoderGet(eCB) + 291;
 }
 int eDLGet() {
      return encoderGet(eDL);
 }
 int eDRGet() {
      return encoderGet(eDR);
+}
+void resetDrive() {
+     encoderReset(eDL);
+     encoderReset(eDR);
+}
+void resetMotors() {
+     for(int i = 1; i <= 10; i++) {
+          motorSet(i, 0);
+     }
 }
 /*
  * The purpose of this function is solely to set the default pin modes (pinMode()) and port
