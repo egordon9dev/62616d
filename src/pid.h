@@ -8,7 +8,8 @@ typedef struct PidVars {
 } PidVars;
 
 extern PidVars pidDef, arm_pid, cb_pid, DL_pid, DR_pid, DLturn_pid, DRturn_pid;
-#define MASSIVE 2000111000
+#define LONG_MAX 2147483647
+#define DBL_MAX 999999999.999999
 void resetDone(PidVars* pidVars);
 
 //----- proportional control feedback -----//

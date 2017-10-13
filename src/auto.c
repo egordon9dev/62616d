@@ -2,93 +2,163 @@
 #include "pid.h"
 #include "setup.h"
 
+int autonDrive(double dist, PidVars* left, PidVars* right, bool turning) {
+	pidDrive(dist, left, right, turning);
+	int wait = 200;
+	if(left->doneTime + wait < millis() && right->doneTime + wait < millis()) {
+		left->doneTime = LONG_MAX;
+		right->doneTime = LONG_MAX;
+		return 1;
+	}
+	return 0;
+}
+
 void auton1(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid, PidVars* arm_pid, PidVars* cb_pid) {
-	//autonDrive(-10, DL_pid, DR_pid, false);
+	printf("starting auton.....");
 	unsigned long t0 = millis();
 	double cbAngle = 180, armAngle = 69;
 	int step = 0;
-	while(digitalRead(MGL_LIM)) {
-		setMGL(-127);
-		delay(20);
-	}
 	resetMotors();
 	resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
-	delay(2000);
 	t0 = millis();
-	while (true) {/*
-		if(!joystickGetDigital(1, 6, JOY_DOWN)) {
-			resetMotors();
-			resetDrive();
-			t0 = millis();
-			continue;
-		}*/
+	while (true) {
 		pidArm(arm_pid, armAngle);
 		pidCB(cb_pid, cbAngle);
 		switch(step) {
 			case 0:
+				setClaw(-127);
+				if(millis() - t0 > 300) {
+					setClaw(-30);
+				}
 				cbAngle = 130;
 				armAngle = 69;
-				if(millis()-t0 < 3000) {
-					setMGL(127);
-				} else {
-					setMGL(0);
-					t0 = millis();
-					step++;
+				step += autonDrive(-68, DL_pid, DR_pid, false);
+				if(step == 1) {
+					resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+					setDL(0);setDR(0);
+					printf("\n\nstep: 1\n\n");
 				}
 				break;
 			case 1:
-				step += autonDrive(-41, DL_pid, DR_pid, false);
+				step += autonDrive(10, DLturn_pid, DRturn_pid, true);
 				if(step == 2) {
 					resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+					setDL(0);setDR(0);
+					printf("\n\nstep: 2\n\n");
+					t0 = millis();
 				}
-				if(millis()-t0 < 100) {
-					setMGL(127);
-				} else {
-					setMGL(0);
-				}
-				setClaw(-20);
 				break;
 			case 2:
-				step += autonDrive(-180, DLturn_pid, DRturn_pid, true);
+				setMGL(-127);
+				if(millis() - t0 > 2500) {
+					stack(arm_pid, cb_pid, 1);
+				}
+				if(millis() - t0 > 2700) {
+					setClaw(25);
+				}
+				if(!digitalRead(MGL_LIM)) {
+					step += autonDrive(48, DL_pid, DR_pid, false);
+				}
+
 				if(step == 3) {
 					resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
-				}
-				if(digitalRead(MGL_LIM)) {
-					setMGL(-127);
-				} else {
-					setMGL(0);
+					setDL(0);setDR(0);
+					printf("\n\nstep: 3\n\n");
 				}
 				break;
 			case 3:
-				//finish lifting mobile goal
-				if(digitalRead(MGL_LIM)) {
-					setMGL(-127);
-				} else {
-					setMGL(0);
+				setMGL(-127);
+				if(millis() - t0 > 2500) {
+					stack(arm_pid, cb_pid, 1);
 				}
-				step += autonDrive(-50, DL_pid, DR_pid, false);
+				if(millis() - t0 > 2700) {
+					setClaw(25);
+				}
+				step += autonDrive(160, DLturn_pid, DRturn_pid, true);
 				if(step == 4) {
 					resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+					t0 = millis();
+					printf("\n\nstep: 4\n\n");
 				}
 				break;
-			/*
-			case 3:
-				stack(arm_pid, cb_pid, 0);
-				step += autonDrive(180, DL_pid, DR_pid, true);
-				break;
 			case 4:
-				step += autonDrive(60, DL_pid, DR_pid, false);
-				t0 = millis();
+				if(millis()-t0 < 3500) {
+					setDL(-127);
+					setDR(-127);
+				} else {
+					setDL(0);setDR(0);
+					step++;
+					t0 = millis();
+					printf("\n\nstep 5:\n\n");
+				}
 				break;
 			case 5:
-				if(millis()-t0 < 2000) {
+				if(millis()-t0 < 750) {
 					setMGL(127);
 				} else {
-					setMGL(0);
+					step++;
+					t0 = millis();
+					printf("\n\nstep 6:\n\n");
 				}
 				break;
 			case 6:
-				step += autonDrive(-20, DL_pid, DR_pid, false);
+				//-----------------------------------------------------------------------------------------------------------
+				//									SPIN-CYCLE
+				//-----------------------------------------------------------------------------------------------------------
+				if(((millis()-t0)/200) % 2 == 1) {
+					setMGL(127);
+				} else {
+					setMGL(-127);
+				}
+
+
+				if(millis()-t0 < 1300) {
+					setDL(127);
+					setDR(127);
+				} else {
+					step++;
+					setDL(0);setDR(0);
+					t0 = millis();
+					printf("\n\nstep 7:\n\n");
+				}
+				break;
+			case 7:
+				if(digitalRead(MGL_LIM)) {
+					setMGL(-127);
+				} else {
+					step++;
+					t0 = millis();
+					printf("\n\nstep 7:\n\n");
+				}
+				break;
+
+
+				/*
+			case 4:
+				setDR(-127);
+				setDL(-127);
+				delay(1000);
+
+				setMGL(127);
+				delay(800);
+				setMGL(0);
+
+				setDL(127);
+				setDR(127);
+				delay(300);
+				setMGL(-127);
+				delay(1700);
+
+				setDL(0);
+				setDR(0);
+				setMGL(0);
+				setClaw(0);
+				step++;
+
+				if(step == 9) {
+					t0 = millis();
+					printf("\n\nstep: 9\n\n");
+				}
 				break;*/
 		}
 		printEnc_pidDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);

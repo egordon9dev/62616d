@@ -1,4 +1,4 @@
-#include "main.h"
+#include "API.h"
 #include "pid.h"
 #include "setup.h"
 
@@ -44,7 +44,12 @@ void setClaw(int n) {//	set claw
 }
 void setMGL(int n) {//	set mobile goal lift
 	limMotorVal(&n);
-	motorSet(M11, -n);
+	int hold = -20;
+	if(n > hold || digitalRead(MGL_LIM)) {
+		motorSet(M11, n);
+		return;
+	}
+	motorSet(M11, hold);
 }
 void resetMotors() {
      for(int i = 1; i <= 10; i++) {
@@ -85,8 +90,18 @@ void resetDriveEnc() {
 }
 void resetDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid) {
 	resetDriveEnc();
-	DL_pid->doneTime = MASSIVE;
-	DR_pid->doneTime = MASSIVE;
-	DLturn_pid->doneTime = MASSIVE;
-	DRturn_pid->doneTime = MASSIVE;
+	DL_pid->doneTime = LONG_MAX;
+	DR_pid->doneTime = LONG_MAX;
+	DLturn_pid->doneTime = LONG_MAX;
+	DRturn_pid->doneTime = LONG_MAX;
+}
+
+void printEnc() {
+	printf("Arm: %d\tCB: %d\tDL: %d\tDR: %d\n", eArmGet(), eCBGet(), eDLGet(), eDRGet());
+}
+void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid) {
+	printf("DL: %d/%d\tDR: %d/%d\tDLt: %d/%d\tDRt: %d/%d\tt: %ld\tdnR: %ld\tdnL: %ld\tdnRt: %ld\tdnLt: %ld\n", (int)DL_pid->sensVal, (int)DL_pid->target, (int)DR_pid->sensVal, (int)DR_pid->target, (int)DLturn_pid->sensVal, (int)DLturn_pid->target, (int)DRturn_pid->sensVal, (int)DRturn_pid->target, millis(), DL_pid->doneTime, DR_pid->doneTime, DLturn_pid->doneTime, DRturn_pid->doneTime);
+}
+void printEnc_pidArmCB(PidVars* arm_pid, PidVars* cb_pid) {
+	printf("arm: %d/%d\tcb: %d/%d\t", (int)arm_pid->sensVal, (int)arm_pid->target, (int)cb_pid->sensVal, (int)cb_pid->target);
 }

@@ -47,9 +47,6 @@ void resetMotors();
 
 //encoders
 void setupEnc();
-extern int stackAngles[][2];
-extern int returnAngle[];
-extern const int ARM, CB;
 int eArmGet();
 int eCBGet();
 int eDLGet();
@@ -60,5 +57,9 @@ void resetDriveEnc();
 
 //resets drive in preparation for using PID with drive
 void resetDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid);
+
+void printEnc();
+void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid);
+void printEnc_pidArmCB(PidVars* arm_pid, PidVars* cb_pid);
 
 #endif //SETUP_H

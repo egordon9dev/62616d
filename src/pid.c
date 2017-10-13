@@ -1,5 +1,6 @@
 #include "API.h"
 #include "pid.h"
+#include "setup.h"
 
 /*
      -------- PidVars --------
@@ -10,9 +11,8 @@
      prevError, errTot, prevTime
      -------------------------
 */
-#define MASSIVE 2000111000
 PidVars pidDef = {
-     .doneTime = MASSIVE, .DONE_ZONE = 10,
+     .doneTime = LONG_MAX, .DONE_ZONE = 10,
      .DERIVATIVE_ACTIVE_ZONE = DBL_MAX,
      .INTEGRAL_ACTIVE_ZONE = DBL_MAX, .maxIntegral = DBL_MAX,
      .target = 0.0,
@@ -21,7 +21,7 @@ PidVars pidDef = {
      .prevTime = 0
 };
 PidVars arm_pid = {
-     .doneTime = MASSIVE, .DONE_ZONE = 10,
+     .doneTime = LONG_MAX, .DONE_ZONE = 10,
      .DERIVATIVE_ACTIVE_ZONE = 20,
      .INTEGRAL_ACTIVE_ZONE = 20, .maxIntegral = 50,
      .target = 0.0,
@@ -30,7 +30,7 @@ PidVars arm_pid = {
      .prevTime = 0
 };
 PidVars cb_pid = {
-     .doneTime = MASSIVE, .DONE_ZONE = 10,
+     .doneTime = LONG_MAX, .DONE_ZONE = 10,
      .DERIVATIVE_ACTIVE_ZONE = 60,
      .INTEGRAL_ACTIVE_ZONE = 20, .maxIntegral = 50,
      .target = 0.0,
@@ -39,39 +39,39 @@ PidVars cb_pid = {
      .prevTime = 0
 };
 PidVars DL_pid = {
-     .doneTime = MASSIVE, .DONE_ZONE = 75,
+     .doneTime = LONG_MAX, .DONE_ZONE = 50,
      .DERIVATIVE_ACTIVE_ZONE = 300,
      .INTEGRAL_ACTIVE_ZONE = 1000, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
-     .kp = 0.35, .ki = 0.0, .kd = 50.0,
+     .kp = 0.35, .ki = 0.0001, .kd = 50.0,
      .prevTime = 0
 };
 PidVars DR_pid = {
-     .doneTime = MASSIVE, .DONE_ZONE = 75,
+     .doneTime = LONG_MAX, .DONE_ZONE = 50,
      .DERIVATIVE_ACTIVE_ZONE = 300,
      .INTEGRAL_ACTIVE_ZONE = 1000, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
-     .kp = 0.35, .ki = 0.0, .kd = 50.0,
+     .kp = 0.35, .ki = 0.0001, .kd = 50.0,
      .prevTime = 0
 };
 PidVars DLturn_pid = {
-     .doneTime = MASSIVE, .DONE_ZONE = 45,
+     .doneTime = LONG_MAX, .DONE_ZONE = 15,
      .DERIVATIVE_ACTIVE_ZONE = 200,
-     .INTEGRAL_ACTIVE_ZONE = 400, .maxIntegral = 50,
+     .INTEGRAL_ACTIVE_ZONE = 50, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
-     .kp = 1.24, .ki = 0.0, .kd = 90.0,
+     .kp = 1.24, .ki = 0.015, .kd = 90.0,
      .prevTime = 0
 };
 PidVars DRturn_pid = {
-     .doneTime = MASSIVE, .DONE_ZONE = 45,
+     .doneTime = LONG_MAX, .DONE_ZONE = 15,
      .DERIVATIVE_ACTIVE_ZONE = 200,
-     .INTEGRAL_ACTIVE_ZONE = 400, .maxIntegral = 50,
+     .INTEGRAL_ACTIVE_ZONE = 50, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
-     .kp = 1.24, .ki = 0.0, .kd = 90.0,
+     .kp = 1.24, .ki = 0.015, .kd = 90.0,
      .prevTime = 0
 };
 //proportional control feedback
@@ -84,7 +84,7 @@ double updateP(PidVars* pidVars) {
      return err * pidVars->kp;
 }
 void resetDone(PidVars* pidVars) {
-     pidVars->doneTime = MASSIVE;
+     pidVars->doneTime = LONG_MAX;
 }
 //get integral component
 double getI(PidVars* pidVars, double dt) {
@@ -142,6 +142,15 @@ void pidArm(PidVars* arm_pid, double a) { // set arm angle with PID
 	arm_pid->sensVal = eArmGet();
 	setArm(updatePID(arm_pid));
 }
+//angle settings for autonomous cone stacking
+const int ARM = 0, CB = 1;
+int stackAngles[][2] = {
+//	  ARM | CB
+	{ 69,   90 },
+	{ 69,   100 },
+	{ 69,   110 },
+};
+int returnAngle[] = { 60, 300 };
 //set chain bar and arm with PID to stack given cone
 void stack(PidVars* arm_pid, PidVars* cb_pid, int cone) {
 	pidCB(cb_pid, stackAngles[cone][CB]);
