@@ -17,10 +17,25 @@ void updateLift(PidVars* arm_pid, PidVars* cb_pid) {
 		}
 		const int t = 15;
 		int j2 = joystickGetAnalog(1, 2);
+		static unsigned long tLiftOff = 0;
+		static double liftHoldAngle = 90;
+		static bool pidRunning = false;
 		if(abs(j2) > t) {
+			tLiftOff = millis();
 			setArm(j2);
 		} else {
-			setArm(0);
+			if(millis() - tLiftOff > 300) {
+				if(!pidRunning) {
+					liftHoldAngle = armGet();
+					pidRunning = true;
+				}
+				arm_pid->sensVal = armGet();
+				arm_pid->target = liftHoldAngle;
+				setArm(updatePID(arm_pid));
+			} else {
+				setArm(0);
+				pidRunning = false;
+			}
 		}
 		//------ update chain bar -----//
 		if(joystickGetDigital(1, 5, JOY_UP)) {
@@ -32,7 +47,7 @@ void updateLift(PidVars* arm_pid, PidVars* cb_pid) {
 		}
 	} else {
 		pidArm(arm_pid, 69);
-		pidCB(cb_pid, 180);
+		pidCB(cb_pid, 150);
 	}
 }
 
@@ -41,7 +56,7 @@ void operatorControl() {
 	long tClawOpen = millis();
 	bool mglClose = false;
 	bool mglUp = false;
-	while (true) {
+	while(true) {
 		printEnc();
 		updateLift(&arm_pid, &cb_pid);
 		//----- mobile-goal lift -----//

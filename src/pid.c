@@ -134,12 +134,12 @@ double updatePID(PidVars* pidVars) {
 
 void pidCB(PidVars* cb_pid, double a) { // set chain-bar angle with PID
 	cb_pid->target = a;
-	cb_pid->sensVal = eCBGet();
+	cb_pid->sensVal = cbGet();
 	setCB(updatePID(cb_pid));
 }
 void pidArm(PidVars* arm_pid, double a) { // set arm angle with PID
 	arm_pid->target = a;
-	arm_pid->sensVal = eArmGet();
+	arm_pid->sensVal = armGet();
 	setArm(updatePID(arm_pid));
 }
 //angle settings for autonomous cone stacking

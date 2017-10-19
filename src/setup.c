@@ -31,9 +31,9 @@ void setCB(int n) {//	set chain bar lift
 	/*int maxPow = 0;
 	int weakZone = 60;*/
 	limMotorVal(&n);/*
-	if(eCBGet() > CB_MAX - weakZone && n > maxPow) {
+	if(cbGet() > CB_MAX - weakZone && n > maxPow) {
 		n = maxPow;
-	} else if(eCBGet() < CB_MIN + weakZone && n < -maxPow) {
+	} else if(cbGet() < CB_MIN + weakZone && n < -maxPow) {
 		n = -maxPow;
 	}*/
 	motorSet(M7_8, n);
@@ -58,25 +58,19 @@ void resetMotors() {
 }
 
 //////////////////////////////          ENCODERS
-static Encoder eArm, eCB, eDL, eDR;
+static Encoder eDL, eDR;
 void setupEnc() {
-     eArm = encoderInit(ARM_ENC_TOP, ARM_ENC_BOT, false);
-     eCB = encoderInit(CHAIN_ENC_TOP, CHAIN_ENC_BOT, false);
      eDL = encoderInit(DRIVE_L_ENC_TOP, DRIVE_L_ENC_BOT, false);
      eDR = encoderInit(DRIVE_R_ENC_TOP, DRIVE_R_ENC_BOT, false);
-     encoderReset(eArm);
-     encoderReset(eCB);
      encoderReset(eDL);
      encoderReset(eDR);
 }
-int eArmGet() {
-     //90 - 34 = 56
-     //56 + (90-77)  = 56 + 13 = 69
-     return 69 - encoderGet(eArm);
+#define POT_SENSITIVITY 0.06105006105
+double armGet() {//-
+	return ( (3955 - analogRead(ARML_POT)) + (analogRead(ARMR_POT) - 121) ) * (POT_SENSITIVITY / 2.0) + 69;
 }
-int eCBGet() {
-     // 315 to 79
-     return encoderGet(eCB) + 291;
+double cbGet() {
+	return analogRead(CB_POT) * POT_SENSITIVITY + 107.5;//107.5
 }
 int eDLGet() {
      return encoderGet(eDL);
@@ -97,7 +91,7 @@ void resetDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* 
 }
 
 void printEnc() {
-	printf("Arm: %d\tCB: %d\tDL: %d\tDR: %d\n", eArmGet(), eCBGet(), eDLGet(), eDRGet());
+	printf("Arm: %lf\tCB: %lf\tDL: %d\tDR: %d\n", armGet(), cbGet(), eDLGet(), eDRGet());
 }
 void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid) {
 	printf("DL: %d/%d\tDR: %d/%d\tDLt: %d/%d\tDRt: %d/%d\tt: %ld\tdnR: %ld\tdnL: %ld\tdnRt: %ld\tdnLt: %ld\n", (int)DL_pid->sensVal, (int)DL_pid->target, (int)DR_pid->sensVal, (int)DR_pid->target, (int)DLturn_pid->sensVal, (int)DLturn_pid->target, (int)DRturn_pid->sensVal, (int)DRturn_pid->target, millis(), DL_pid->doneTime, DR_pid->doneTime, DLturn_pid->doneTime, DRturn_pid->doneTime);

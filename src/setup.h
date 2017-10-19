@@ -4,16 +4,19 @@
 #define SETUP_H
 
 //------- Digital -------
-#define DRIVE_R_ENC_BOT 12
-#define DRIVE_R_ENC_TOP 11
-#define CHAIN_ENC_TOP 7
-#define CHAIN_ENC_BOT 8
-#define ARM_ENC_TOP 6
-#define ARM_ENC_BOT 5
 #define DRIVE_L_ENC_TOP 4
 #define DRIVE_L_ENC_BOT 2
+#define DRIVE_R_ENC_BOT 12
+#define DRIVE_R_ENC_TOP 11
 
 #define MGL_LIM 1
+
+//------- Analog -------
+
+#define POW_EXP 1
+#define ARML_POT 5
+#define ARMR_POT 3
+#define CB_POT 4
 
 //------- MOTOR -------
 //CORTEX
@@ -21,10 +24,10 @@
 #define M0_1 3
 
 //PWR EX
-#define M2 4 // A
-#define M11 5 // B
-#define M6 6 // C
-#define M5 7 // D
+#define M2 4
+#define M11 5
+#define M6 6
+#define M5 7
 
 //CORTEX
 #define M3_4 8
@@ -47,8 +50,8 @@ void resetMotors();
 
 //encoders
 void setupEnc();
-int eArmGet();
-int eCBGet();
+double armGet();
+double cbGet();
 int eDLGet();
 int eDRGet();
 
