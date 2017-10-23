@@ -16,7 +16,7 @@ int autonDrive(double dist, PidVars* left, PidVars* right, bool turning) {
 void auton1(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid, PidVars* arm_pid, PidVars* cb_pid) {
 	printf("starting auton.....");
 	unsigned long t0 = millis();
-	double cbAngle = 180, armAngle = 69;
+	double cbAngle = 180, armAngle = 75;
 	int step = 0;
 	resetMotors();
 	resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
@@ -31,7 +31,7 @@ void auton1(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRtu
 					setClaw(-30);
 				}
 				cbAngle = 130;
-				armAngle = 69;
+				armAngle = 75;
 				step += autonDrive(-68, DL_pid, DR_pid, false);
 				if(step == 1) {
 					resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);

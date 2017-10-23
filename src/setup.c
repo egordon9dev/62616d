@@ -15,13 +15,13 @@ int getLimMotorVal(int n) {
 }
 void setDL(int n) {//	set left drive motors
 	limMotorVal(&n);
-	motorSet(M0_1, n);
-	motorSet(M2, n);
+	motorSet(M0, n);
+	motorSet(M1_2, n);
 }
 void setDR(int n) {//	set right drive motors
 	limMotorVal(&n);
-	motorSet(M3_4, -n);
-	motorSet(M5, -n);
+	motorSet(M3, -n);
+	motorSet(M4_5, -n);
 }
 void setArm(int n) {//	set main 4 bar lift
 	limMotorVal(&n);
@@ -97,5 +97,5 @@ void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, Pi
 	printf("DL: %d/%d\tDR: %d/%d\tDLt: %d/%d\tDRt: %d/%d\tt: %ld\tdnR: %ld\tdnL: %ld\tdnRt: %ld\tdnLt: %ld\n", (int)DL_pid->sensVal, (int)DL_pid->target, (int)DR_pid->sensVal, (int)DR_pid->target, (int)DLturn_pid->sensVal, (int)DLturn_pid->target, (int)DRturn_pid->sensVal, (int)DRturn_pid->target, millis(), DL_pid->doneTime, DR_pid->doneTime, DLturn_pid->doneTime, DRturn_pid->doneTime);
 }
 void printEnc_pidArmCB(PidVars* arm_pid, PidVars* cb_pid) {
-	printf("arm: %d/%d\tcb: %d/%d\t", (int)arm_pid->sensVal, (int)arm_pid->target, (int)cb_pid->sensVal, (int)cb_pid->target);
+	printf("arm: %d/%d\tcb: %d/%d\n", (int)arm_pid->sensVal, (int)arm_pid->target, (int)cb_pid->sensVal, (int)cb_pid->target);
 }

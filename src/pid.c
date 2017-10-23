@@ -22,11 +22,11 @@ PidVars pidDef = {
 };
 PidVars arm_pid = {
      .doneTime = LONG_MAX, .DONE_ZONE = 10,
-     .DERIVATIVE_ACTIVE_ZONE = 20,
-     .INTEGRAL_ACTIVE_ZONE = 20, .maxIntegral = 50,
+     .DERIVATIVE_ACTIVE_ZONE = 30,
+     .INTEGRAL_ACTIVE_ZONE = 7, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
-     .kp = 7.0, .ki = 0.01, .kd = 300.0,
+     .kp = 11.0, .ki = 0.01, .kd = 800.0,
      .prevTime = 0
 };
 PidVars cb_pid = {
@@ -38,40 +38,46 @@ PidVars cb_pid = {
      .kp = 2.55, .ki = 0.0, .kd = 220.0,
      .prevTime = 0
 };
+#define dkp 0.12
+#define dki 0.001
+#define dkd 30.0
 PidVars DL_pid = {
      .doneTime = LONG_MAX, .DONE_ZONE = 50,
      .DERIVATIVE_ACTIVE_ZONE = 300,
-     .INTEGRAL_ACTIVE_ZONE = 1000, .maxIntegral = 50,
+     .INTEGRAL_ACTIVE_ZONE = 80, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
-     .kp = 0.35, .ki = 0.0001, .kd = 50.0,
+     .kp = dkp, .ki = dki, .kd = dkd,
      .prevTime = 0
 };
 PidVars DR_pid = {
      .doneTime = LONG_MAX, .DONE_ZONE = 50,
      .DERIVATIVE_ACTIVE_ZONE = 300,
-     .INTEGRAL_ACTIVE_ZONE = 1000, .maxIntegral = 50,
+     .INTEGRAL_ACTIVE_ZONE = 80, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
-     .kp = 0.35, .ki = 0.0001, .kd = 50.0,
+     .kp = dkp, .ki = dki, .kd = dkd,
      .prevTime = 0
 };
+#define dtkp 2.7
+#define dtki 0.0
+#define dtkd 150.0
 PidVars DLturn_pid = {
      .doneTime = LONG_MAX, .DONE_ZONE = 15,
-     .DERIVATIVE_ACTIVE_ZONE = 200,
+     .DERIVATIVE_ACTIVE_ZONE = 70,
      .INTEGRAL_ACTIVE_ZONE = 50, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
-     .kp = 1.24, .ki = 0.015, .kd = 90.0,
+     .kp = dtkp, .ki = dtki, .kd = dtkd,
      .prevTime = 0
 };
 PidVars DRturn_pid = {
      .doneTime = LONG_MAX, .DONE_ZONE = 15,
-     .DERIVATIVE_ACTIVE_ZONE = 200,
+     .DERIVATIVE_ACTIVE_ZONE = 70,
      .INTEGRAL_ACTIVE_ZONE = 50, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
-     .kp = 1.24, .ki = 0.015, .kd = 90.0,
+     .kp = dtkp, .ki = dtki, .kd = dtkd,
      .prevTime = 0
 };
 //proportional control feedback

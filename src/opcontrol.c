@@ -46,11 +46,17 @@ void updateLift(PidVars* arm_pid, PidVars* cb_pid) {
 			setCB(0);
 		}
 	} else {
-		pidArm(arm_pid, 69);
+		pidArm(arm_pid, 72);
 		pidCB(cb_pid, 150);
 	}
 }
-
+void pidTest() {
+	while(true) {
+		pidDrive(90, &DLturn_pid, &DRturn_pid, true);
+		printEnc_pidDrive(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid);
+		delay(20);
+	}
+}
 void operatorControl() {
 	bool clawOpen = false;
 	long tClawOpen = millis();
@@ -93,21 +99,21 @@ void operatorControl() {
 		if(joystickGetDigital(1, 6, JOY_DOWN)) {
 			//close
 			clawOpen = false;
-			setClaw(-80);
+			setClaw(-70);
 		} else if(joystickGetDigital(1, 6, JOY_UP)) {
 			//open
 			clawOpen = true;
 			tClawOpen = millis();
-			setClaw(90);
+			setClaw(70);
 		} else {
 			if(clawOpen == true) {
 				if(millis() - tClawOpen < 300) {
-					setClaw(20);//+
+					setClaw(10);//+
 				} else {
 					setClaw(0);//+
 				}
 			} else {
-				setClaw(-20);//-
+				setClaw(-15);//-
 			}
 		}
 		//----- drive -----//

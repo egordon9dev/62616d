@@ -4,12 +4,12 @@
 #define SETUP_H
 
 //------- Digital -------
-#define DRIVE_L_ENC_TOP 4
+#define DRIVE_L_ENC_TOP 1
 #define DRIVE_L_ENC_BOT 2
-#define DRIVE_R_ENC_BOT 12
-#define DRIVE_R_ENC_TOP 11
+#define DRIVE_R_ENC_BOT 3
+#define DRIVE_R_ENC_TOP 4
 
-#define MGL_LIM 1
+#define MGL_LIM 10
 
 //------- Analog -------
 
@@ -21,16 +21,16 @@
 //------- MOTOR -------
 //CORTEX
 #define M7_8 2
-#define M0_1 3
+#define M0 3
 
 //PWR EX
-#define M2 4
-#define M11 5
+#define M1_2 4
 #define M6 6
-#define M5 7
+#define M4_5 7
+#define M11 5
 
 //CORTEX
-#define M3_4 8
+#define M3 8
 #define M9_10 9
 
 #define CB_MAX 315
