@@ -52,7 +52,7 @@ void updateLift(PidVars* arm_pid, PidVars* cb_pid) {
 }
 void pidTest() {
 	while(true) {
-		pidDrive(90, &DLturn_pid, &DRturn_pid, true);
+		pidDrive(-68, &DL_pid, &DR_pid, false);
 		printEnc_pidDrive(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid);
 		delay(20);
 	}

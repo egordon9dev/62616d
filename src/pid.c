@@ -38,12 +38,12 @@ PidVars cb_pid = {
      .kp = 2.55, .ki = 0.0, .kd = 220.0,
      .prevTime = 0
 };
-#define dkp 0.12
-#define dki 0.001
-#define dkd 30.0
+#define dkp 0.7
+#define dki 0.0
+#define dkd 75.0
 PidVars DL_pid = {
      .doneTime = LONG_MAX, .DONE_ZONE = 50,
-     .DERIVATIVE_ACTIVE_ZONE = 300,
+     .DERIVATIVE_ACTIVE_ZONE = 600,
      .INTEGRAL_ACTIVE_ZONE = 80, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,
@@ -52,7 +52,7 @@ PidVars DL_pid = {
 };
 PidVars DR_pid = {
      .doneTime = LONG_MAX, .DONE_ZONE = 50,
-     .DERIVATIVE_ACTIVE_ZONE = 300,
+     .DERIVATIVE_ACTIVE_ZONE = 600,
      .INTEGRAL_ACTIVE_ZONE = 80, .maxIntegral = 50,
      .target = 0.0,
      .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0,

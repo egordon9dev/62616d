@@ -82,7 +82,7 @@ void auton1(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRtu
 				}
 				break;
 			case 4:
-				if(millis()-t0 < 3500) {
+				if(millis()-t0 < 2700) {
 					setDL(-127);
 					setDR(-127);
 				} else {
@@ -112,7 +112,7 @@ void auton1(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRtu
 				}
 
 
-				if(millis()-t0 < 1300) {
+				if(millis()-t0 < 700) {
 					setDL(127);
 					setDR(127);
 				} else {
