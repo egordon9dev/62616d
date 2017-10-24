@@ -3,6 +3,9 @@
 #ifndef SETUP_H
 #define SETUP_H
 
+//------- Auton Select -------
+int autonSelect;
+
 //------- Digital -------
 #define DRIVE_L_ENC_TOP 1
 #define DRIVE_L_ENC_BOT 2
