@@ -5,10 +5,10 @@
 //----- updates Arm and Chain-Bar -----//
 void updateLift(PidVars* arm_pid, PidVars* cb_pid) {
 	//----- update arm -----//
+	static bool returning = false;
 	if(!digitalRead(MGL_LIM)) {
 		if(joystickGetDigital(1, 7, JOY_RIGHT)) {
-			returnLift(arm_pid, cb_pid);
-			return;
+			returning = true;
 		}
 		if(joystickGetDigital(1, 7, JOY_UP)) {
 			// insert auto stack code here..............
@@ -40,12 +40,19 @@ void updateLift(PidVars* arm_pid, PidVars* cb_pid) {
 		//------ update chain bar -----//
 		if(joystickGetDigital(1, 5, JOY_UP)) {
 			setCB(-127);
+			returning = false;
 		} else if(joystickGetDigital(1, 5, JOY_DOWN)) {
 			setCB(127);
+			returning = false;
 		} else {
-			setCB(0);
+			if(returning) {
+				returnLift(arm_pid, cb_pid);
+				return;
+			} else {
+				setCB(0);
+			}
 		}
-	} else {
+	} else if(!returning) {
 		pidArm(arm_pid, 72);
 		pidCB(cb_pid, 150);
 	}
@@ -60,36 +67,31 @@ void pidTest() {
 void operatorControl() {
 	bool clawOpen = false;
 	long tClawOpen = millis();
-	bool mglClose = false;
-	bool mglUp = false;
+	bool mglHold = false;
+	bool mglAutoUp = false;
 	while(true) {
 		printEnc();
 		updateLift(&arm_pid, &cb_pid);
 		//----- mobile-goal lift -----//
 		if(joystickGetDigital(1, 8, JOY_RIGHT)) {
-			if((millis()/200) % 2 == 1) {
-			    setMGL(127);
-			} else {
-			    setMGL(-127);
-			}
+			mglAutoUp = true;
 		} else if(joystickGetDigital(1, 8, JOY_UP)) {
+			mglAutoUp = false;
 			if(digitalRead(MGL_LIM)) {
 				setMGL(-127);
-				mglClose = false;
-				mglUp = false;//true
+				mglHold = false;
 			} else {
 				setMGL(-20);
-				mglClose = true;
-				mglUp = false;
+				mglHold = true;
 			}
 		} else if(joystickGetDigital(1, 8, JOY_DOWN)) {
 			setMGL(127);
-			mglClose = false;
-			mglUp = false;
+			mglHold = false;
+			mglAutoUp = false;
 		} else {
-			if(mglClose) {
+			if(mglHold) {
 				setMGL(-25);// hold mobile goal in place
-			} else if(mglUp) {
+			} else if(mglAutoUp) {
 				setMGL(-127); // automatically continue lifting mobile goal
 			} else {
 				setMGL(0);

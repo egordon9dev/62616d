@@ -12,7 +12,13 @@ int autonDrive(double dist, PidVars* left, PidVars* right, bool turning) {
 	}
 	return 0;
 }
-
+void spinCycle(unsigned long t0) {
+	if(((millis()-t0)/200) % 2 == 1) {
+		setMGL(127);
+	} else {
+		setMGL(-127);
+	}
+}
 void auton1(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid, PidVars* arm_pid, PidVars* cb_pid) {
 	printf("starting auton.....");
 	unsigned long t0 = millis();
@@ -106,12 +112,7 @@ void auton1(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRtu
 				//-----------------------------------------------------------------------------------------------------------
 				//									SPIN-CYCLE
 				//-----------------------------------------------------------------------------------------------------------
-				if(((millis()-t0)/200) % 2 == 1) {
-					setMGL(127);
-				} else {
-					setMGL(-127);
-				}
-
+				spinCycle(t0);
 
 				if(millis()-t0 < 700) {
 					setDL(127);
@@ -166,6 +167,57 @@ void auton1(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRtu
 		delay(20);
 	}
 }
+void skills(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid, PidVars* arm_pid, PidVars* cb_pid) {
+	int step = 0;
+	unsigned long t0 = millis();
+	while(true) {
+		double cbAngle = 130, armAngle = 72;
+		pidArm(arm_pid, armAngle);
+		pidCB(cb_pid, cbAngle);
+		switch(step) {
+			case 0:
+				step += autonDrive(-38, DL_pid, DR_pid, false);
+				if(step == 1) {
+					resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+				}
+				break;
+			case 1:
+				setMGL(-127);
+				if(!digitalRead(MGL_LIM)) {
+					step++;
+				}
+				break;
+			case 2:
+				step += autonDrive(180, DLturn_pid, DRturn_pid, true);
+				if(step == 1) {
+					resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+				}
+				break;
+			case 3:
+				if(millis() - t0 < 700) {
+					setDL(-127);
+					setDR(-127);
+					setMGL(127);
+				} else if(millis() - t0 < 1400) {
+					spinCycle(t0);
+					setDL(127);
+					setDR(127);
+				} else {
+					t0 = millis();
+					step++;
+				}
+			case 4:
+				spinCycle(t0);
+				if(millis()-t0 < 700) {
+					setDL(127);
+					setDR(127);
+				} else {
+					step++;
+				}
+		}
+		delay(20);
+	}
+}
 /*
  * Runs the user autonomous code. This function will be started in its own task with the default
  * priority and stack size whenever the robot is enabled via the Field Management System or the
@@ -181,5 +233,6 @@ void auton1(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRtu
  * so, the robot will await a switch to another mode or disable/enable cycle.
  */
 void autonomous() {
-	auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &arm_pid, &cb_pid);
+	//auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &arm_pid, &cb_pid);
+	skills(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &arm_pid, &cb_pid);
 }

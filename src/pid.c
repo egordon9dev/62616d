@@ -153,10 +153,10 @@ const int ARM = 0, CB = 1;
 int stackAngles[][2] = {
 //	  ARM | CB
 	{ 73,   110 },
-	{ 69,   120 },
-	{ 69,   130 },
+	{ 73,   120 },
+	{ 73,   130 },
 };
-int returnAngle[] = { 60, 300 };
+int returnAngle[] = { 71, 300 };
 //set chain bar and arm with PID to stack given cone
 int stack(PidVars* arm_pid, PidVars* cb_pid, int cone) {
 	pidCB(cb_pid, stackAngles[cone][CB]);
