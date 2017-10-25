@@ -21,6 +21,7 @@ void auton1(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRtu
 	resetMotors();
 	resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
 	t0 = millis();
+	bool pidRunning = false;
 	while (true) {
 		pidArm(arm_pid, armAngle);
 		pidCB(cb_pid, cbAngle);
@@ -40,49 +41,49 @@ void auton1(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRtu
 				}
 				break;
 			case 1:
-				step += autonDrive(10, DLturn_pid, DRturn_pid, true);
-				if(step == 2) {
-					resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
-					setDL(0);setDR(0);
-					printf("\n\nstep: 2\n\n");
-					t0 = millis();
+				setMGL(-127);
+				if(!digitalRead(MGL_LIM)) {
+					step += autonDrive(15, DLturn_pid, DRturn_pid, true);
+					if(step == 2) {
+						resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+						setDL(0);setDR(0);
+						printf("\n\nstep: 2\n\n");
+						t0 = millis();
+					}
 				}
 				break;
 			case 2:
-				setMGL(-127);
-				if(millis() - t0 > 2500) {
-					stack(arm_pid, cb_pid, 1);
-				}
-				if(millis() - t0 > 2700) {
+				step += autonDrive(43, DL_pid, DR_pid, false);
+				if(stack(arm_pid, cb_pid, 0)) {
 					setClaw(25);
 				}
-				if(!digitalRead(MGL_LIM)) {
-					step += autonDrive(48, DL_pid, DR_pid, false);
-				}
-
 				if(step == 3) {
 					resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
-					setDL(0);setDR(0);
+					t0 = millis();
 					printf("\n\nstep: 3\n\n");
+					setDL(0);setDR(0);
 				}
 				break;
 			case 3:
-				setMGL(-127);
-				if(millis() - t0 > 2500) {
-					stack(arm_pid, cb_pid, 1);
-				}
-				if(millis() - t0 > 2700) {
+				if(stack(arm_pid, cb_pid, 0)) {
 					setClaw(25);
 				}
-				step += autonDrive(160, DLturn_pid, DRturn_pid, true);
+				step += autonDrive(140, DLturn_pid, DRturn_pid, true);
 				if(step == 4) {
+					setClaw(0);
 					resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
 					t0 = millis();
 					printf("\n\nstep: 4\n\n");
 				}
 				break;
 			case 4:
-				if(millis()-t0 < 2700) {
+
+				if(!digitalRead(MGL_LIM)) {
+					if(stack(arm_pid, cb_pid, 0)) {
+						setClaw(25);
+					}
+				}
+				if(millis()-t0 < 2500) {
 					setDL(-127);
 					setDR(-127);
 				} else {

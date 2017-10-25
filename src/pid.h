@@ -33,7 +33,7 @@ void pidCB(PidVars* cb_pid, double a);
 void pidArm(PidVars* arm_pid, double a);
 
 //set chain bar and arm with PID to stack given cone
-void stack(PidVars* arm_pid, PidVars* cb_pid, int cone);
+int stack(PidVars* arm_pid, PidVars* cb_pid, int cone);
 
 //return lift to pick up cones
 void returnLift(PidVars* arm_pid, PidVars* cb_pid);

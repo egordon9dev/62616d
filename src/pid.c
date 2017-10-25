@@ -152,15 +152,24 @@ void pidArm(PidVars* arm_pid, double a) { // set arm angle with PID
 const int ARM = 0, CB = 1;
 int stackAngles[][2] = {
 //	  ARM | CB
-	{ 69,   90 },
-	{ 69,   100 },
-	{ 69,   110 },
+	{ 73,   110 },
+	{ 69,   120 },
+	{ 69,   130 },
 };
 int returnAngle[] = { 60, 300 };
 //set chain bar and arm with PID to stack given cone
-void stack(PidVars* arm_pid, PidVars* cb_pid, int cone) {
+int stack(PidVars* arm_pid, PidVars* cb_pid, int cone) {
 	pidCB(cb_pid, stackAngles[cone][CB]);
-	pidArm(arm_pid, stackAngles[cone][ARM]);
+	if(cb_pid->doneTime < millis()) {
+          pidArm(arm_pid, stackAngles[cone][ARM]);
+     }
+     int wait = 200;
+	if(arm_pid->doneTime + wait < millis() && cb_pid->doneTime + wait < millis()) {
+		arm_pid->doneTime = LONG_MAX;
+		cb_pid->doneTime = LONG_MAX;
+		return 1;
+	}
+	return 0;
 }
 //return lift to pick up cones
 void returnLift(PidVars* arm_pid, PidVars* cb_pid) {
