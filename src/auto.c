@@ -179,6 +179,8 @@ void skills(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRtu
 				step += autonDrive(-38, DL_pid, DR_pid, false);
 				if(step == 1) {
 					resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+					setDL(0);
+					setDR(0);
 				}
 				break;
 			case 1:
@@ -191,6 +193,9 @@ void skills(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRtu
 				step += autonDrive(180, DLturn_pid, DRturn_pid, true);
 				if(step == 1) {
 					resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+					setDL(0);
+					setDR(0);
+					t0 = millis();
 				}
 				break;
 			case 3:
@@ -206,6 +211,7 @@ void skills(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRtu
 					t0 = millis();
 					step++;
 				}
+				break;
 			case 4:
 				spinCycle(t0);
 				if(millis()-t0 < 700) {
@@ -214,6 +220,7 @@ void skills(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRtu
 				} else {
 					step++;
 				}
+				break;
 		}
 		delay(20);
 	}
