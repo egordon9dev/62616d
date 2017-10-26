@@ -23,5 +23,8 @@ void initializeIO() {
  * can be implemented in this task if desired.
  */
 void initialize() {
+     lcdInit(uart1);
+     lcdClear(uart1);
+     lcdSetBacklight(uart1, true);
      setupEnc();
 }

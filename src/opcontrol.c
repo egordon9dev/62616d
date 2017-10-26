@@ -65,6 +65,7 @@ void pidTest() {
 	}
 }
 void operatorControl() {
+	lcdSetText(uart1, 1, "MGL STATE");
 	bool clawOpen = false;
 	long tClawOpen = millis();
 	bool mglHold = false;
