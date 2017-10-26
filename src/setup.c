@@ -57,6 +57,11 @@ void resetMotors() {
      }
 }
 
+void setupLCD() {
+     lcdInit(LCD);
+     lcdClear(LCD);
+     lcdSetBacklight(LCD, true);
+}
 //////////////////////////////          ENCODERS
 static Encoder eDL, eDR;
 void setupEnc() {
@@ -98,4 +103,46 @@ void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, Pi
 }
 void printEnc_pidArmCB(PidVars* arm_pid, PidVars* cb_pid) {
 	printf("arm: %d/%d\tcb: %d/%d\n", (int)arm_pid->sensVal, (int)arm_pid->target, (int)cb_pid->sensVal, (int)cb_pid->target);
+}
+
+int autonMode = 0;
+#define AUTO_MAX 5
+#define nAutons 4
+void autoSelect() {
+	static int prevBtn = 0;
+	int btn = lcdReadButtons(LCD);
+	if(btn & LCD_BTN_CENTER) {
+		lcdSetText(LCD, 1, "BATTERY STUFF");
+	} else {
+		if(btn & LCD_BTN_LEFT && !(prevBtn & LCD_BTN_LEFT)) {
+			if(autonMode > 0) {
+				autonMode--;
+			}
+		} else if(btn & LCD_BTN_RIGHT && !(prevBtn & LCD_BTN_RIGHT)) {
+			if(autonMode < AUTO_MAX) {
+				autonMode++;
+			}
+		}
+		lcdClear(LCD);
+		if(autonMode < nAutons) {
+			lcdPrint(LCD, 1, "<   Auton  %d   >", autonMode);
+			switch(autonMode) {
+				case 0:
+					lcdSetText(LCD, 2, "MG + C 20pt LEFT");
+					break;
+				case 1:
+					lcdSetText(LCD, 2, "MG + C 20pt RIGHT");
+					break;
+				case 2:
+					lcdSetText(LCD, 2, "MG + C 10pt LEFT");
+					break;
+				case 3:
+					lcdSetText(LCD, 2, "MG + C 10pt RIGHT");
+					break;
+			}
+		} else {
+			lcdPrint(LCD, 1, "<   Skills %d   >", autonMode - nAutons);
+		}
+	}
+	prevBtn = btn;
 }

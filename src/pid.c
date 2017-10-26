@@ -135,9 +135,6 @@ double updatePID(PidVars* pidVars) {
      return updateP(pidVars) + getI(pidVars, dt) + getD(pidVars, dt);
 }
 
-
-
-
 void pidCB(PidVars* cb_pid, double a) { // set chain-bar angle with PID
 	cb_pid->target = a;
 	cb_pid->sensVal = cbGet();
@@ -152,9 +149,9 @@ void pidArm(PidVars* arm_pid, double a) { // set arm angle with PID
 const int ARM = 0, CB = 1;
 int stackAngles[][2] = {
 //	  ARM | CB
-	{ 73,   110 },
 	{ 73,   120 },
 	{ 73,   130 },
+	{ 73,   140 },
 };
 int returnAngle[] = { 71, 300 };
 //set chain bar and arm with PID to stack given cone

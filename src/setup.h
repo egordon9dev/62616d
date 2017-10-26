@@ -3,6 +3,8 @@
 #ifndef SETUP_H
 #define SETUP_H
 
+#define LCD uart1
+
 //------- Digital -------
 #define DRIVE_L_ENC_TOP 1
 #define DRIVE_L_ENC_BOT 2
@@ -47,7 +49,6 @@ void setClaw(int n);
 void setMGL(int n);
 void resetMotors();
 
-
 //encoders
 void setupEnc();
 double armGet();
@@ -64,5 +65,9 @@ void resetDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* 
 void printEnc();
 void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid);
 void printEnc_pidArmCB(PidVars* arm_pid, PidVars* cb_pid);
+
+void setupLCD();
+extern int autonMode;
+void autoSelect();
 
 #endif //SETUP_H
