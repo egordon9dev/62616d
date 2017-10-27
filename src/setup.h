@@ -11,7 +11,7 @@
 #define DRIVE_R_ENC_BOT 3
 #define DRIVE_R_ENC_TOP 4
 
-#define MGL_LIM 10
+#define MGL_LIM 9
 
 //------- Analog -------
 
@@ -21,25 +21,25 @@
 #define CB_POT 4
 
 //------- MOTOR -------
-//CORTEX
+// CORTEX
 #define M7_8 2
 #define M0 3
 
-//PWR EX
+// PWR EX
 #define M1_2 4
 #define M6 6
 #define M4_5 7
 #define M11 5
 
-//CORTEX
+// CORTEX
 #define M3 8
 #define M9_10 9
 
 #define CB_MAX 315
 #define CB_MIN 79
 
-//motors
-void limMotorVal(int* n);
+// motors
+void limMotorVal(int *n);
 int getLimMotorVal(int n);
 void setDL(int n);
 void setDR(int n);
@@ -49,25 +49,27 @@ void setClaw(int n);
 void setMGL(int n);
 void resetMotors();
 
-//encoders
+// encoders
 void setupEnc();
 double armGet();
 double cbGet();
 int eDLGet();
 int eDRGet();
 
-//zeroes drive encoders
+// zeroes drive encoders
 void resetDriveEnc();
 
-//resets drive in preparation for using PID with drive
-void resetDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid);
+// resets drive in preparation for using PID with drive
+void resetDrive(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid,
+                PidVars *DRturn_pid);
 
 void printEnc();
-void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid);
-void printEnc_pidArmCB(PidVars* arm_pid, PidVars* cb_pid);
+void printEnc_pidDrive(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid,
+    PidVars *DRturn_pid);
+void printEnc_pidArmCB(PidVars *arm_pid, PidVars *cb_pid);
 
 void setupLCD();
 extern int autonMode;
 void autoSelect();
 
-#endif //SETUP_H
+#endif // SETUP_H
