@@ -25,7 +25,7 @@ void initialize() {
     setupLCD();
     setupEnc();
     lcdClear(LCD);
-    lcdSetText(LCD, 1, "INIT");
+    lcdSetText(LCD, 1, "INIT.");
     delay(2000);
     while (!isEnabled()) {
         autoSelect();

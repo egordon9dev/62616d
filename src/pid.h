@@ -1,10 +1,9 @@
 #ifndef PID_H
 #define PID_H
-
+#include <stdbool.h>
 //----- variables to be entered into P, PD, or PID function -----//
 typedef struct PidVars {
-    double INTEGRAL_ACTIVE_ZONE, DERIVATIVE_ACTIVE_ZONE, DONE_ZONE, maxIntegral,
-        target, sensVal, prevErr, errTot, kp, ki, kd;
+    double INTEGRAL_ACTIVE_ZONE, DERIVATIVE_ACTIVE_ZONE, DONE_ZONE, maxIntegral, target, sensVal, prevErr, errTot, kp, ki, kd;
     unsigned long prevTime, doneTime;
 } PidVars;
 
