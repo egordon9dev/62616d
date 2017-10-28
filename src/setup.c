@@ -72,9 +72,7 @@ void setupEnc() {
 }
 #define POT_SENSITIVITY 0.06105006105
 double armGet() {  //-
-    return (3955 - analogRead(ARML_POT) + analogRead(ARMR_POT) - 121) *
-               (POT_SENSITIVITY / 2.0) +
-           69;
+    return (3955 - analogRead(ARML_POT) + analogRead(ARMR_POT) - 121) * (POT_SENSITIVITY / 2.0) + 69;
 }
 double cbGet() {
     return analogRead(CB_POT) * POT_SENSITIVITY + 107.5;  // 107.5
@@ -85,36 +83,26 @@ void resetDriveEnc() {
     encoderReset(eDL);
     encoderReset(eDR);
 }
-void resetDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid,
-                PidVars* DRturn_pid) {
+void resetDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid) {
     resetDriveEnc();
     DL_pid->doneTime = LONG_MAX;
     DR_pid->doneTime = LONG_MAX;
     DLturn_pid->doneTime = LONG_MAX;
     DRturn_pid->doneTime = LONG_MAX;
+    setDL(0);
+    setDR(0);
 }
 
-void printEnc() {
-    printf("Arm: %lf\tCB: %lf\tDL: %d\tDR: %d\n", armGet(), cbGet(), eDLGet(),
-           eDRGet());
-}
-void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid,
-                       PidVars* DRturn_pid) {
+void printEnc() { printf("Arm: %lf\tCB: %lf\tDL: %d\tDR: %d\n", armGet(), cbGet(), eDLGet(), eDRGet()); }
+void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid) {
     printf(
         "DL: %d/%d\tDR: %d/%d\tDLt: %d/%d\tDRt: %d/%d\tt: %ld\tdnR: "
         "%ld\tdnL: %ld\tdnRt: %ld\tdnLt: %ld\n",
-        (int)DL_pid->sensVal, (int)DL_pid->target, (int)DR_pid->sensVal,
-        (int)DR_pid->target, (int)DLturn_pid->sensVal, (int)DLturn_pid->target,
-        (int)DRturn_pid->sensVal, (int)DRturn_pid->target, millis(),
-        DL_pid->doneTime, DR_pid->doneTime, DLturn_pid->doneTime,
-        DRturn_pid->doneTime);
+        (int)DL_pid->sensVal, (int)DL_pid->target, (int)DR_pid->sensVal, (int)DR_pid->target, (int)DLturn_pid->sensVal, (int)DLturn_pid->target, (int)DRturn_pid->sensVal, (int)DRturn_pid->target, millis(), DL_pid->doneTime, DR_pid->doneTime, DLturn_pid->doneTime, DRturn_pid->doneTime);
 }
-void printEnc_pidArmCB(PidVars* arm_pid, PidVars* cb_pid) {
-    printf("arm: %d/%d\tcb: %d/%d\n", (int)arm_pid->sensVal,
-           (int)arm_pid->target, (int)cb_pid->sensVal, (int)cb_pid->target);
-}
+void printEnc_pidArmCB(PidVars* arm_pid, PidVars* cb_pid) { printf("arm: %d/%d\tcb: %d/%d\n", (int)arm_pid->sensVal, (int)arm_pid->target, (int)cb_pid->sensVal, (int)cb_pid->target); }
 
-int autonMode = 0;
+int autonMode = 4;
 #define AUTO_MAX 5
 #define nAutons 4
 void autoSelect() {

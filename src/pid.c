@@ -12,103 +12,19 @@
      prevError, errTot, prevTime
      -------------------------
 */
-PidVars pidDef = {.doneTime = LONG_MAX,
-                  .DONE_ZONE = 10,
-                  .DERIVATIVE_ACTIVE_ZONE = DBL_MAX,
-                  .INTEGRAL_ACTIVE_ZONE = DBL_MAX,
-                  .maxIntegral = DBL_MAX,
-                  .target = 0.0,
-                  .sensVal = 0.0,
-                  .prevErr = 0.0,
-                  .errTot = 0.0,
-                  .kp = 0.0,
-                  .ki = 0.0,
-                  .kd = 0.0,
-                  .prevTime = 0};
-PidVars arm_pid = {.doneTime = LONG_MAX,
-                   .DONE_ZONE = 10,
-                   .DERIVATIVE_ACTIVE_ZONE = 30,
-                   .INTEGRAL_ACTIVE_ZONE = 7,
-                   .maxIntegral = 50,
-                   .target = 0.0,
-                   .sensVal = 0.0,
-                   .prevErr = 0.0,
-                   .errTot = 0.0,
-                   .kp = 11.0,
-                   .ki = 0.01,
-                   .kd = 800.0,
-                   .prevTime = 0};
-PidVars cb_pid = {.doneTime = LONG_MAX,
-                  .DONE_ZONE = 10,
-                  .DERIVATIVE_ACTIVE_ZONE = 60,
-                  .INTEGRAL_ACTIVE_ZONE = 20,
-                  .maxIntegral = 50,
-                  .target = 0.0,
-                  .sensVal = 0.0,
-                  .prevErr = 0.0,
-                  .errTot = 0.0,
-                  .kp = 2.55,
-                  .ki = 0.0,
-                  .kd = 220.0,
-                  .prevTime = 0};
+PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .DERIVATIVE_ACTIVE_ZONE = DBL_MAX, .INTEGRAL_ACTIVE_ZONE = DBL_MAX, .maxIntegral = DBL_MAX, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0};
+PidVars arm_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .DERIVATIVE_ACTIVE_ZONE = 30, .INTEGRAL_ACTIVE_ZONE = 7, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 11.0, .ki = 0.01, .kd = 800.0, .prevTime = 0};
+PidVars cb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .DERIVATIVE_ACTIVE_ZONE = 60, .INTEGRAL_ACTIVE_ZONE = 20, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2.55, .ki = 0.0, .kd = 220.0, .prevTime = 0};
 #define dkp 0.7
-#define dki 0.0
+#define dki 0.03
 #define dkd 75.0
-PidVars DL_pid = {.doneTime = LONG_MAX,
-                  .DONE_ZONE = 50,
-                  .DERIVATIVE_ACTIVE_ZONE = 600,
-                  .INTEGRAL_ACTIVE_ZONE = 80,
-                  .maxIntegral = 50,
-                  .target = 0.0,
-                  .sensVal = 0.0,
-                  .prevErr = 0.0,
-                  .errTot = 0.0,
-                  .kp = dkp,
-                  .ki = dki,
-                  .kd = dkd,
-                  .prevTime = 0};
-PidVars DR_pid = {.doneTime = LONG_MAX,
-                  .DONE_ZONE = 50,
-                  .DERIVATIVE_ACTIVE_ZONE = 600,
-                  .INTEGRAL_ACTIVE_ZONE = 80,
-                  .maxIntegral = 50,
-                  .target = 0.0,
-                  .sensVal = 0.0,
-                  .prevErr = 0.0,
-                  .errTot = 0.0,
-                  .kp = dkp,
-                  .ki = dki,
-                  .kd = dkd,
-                  .prevTime = 0};
+PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .DERIVATIVE_ACTIVE_ZONE = 600, .INTEGRAL_ACTIVE_ZONE = 20, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dkp, .ki = dki, .kd = dkd, .prevTime = 0};
+PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .DERIVATIVE_ACTIVE_ZONE = 600, .INTEGRAL_ACTIVE_ZONE = 20, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dkp, .ki = dki, .kd = dkd, .prevTime = 0};
 #define dtkp 2.7
 #define dtki 0.0
 #define dtkd 150.0
-PidVars DLturn_pid = {.doneTime = LONG_MAX,
-                      .DONE_ZONE = 15,
-                      .DERIVATIVE_ACTIVE_ZONE = 70,
-                      .INTEGRAL_ACTIVE_ZONE = 50,
-                      .maxIntegral = 50,
-                      .target = 0.0,
-                      .sensVal = 0.0,
-                      .prevErr = 0.0,
-                      .errTot = 0.0,
-                      .kp = dtkp,
-                      .ki = dtki,
-                      .kd = dtkd,
-                      .prevTime = 0};
-PidVars DRturn_pid = {.doneTime = LONG_MAX,
-                      .DONE_ZONE = 15,
-                      .DERIVATIVE_ACTIVE_ZONE = 70,
-                      .INTEGRAL_ACTIVE_ZONE = 50,
-                      .maxIntegral = 50,
-                      .target = 0.0,
-                      .sensVal = 0.0,
-                      .prevErr = 0.0,
-                      .errTot = 0.0,
-                      .kp = dtkp,
-                      .ki = dtki,
-                      .kd = dtkd,
-                      .prevTime = 0};
+PidVars DLturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 15, .DERIVATIVE_ACTIVE_ZONE = 70, .INTEGRAL_ACTIVE_ZONE = 50, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dtkp, .ki = dtki, .kd = dtkd, .prevTime = 0};
+PidVars DRturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 15, .DERIVATIVE_ACTIVE_ZONE = 70, .INTEGRAL_ACTIVE_ZONE = 50, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dtkp, .ki = dtki, .kd = dtkd, .prevTime = 0};
 // proportional control feedback
 double updateP(PidVars *pidVars) {
     double err = pidVars->target - pidVars->sensVal;
@@ -162,12 +78,12 @@ double updatePID(PidVars *pidVars) {
     return updateP(pidVars) + getI(pidVars, dt) + getD(pidVars, dt);
 }
 
-void pidCB(PidVars *cb_pid, double a) { // set chain-bar angle with PID
+void pidCB(PidVars *cb_pid, double a) {  // set chain-bar angle with PID
     cb_pid->target = a;
     cb_pid->sensVal = cbGet();
     setCB(updatePID(cb_pid));
 }
-void pidArm(PidVars *arm_pid, double a) { // set arm angle with PID
+void pidArm(PidVars *arm_pid, double a) {  // set arm angle with PID
     arm_pid->target = a;
     arm_pid->sensVal = armGet();
     setArm(updatePID(arm_pid));
@@ -188,8 +104,7 @@ int stack(PidVars *arm_pid, PidVars *cb_pid, int cone) {
         pidArm(arm_pid, stackAngles[cone][ARM]);
     }
     int wait = 200;
-    if (arm_pid->doneTime + wait < millis() &&
-        cb_pid->doneTime + wait < millis()) {
+    if (arm_pid->doneTime + wait < millis() && cb_pid->doneTime + wait < millis()) {
         arm_pid->doneTime = LONG_MAX;
         cb_pid->doneTime = LONG_MAX;
         return 1;
