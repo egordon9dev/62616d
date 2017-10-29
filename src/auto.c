@@ -18,6 +18,108 @@ void spinCycle(unsigned long t0) {
         setMGL(-127);
     }
 }
+void driverSkillsAuton(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid, PidVars *arm_pid, PidVars *cb_pid) {
+    printf("starting auton.....");
+    unsigned long t0 = millis();
+    double cbAngle = 180, armAngle = 75;
+    int step = 0;
+    resetMotors();
+    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+    t0 = millis();
+    int waitT = 200;
+    while (!joystickGetDigital(1, 8, JOY_DOWN) && !joystickGetDigital(1, 8, JOY_UP) && !joystickGetDigital(1, 8, JOY_RIGHT)) {
+        pidArm(arm_pid, armAngle);
+        pidCB(cb_pid, cbAngle);
+        switch (step) {
+            case 0:
+                setClaw(-30);
+                cbAngle = 140;
+                armAngle = 73;
+                step += autonDrive(-60, waitT, DL_pid, DR_pid, false);
+                if (step == 1) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 1:
+                setMGL(-127);
+                if (!digitalRead(MGL_LIM)) {
+                    step++;
+                }
+                break;
+            case 2:
+                armAngle = getArm(0);
+                cbAngle = getCB(0);
+                step += autonDrive(55, waitT, DL_pid, DR_pid, false);
+                if (step == 3) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 3:
+                setClaw(25);
+                step += autonDrive(45, waitT, DLturn_pid, DRturn_pid, true);
+                if (step == 4) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 4:
+                step += autonDrive(24, waitT, DL_pid, DR_pid, false);
+                if (step == 5) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 5:
+                step += autonDrive(90, waitT, DLturn_pid, DRturn_pid, true);
+                if (step == 6) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                    t0 = millis();
+                }
+                break;
+            case 6:
+                setClaw(0);
+                cbAngle = 140;
+                if (millis() - t0 < 1800) {
+                    setDL(-127);
+                    setDR(-127);
+                } else {
+                    setDL(0);
+                    setDR(0);
+                    t0 = millis();
+                    step++;
+                }
+                break;
+            case 7:
+                if (millis() - t0 < 750) {
+                    setMGL(127);
+                } else {
+                    t0 = millis();
+                    step++;
+                }
+                break;
+            case 8:
+                spinCycle(t0);
+                if (millis() - t0 < 600) {
+                    setDL(127);
+                    setDR(127);
+                } else {
+                    setDL(0);
+                    setDR(0);
+                    t0 = millis();
+                    step++;
+                }
+                break;
+            case 9:
+                setMGL(-127);
+                if (!digitalRead(MGL_LIM)) {
+                    step++;
+                }
+                break;
+            default:
+                resetMotors();
+        }
+        printEnc_pidDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+        delay(20);
+    }
+}
 // MG 20pt LEFT SIDE
 void auton0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid, PidVars *arm_pid, PidVars *cb_pid) {
     printf("starting auton.....");

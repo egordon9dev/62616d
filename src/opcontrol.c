@@ -1,7 +1,7 @@
+#include "auto.h"
 #include "main.h"
 #include "pid.h"
 #include "setup.h"
-
 //----- updates Arm and Chain-Bar -----//
 void updateLift(PidVars *arm_pid, PidVars *cb_pid) {
     //----- update arm -----//
@@ -67,6 +67,9 @@ void test() {
     }
 }
 void operatorControl() {
+    if (autonMode == 6) {
+        driverSkillsAuton(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &arm_pid, &cb_pid);
+    }
     bool clawOpen = false;
     long tClawOpen = millis();
     bool mglHold = false;

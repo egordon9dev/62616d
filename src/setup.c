@@ -103,8 +103,9 @@ void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, Pi
 void printEnc_pidArmCB(PidVars* arm_pid, PidVars* cb_pid) { printf("arm: %d/%d\tcb: %d/%d\n", (int)arm_pid->sensVal, (int)arm_pid->target, (int)cb_pid->sensVal, (int)cb_pid->target); }
 
 int autonMode = 0;
-#define AUTO_MAX 5
+#define AUTO_MAX 6
 #define nAutons 4
+#define nSkills 2
 void autoSelect() {
     static int prevBtn = 0;
     int btn = lcdReadButtons(LCD);
@@ -137,8 +138,22 @@ void autoSelect() {
                     lcdSetText(LCD, 2, "MG + C 10pt RIGHT");
                     break;
             }
-        } else {
+        } else if (autonMode < nAutons + nSkills) {
             lcdPrint(LCD, 1, "<   Skills %d   >", autonMode - nAutons);
+            switch (autonMode) {
+                case 4:
+                    lcdSetText(LCD, 2, "3 Middle MG + C");
+                    break;
+                case 5:
+                    lcdSetText(LCD, 2, "ALERT: UNTESTED!");
+                    break;
+            }
+        } else if (autonMode == AUTO_MAX) {
+            lcdSetText(LCD, 1, "Driver Skills");
+            lcdSetText(LCD, 2, "MG+C LEFT,OP= 8D");
+        } else {
+            lcdSetText(LCD, 1, "--- INVALID ---");
+            lcdSetText(LCD, 2, "--- INVALID ---");
         }
     }
     prevBtn = btn;
