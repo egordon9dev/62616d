@@ -3,25 +3,57 @@
 #include "pid.h"
 #include "setup.h"
 //----- updates Arm and Chain-Bar -----//
+unsigned long tLiftOff = 0, tCbOff = 0;
+double liftHoldAngle = 90, cbHoldAngle = 180;
+bool pidRunning = false, cbPidRunning = false;
+bool returning = false;
 void updateLift(PidVars *arm_pid, PidVars *cb_pid) {
     //----- update arm -----//
-    static bool returning = false;
     if (!digitalRead(MGL_LIM)) {
         if (joystickGetDigital(1, 7, JOY_RIGHT)) {
             returning = true;
         }
+        if (joystickGetDigital(1, 7, JOY_LEFT)) {
+            returning = false;
+        }
         if (joystickGetDigital(1, 7, JOY_UP)) {
             // insert auto stack code here..............
             // c .........................................
-            return;
+        }
+        //------ update chain bar -----//
+        if (joystickGetDigital(1, 5, JOY_UP)) {
+            setCB(-127);
+            tCbOff = millis();
+            cbPidRunning = false;
+            returning = false;
+        } else if (joystickGetDigital(1, 5, JOY_DOWN)) {
+            setCB(127);
+            tCbOff = millis();
+            cbPidRunning = false;
+            returning = false;
+        } else {
+            if (returning) {
+                returnLift(arm_pid, cb_pid);
+                return;
+            } else if (millis() - tCbOff > 300) {
+                if (!cbPidRunning) {
+                    cbHoldAngle = cbGet();
+                    cbPidRunning = true;
+                }
+                cb_pid->sensVal = cbGet();
+                cb_pid->target = cbHoldAngle;
+                setCB(updatePID(cb_pid));
+            } else {
+                setCB(0);
+                cbPidRunning = false;
+            }
         }
         const int t = 15;
         int j2 = joystickGetAnalog(1, 2);
-        static unsigned long tLiftOff = 0;
-        static double liftHoldAngle = 90;
-        static bool pidRunning = false;
         if (abs(j2) > t) {
             tLiftOff = millis();
+            returning = false;
+            pidRunning = false;
             setArm(j2);
         } else {
             if (millis() - tLiftOff > 300) {
@@ -37,22 +69,10 @@ void updateLift(PidVars *arm_pid, PidVars *cb_pid) {
                 pidRunning = false;
             }
         }
-        //------ update chain bar -----//
-        if (joystickGetDigital(1, 5, JOY_UP)) {
-            setCB(-127);
-            returning = false;
-        } else if (joystickGetDigital(1, 5, JOY_DOWN)) {
-            setCB(127);
-            returning = false;
-        } else {
-            if (returning) {
-                returnLift(arm_pid, cb_pid);
-                return;
-            } else {
-                setCB(0);
-            }
-        }
-    } else if (!returning) {
+    } else {
+        returning = false;
+        pidRunning = false;
+        cbPidRunning = false;
         pidArm(arm_pid, 72);
         pidCB(cb_pid, 150);
     }

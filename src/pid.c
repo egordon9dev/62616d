@@ -98,11 +98,11 @@ void pidArm(PidVars *arm_pid, double a) {  // set arm angle with PID
 const int ARM = 0, CB = 1;
 int stackAngles[][2] = {
     //	  ARM | CB
-    {73, 110},
-    {73, 120},
-    {73, 130},
+    {75, 110},
+    {75, 120},
+    {75, 130},
 };
-int returnAngle[] = {73, 300};
+int returnAngle[] = {73, 305};
 // set chain bar and arm with PID to stack given cone
 int stack(PidVars *arm_pid, PidVars *cb_pid, int cone) {
     pidCB(cb_pid, stackAngles[cone][CB]);
