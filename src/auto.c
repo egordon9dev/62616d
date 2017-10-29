@@ -42,7 +42,7 @@ void driverSkillsAuton(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, Pi
                 break;
             case 1:
                 setMGL(-127);
-                if (!digitalRead(MGL_LIM)) {
+                if (mglBut()) {
                     step++;
                 }
                 break;
@@ -109,7 +109,7 @@ void driverSkillsAuton(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, Pi
                 break;
             case 9:
                 setMGL(-127);
-                if (!digitalRead(MGL_LIM)) {
+                if (mglBut()) {
                     step++;
                 }
                 break;
@@ -145,7 +145,7 @@ void auton0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
                 break;
             case 1:
                 setMGL(-127);
-                if (!digitalRead(MGL_LIM)) {
+                if (mglBut()) {
                     step++;
                 }
                 break;
@@ -212,7 +212,7 @@ void auton0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
                 break;
             case 9:
                 setMGL(-127);
-                if (!digitalRead(MGL_LIM)) {
+                if (mglBut()) {
                     step++;
                 }
                 break;
@@ -248,7 +248,7 @@ void auton1(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
                 break;
             case 1:
                 setMGL(-127);
-                if (!digitalRead(MGL_LIM)) {
+                if (mglBut()) {
                     step++;
                 }
                 break;
@@ -315,7 +315,7 @@ void auton1(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
                 break;
             case 9:
                 setMGL(-127);
-                if (!digitalRead(MGL_LIM)) {
+                if (mglBut()) {
                     step++;
                 }
                 break;
@@ -350,7 +350,7 @@ void auton2(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
                 break;
             case 1:
                 setMGL(-127);
-                if (!digitalRead(MGL_LIM)) {
+                if (mglBut()) {
                     step++;
                 }
                 break;
@@ -402,7 +402,7 @@ void auton2(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
                 break;
             case 7:
                 setMGL(-127);
-                if (!digitalRead(MGL_LIM)) {
+                if (mglBut()) {
                     step++;
                 }
                 break;
@@ -436,7 +436,7 @@ void auton3(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
                 break;
             case 1:
                 setMGL(-127);
-                if (!digitalRead(MGL_LIM)) {
+                if (mglBut()) {
                     step++;
                 }
                 break;
@@ -488,7 +488,7 @@ void auton3(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
                 break;
             case 7:
                 setMGL(-127);
-                if (!digitalRead(MGL_LIM)) {
+                if (mglBut()) {
                     step++;
                 }
                 break;
@@ -520,7 +520,7 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                 break;
             case 1:
                 setMGL(-127);
-                if (!digitalRead(MGL_LIM)) {
+                if (mglBut()) {
                     step++;
                 }
                 break;
@@ -640,7 +640,7 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                 break;
             case 11:
                 setMGL(-127);
-                if (!digitalRead(MGL_LIM)) {
+                if (mglBut()) {
                     step++;
                 }
                 break;
@@ -722,7 +722,7 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                 break;
             case 20:
                 setMGL(-127);
-                if (!digitalRead(MGL_LIM)) {
+                if (mglBut()) {
                     step++;
                 }
                 break;
@@ -807,7 +807,7 @@ void skills1(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                 break;
             case 1:
                 setMGL(-127);
-                if (!digitalRead(MGL_LIM)) {
+                if (mglBut()) {
                     step++;
                 }
                 break;

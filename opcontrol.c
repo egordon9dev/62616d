@@ -6,7 +6,7 @@
 void updateLift(PidVars *arm_pid, PidVars *cb_pid) {
     //----- update arm -----//
     static bool returning = false;
-    if (!digitalRead(MGL_LIM)) {
+    if (mglBut()) {
         if (joystickGetDigital(1, 7, JOY_RIGHT)) {
             returning = true;
         }
@@ -77,7 +77,7 @@ void operatorControl() {
             mglAutoUp = true;
         } else if (joystickGetDigital(1, 8, JOY_UP)) {
             mglAutoUp = false;
-            if (digitalRead(MGL_LIM)) {
+            if (!mglBut()) {
                 setMGL(-127);
                 mglHold = false;
             } else {
@@ -90,9 +90,9 @@ void operatorControl() {
             mglAutoUp = false;
         } else {
             if (mglHold) {
-                setMGL(-25); // hold mobile goal in place
+                setMGL(-25);  // hold mobile goal in place
             } else if (mglAutoUp) {
-                setMGL(-127); // automatically continue lifting mobile goal
+                setMGL(-127);  // automatically continue lifting mobile goal
             } else {
                 setMGL(0);
             }
@@ -110,12 +110,12 @@ void operatorControl() {
         } else {
             if (clawOpen == true) {
                 if (millis() - tClawOpen < 300) {
-                    setClaw(10); //+
+                    setClaw(10);  //+
                 } else {
-                    setClaw(0); //+
+                    setClaw(0);  //+
                 }
             } else {
-                setClaw(-15); //-
+                setClaw(-15);  //-
             }
         }
         //----- drive -----//

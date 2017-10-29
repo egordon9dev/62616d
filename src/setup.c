@@ -2,6 +2,7 @@
 #include "API.h"
 #include "pid.h"
 
+bool mglBut() { return digitalRead(MGL_LIM1) || digitalRead(MGL_LIM2); }
 //////////////////////////////          MOTORS
 const int MAX_POWER = 127;
 void limMotorVal(int* n) {
@@ -45,7 +46,7 @@ void setClaw(int n) {  //	set claw
 void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
     int hold = -20;
-    if (n > hold || digitalRead(MGL_LIM)) {
+    if (n > hold || !mglBut()) {
         motorSet(M11, n);
         return;
     }

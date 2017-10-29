@@ -9,7 +9,7 @@ bool pidRunning = false, cbPidRunning = false;
 bool returning = false;
 void updateLift(PidVars *arm_pid, PidVars *cb_pid) {
     //----- update arm -----//
-    if (!digitalRead(MGL_LIM)) {
+    if (mglBut()) {
         if (joystickGetDigital(1, 7, JOY_RIGHT)) {
             returning = true;
         }
@@ -102,11 +102,11 @@ void operatorControl() {
             mglAutoUp = true;
         } else if (joystickGetDigital(1, 8, JOY_UP)) {
             mglAutoUp = false;
-            if (digitalRead(MGL_LIM)) {
+            if (!mglBut()) {
                 setMGL(-127);
                 mglHold = false;
             } else {
-                setMGL(-30);
+                setMGL(-28);
                 mglHold = true;
             }
         } else if (joystickGetDigital(1, 8, JOY_DOWN)) {
@@ -115,7 +115,7 @@ void operatorControl() {
             mglAutoUp = false;
         } else {
             if (mglHold) {
-                setMGL(-25);  // hold mobile goal in place
+                setMGL(-28);  // hold mobile goal in place
             } else if (mglAutoUp) {
                 setMGL(-127);  // automatically continue lifting mobile goal
             } else {

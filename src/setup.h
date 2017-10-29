@@ -11,7 +11,8 @@
 #define DRIVE_R_ENC_BOT 3
 #define DRIVE_R_ENC_TOP 4
 
-#define MGL_LIM 9
+#define MGL_LIM1 8
+#define MGL_LIM2 9
 
 //------- Analog -------
 
@@ -65,7 +66,7 @@ void resetDrive(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *
 void printEnc();
 void printEnc_pidDrive(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid);
 void printEnc_pidArmCB(PidVars *arm_pid, PidVars *cb_pid);
-
+bool mglBut();
 void setupLCD();
 extern int autonMode;
 void autoSelect();
