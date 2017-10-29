@@ -563,8 +563,8 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                         }
                         break;
                     case 2:
-                        substep += autonDrive(-27, driveT, DL_pid, DR_pid, false);
-                        if (killPID(90, 3, DL_pid) + killPID(90, 3, DR_pid) == 2) {
+                        substep += autonDrive(-29, driveT, DL_pid, DR_pid, false);
+                        if (killPID(270, 1, DL_pid) + killPID(270, 1, DR_pid) > 0) {
                             substep++;
                         };
                         if (substep == 3) {
@@ -651,8 +651,11 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                 }
                 break;
             case 13:
+                if (killPID(300, 1, DL_pid) + killPID(300, 1, DR_pid) == 2) {
+                    step++;
+                }
                 step += autonDrive(-52, driveT, DL_pid, DR_pid, false);
-                if (killPID(90, 3, DL_pid) + killPID(90, 3, DR_pid) == 2) {
+                if (killPID(300, 1, DL_pid) + killPID(300, 1, DR_pid) == 2) {
                     step++;
                 }
                 if (step == 14) {
@@ -749,7 +752,7 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                 break;
             case 25:
                 step += autonDrive(-24, driveT, DL_pid, DR_pid, false);
-                if (killPID(200, 3, DL_pid) + killPID(200, 3, DR_pid) == 2) {
+                if (killPID(300, 1, DL_pid) + killPID(300, 1, DR_pid) == 2) {
                     step++;
                 }
                 if (step == 26) {

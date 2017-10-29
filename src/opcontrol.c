@@ -106,7 +106,7 @@ void operatorControl() {
                 setMGL(-127);
                 mglHold = false;
             } else {
-                setMGL(-20);
+                setMGL(-30);
                 mglHold = true;
             }
         } else if (joystickGetDigital(1, 8, JOY_DOWN)) {
