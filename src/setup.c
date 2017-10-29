@@ -102,7 +102,7 @@ void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, Pi
 }
 void printEnc_pidArmCB(PidVars* arm_pid, PidVars* cb_pid) { printf("arm: %d/%d\tcb: %d/%d\n", (int)arm_pid->sensVal, (int)arm_pid->target, (int)cb_pid->sensVal, (int)cb_pid->target); }
 
-int autonMode = 4;
+int autonMode = 0;
 #define AUTO_MAX 5
 #define nAutons 4
 void autoSelect() {

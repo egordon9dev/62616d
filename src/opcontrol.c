@@ -57,16 +57,15 @@ void updateLift(PidVars *arm_pid, PidVars *cb_pid) {
         pidCB(cb_pid, 150);
     }
 }
-void pidTest() {
-    while (true) {
-        pidDrive(-68, &DL_pid, &DR_pid, false);
+// for testing auton pid
+int autonDrive(double dist, int wait, PidVars *left, PidVars *right, bool turning);
+void test() {
+    resetDrive(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid);
+    while (!autonDrive(90, 20000, &DLturn_pid, &DRturn_pid, true)) {
         printEnc_pidDrive(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid);
         delay(20);
     }
 }
-// for testing auton pid
-int autonDrive(double dist, int wait, PidVars *left, PidVars *right, bool turning);
-
 void operatorControl() {
     bool clawOpen = false;
     long tClawOpen = millis();

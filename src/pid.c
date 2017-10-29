@@ -21,7 +21,7 @@ PidVars cb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .DERIVATIVE_ACTIVE_ZONE
 PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .DERIVATIVE_ACTIVE_ZONE = 600, .INTEGRAL_ACTIVE_ZONE = 20, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dkp, .ki = dki, .kd = dkd, .prevTime = 0};
 PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .DERIVATIVE_ACTIVE_ZONE = 600, .INTEGRAL_ACTIVE_ZONE = 20, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dkp, .ki = dki, .kd = dkd, .prevTime = 0};
 #define dtkp 0.62
-#define dtki 0.0025
+#define dtki 0.0025  // 0.0025
 #define dtkd 98.0
 PidVars DLturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 15, .DERIVATIVE_ACTIVE_ZONE = 70, .INTEGRAL_ACTIVE_ZONE = 20, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dtkp, .ki = dtki, .kd = dtkd, .prevTime = 0};
 PidVars DRturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 15, .DERIVATIVE_ACTIVE_ZONE = 70, .INTEGRAL_ACTIVE_ZONE = 50, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dtkp, .ki = dtki, .kd = dtkd, .prevTime = 0};

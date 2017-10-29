@@ -18,6 +18,7 @@ void spinCycle(unsigned long t0) {
         setMGL(-127);
     }
 }
+// MG 20pt LEFT SIDE
 void auton0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid, PidVars *arm_pid, PidVars *cb_pid) {
     printf("starting auton.....");
     unsigned long t0 = millis();
@@ -26,153 +27,375 @@ void auton0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
     resetMotors();
     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
     t0 = millis();
-    bool pidRunning = false;
+    int waitT = 200;
     while (true) {
         pidArm(arm_pid, armAngle);
         pidCB(cb_pid, cbAngle);
         switch (step) {
             case 0:
-                setClaw(-127);
-                if (millis() - t0 > 300) {
-                    setClaw(-30);
-                }
-                cbAngle = 130;
-                armAngle = 75;
-                step += autonDrive(-68, 200, DL_pid, DR_pid, false);
+                setClaw(-30);
+                cbAngle = 140;
+                armAngle = 73;
+                step += autonDrive(-60, waitT, DL_pid, DR_pid, false);
                 if (step == 1) {
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
-                    setDL(0);
-                    setDR(0);
-                    printf("\n\nstep: 1\n\n");
                 }
                 break;
             case 1:
                 setMGL(-127);
                 if (!digitalRead(MGL_LIM)) {
-                    step += autonDrive(15, 200, DLturn_pid, DRturn_pid, true);
-                    if (step == 2) {
-                        resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
-                        setDL(0);
-                        setDR(0);
-                        printf("\n\nstep: 2\n\n");
-                        t0 = millis();
-                    }
+                    step++;
                 }
                 break;
             case 2:
-                step += autonDrive(48, 200, DL_pid, DR_pid, false);
-                if (stack(arm_pid, cb_pid, 0)) {
-                    setClaw(25);
-                }
+                armAngle = getArm(0);
+                cbAngle = getCB(0);
+                step += autonDrive(55, waitT, DL_pid, DR_pid, false);
                 if (step == 3) {
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
-                    t0 = millis();
-                    printf("\n\nstep: 3\n\n");
-                    setDL(0);
-                    setDR(0);
                 }
                 break;
             case 3:
-                if (stack(arm_pid, cb_pid, 0)) {
-                    setClaw(25);
-                }
-                step += autonDrive(145, 200, DLturn_pid, DRturn_pid, true);
+                setClaw(25);
+                step += autonDrive(45, waitT, DLturn_pid, DRturn_pid, true);
                 if (step == 4) {
-                    setClaw(0);
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
-                    t0 = millis();
-                    printf("\n\nstep: 4\n\n");
                 }
                 break;
             case 4:
-
-                if (!digitalRead(MGL_LIM)) {
-                    if (stack(arm_pid, cb_pid, 0)) {
-                        setClaw(25);
-                    }
+                step += autonDrive(24, waitT, DL_pid, DR_pid, false);
+                if (step == 5) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                 }
-                if (millis() - t0 < 2500) {
+                break;
+            case 5:
+                step += autonDrive(90, waitT, DLturn_pid, DRturn_pid, true);
+                if (step == 6) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                    t0 = millis();
+                }
+                break;
+            case 6:
+                setClaw(0);
+                cbAngle = 140;
+                if (millis() - t0 < 1800) {
                     setDL(-127);
                     setDR(-127);
                 } else {
                     setDL(0);
                     setDR(0);
-                    step++;
                     t0 = millis();
-                    printf("\n\nstep 5:\n\n");
-                }
-                break;
-            case 5:
-                if (millis() - t0 < 750) {
-                    setMGL(127);
-                } else {
                     step++;
-                    t0 = millis();
-                    printf("\n\nstep 6:\n\n");
-                }
-                break;
-            case 6:
-                //-----------------------------------------------------------------------------------------------------------
-                //									SPIN-CYCLE
-                //-----------------------------------------------------------------------------------------------------------
-                spinCycle(t0);
-
-                if (millis() - t0 < 700) {
-                    setDL(127);
-                    setDR(127);
-                } else {
-                    step++;
-                    setDL(0);
-                    setDR(0);
-                    t0 = millis();
-                    printf("\n\nstep 7:\n\n");
                 }
                 break;
             case 7:
-                if (digitalRead(MGL_LIM)) {
-                    setMGL(-127);
+                if (millis() - t0 < 750) {
+                    setMGL(127);
                 } else {
-                    step++;
                     t0 = millis();
-                    printf("\n\nstep 7:\n\n");
+                    step++;
                 }
                 break;
-
-                /*
-                case 4:
-                        setDR(-127);
-                        setDL(-127);
-                        delay(1000);
-
-                        setMGL(127);
-                        delay(800);
-                        setMGL(0);
-
-                        setDL(127);
-                        setDR(127);
-                        delay(300);
-                        setMGL(-127);
-                        delay(1700);
-
-                        setDL(0);
-                        setDR(0);
-                        setMGL(0);
-                        setClaw(0);
-                        step++;
-
-                        if(step == 9) {
-                                t0 = millis();
-                                printf("\n\nstep: 9\n\n");
-                        }
-                        break;*/
+            case 8:
+                spinCycle(t0);
+                if (millis() - t0 < 600) {
+                    setDL(127);
+                    setDR(127);
+                } else {
+                    setDL(0);
+                    setDR(0);
+                    t0 = millis();
+                    step++;
+                }
+                break;
+            case 9:
+                setMGL(-127);
+                if (!digitalRead(MGL_LIM)) {
+                    step++;
+                }
+                break;
+            default:
+                resetMotors();
         }
         printEnc_pidDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
         delay(20);
     }
 }
-void auton1(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid, PidVars *arm_pid, PidVars *cb_pid) {}
-void auton2(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid, PidVars *arm_pid, PidVars *cb_pid) {}
-void auton3(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid, PidVars *arm_pid, PidVars *cb_pid) {}
+// MG 20pt RIGHT SIDE
+void auton1(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid, PidVars *arm_pid, PidVars *cb_pid) {
+    printf("starting auton.....");
+    unsigned long t0 = millis();
+    double cbAngle = 180, armAngle = 75;
+    int step = 0;
+    resetMotors();
+    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+    t0 = millis();
+    int waitT = 200;
+    while (true) {
+        pidArm(arm_pid, armAngle);
+        pidCB(cb_pid, cbAngle);
+        switch (step) {
+            case 0:
+                setClaw(-30);
+                cbAngle = 140;
+                armAngle = 73;
+                step += autonDrive(-60, waitT, DL_pid, DR_pid, false);
+                if (step == 1) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 1:
+                setMGL(-127);
+                if (!digitalRead(MGL_LIM)) {
+                    step++;
+                }
+                break;
+            case 2:
+                armAngle = getArm(0);
+                cbAngle = getCB(0);
+                step += autonDrive(55, waitT, DL_pid, DR_pid, false);
+                if (step == 3) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 3:
+                setClaw(25);
+                step += autonDrive(-45, waitT, DLturn_pid, DRturn_pid, true);
+                if (step == 4) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 4:
+                step += autonDrive(24, waitT, DL_pid, DR_pid, false);
+                if (step == 5) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 5:
+                step += autonDrive(-90, waitT, DLturn_pid, DRturn_pid, true);
+                if (step == 6) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                    t0 = millis();
+                }
+                break;
+            case 6:
+                setClaw(0);
+                cbAngle = 140;
+                if (millis() - t0 < 1800) {
+                    setDL(-127);
+                    setDR(-127);
+                } else {
+                    setDL(0);
+                    setDR(0);
+                    t0 = millis();
+                    step++;
+                }
+                break;
+            case 7:
+                if (millis() - t0 < 750) {
+                    setMGL(127);
+                } else {
+                    t0 = millis();
+                    step++;
+                }
+                break;
+            case 8:
+                spinCycle(t0);
+                if (millis() - t0 < 600) {
+                    setDL(127);
+                    setDR(127);
+                } else {
+                    setDL(0);
+                    setDR(0);
+                    t0 = millis();
+                    step++;
+                }
+                break;
+            case 9:
+                setMGL(-127);
+                if (!digitalRead(MGL_LIM)) {
+                    step++;
+                }
+                break;
+            default:
+                resetMotors();
+        }
+        printEnc_pidDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+        delay(20);
+    }
+}
+// MG 10pt LEFT SIDE
+void auton2(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid, PidVars *arm_pid, PidVars *cb_pid) {
+    unsigned long t0 = millis();
+    double cbAngle = 180, armAngle = 75;
+    int step = 0;
+    resetMotors();
+    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+    t0 = millis();
+    int waitT = 200;
+    while (true) {
+        pidArm(arm_pid, armAngle);
+        pidCB(cb_pid, cbAngle);
+        switch (step) {
+            case 0:
+                setClaw(-30);
+                cbAngle = 140;
+                armAngle = 73;
+                step += autonDrive(-60, waitT, DL_pid, DR_pid, false);
+                if (step == 1) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 1:
+                setMGL(-127);
+                if (!digitalRead(MGL_LIM)) {
+                    step++;
+                }
+                break;
+            case 2:
+                armAngle = getArm(0);
+                cbAngle = getCB(0);
+                step += autonDrive(55, waitT, DL_pid, DR_pid, false);
+                if (step == 3) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 3:
+                setClaw(30);
+                step += autonDrive(163, waitT, DLturn_pid, DRturn_pid, true);
+                if (step == 4) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                    t0 = millis();
+                }
+                break;
+            case 4:
+                cbAngle = 140;
+                if (millis() - t0 < 800) {
+                    setDL(-127);
+                    setDR(-127);
+                } else {
+                    step++;
+                }
+                if (step == 5) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                    t0 = millis();
+                }
+                break;
+            case 5:
+                if (millis() - t0 < 1000) {
+                    setMGL(127);
+                } else {
+                    t0 = millis();
+                    step++;
+                }
+                break;
+            case 6:
+                spinCycle(t0);
+                if (millis() - t0 > 600) {
+                    step += autonDrive(22, waitT, DL_pid, DR_pid, false);
+                }
+                if (step == 7) {
+                    t0 = millis();
+                }
+                break;
+            case 7:
+                setMGL(-127);
+                if (!digitalRead(MGL_LIM)) {
+                    step++;
+                }
+                break;
+            default:
+                resetMotors();
+        }
+        delay(20);
+    }
+}
+// MG 10pt RIGHT SIDE
+void auton3(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid, PidVars *arm_pid, PidVars *cb_pid) {
+    unsigned long t0 = millis();
+    double cbAngle = 180, armAngle = 75;
+    int step = 0;
+    resetMotors();
+    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+    t0 = millis();
+    int waitT = 200;
+    while (true) {
+        pidArm(arm_pid, armAngle);
+        pidCB(cb_pid, cbAngle);
+        switch (step) {
+            case 0:
+                setClaw(-30);
+                cbAngle = 140;
+                armAngle = 73;
+                step += autonDrive(-60, waitT, DL_pid, DR_pid, false);
+                if (step == 1) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 1:
+                setMGL(-127);
+                if (!digitalRead(MGL_LIM)) {
+                    step++;
+                }
+                break;
+            case 2:
+                armAngle = getArm(0);
+                cbAngle = getCB(0);
+                step += autonDrive(55, waitT, DL_pid, DR_pid, false);
+                if (step == 3) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 3:
+                setClaw(30);
+                step += autonDrive(-163, waitT, DLturn_pid, DRturn_pid, true);
+                if (step == 4) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                    t0 = millis();
+                }
+                break;
+            case 4:
+                cbAngle = 140;
+                if (millis() - t0 < 800) {
+                    setDL(-127);
+                    setDR(-127);
+                } else {
+                    step++;
+                }
+                if (step == 5) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                    t0 = millis();
+                }
+                break;
+            case 5:
+                if (millis() - t0 < 1000) {
+                    setMGL(127);
+                } else {
+                    t0 = millis();
+                    step++;
+                }
+                break;
+            case 6:
+                spinCycle(t0);
+                if (millis() - t0 > 600) {
+                    step += autonDrive(22, waitT, DL_pid, DR_pid, false);
+                }
+                if (step == 7) {
+                    t0 = millis();
+                }
+                break;
+            case 7:
+                setMGL(-127);
+                if (!digitalRead(MGL_LIM)) {
+                    step++;
+                }
+                break;
+            default:
+                resetMotors();
+        }
+        delay(20);
+    }
+}
 // start: 8 inches from wall
 void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid, PidVars *arm_pid, PidVars *cb_pid) {
     int step = 0, substep = 0;
