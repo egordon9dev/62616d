@@ -64,6 +64,9 @@ void pidTest() {
         delay(20);
     }
 }
+// for testing auton pid
+int autonDrive(double dist, int wait, PidVars *left, PidVars *right, bool turning);
+
 void operatorControl() {
     bool clawOpen = false;
     long tClawOpen = millis();
@@ -90,9 +93,9 @@ void operatorControl() {
             mglAutoUp = false;
         } else {
             if (mglHold) {
-                setMGL(-25); // hold mobile goal in place
+                setMGL(-25);  // hold mobile goal in place
             } else if (mglAutoUp) {
-                setMGL(-127); // automatically continue lifting mobile goal
+                setMGL(-127);  // automatically continue lifting mobile goal
             } else {
                 setMGL(0);
             }
@@ -110,12 +113,12 @@ void operatorControl() {
         } else {
             if (clawOpen == true) {
                 if (millis() - tClawOpen < 300) {
-                    setClaw(10); //+
+                    setClaw(10);  //+
                 } else {
-                    setClaw(0); //+
+                    setClaw(0);  //+
                 }
             } else {
-                setClaw(-15); //-
+                setClaw(-15);  //-
             }
         }
         //----- drive -----//

@@ -40,7 +40,7 @@ void setCB(int n) {  //	set chain bar lift
 }
 void setClaw(int n) {  //	set claw
     limMotorVal(&n);
-    motorSet(M6, n);
+    motorSet(M6, -n);
 }
 void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);

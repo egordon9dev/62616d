@@ -2,9 +2,8 @@
 #include "pid.h"
 #include "setup.h"
 
-int autonDrive(double dist, PidVars *left, PidVars *right, bool turning) {
+int autonDrive(double dist, int wait, PidVars *left, PidVars *right, bool turning) {
     pidDrive(dist, left, right, turning);
-    int wait = 200;
     if (left->doneTime + wait < millis() && right->doneTime + wait < millis()) {
         left->doneTime = LONG_MAX;
         right->doneTime = LONG_MAX;
@@ -39,7 +38,7 @@ void auton0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
                 }
                 cbAngle = 130;
                 armAngle = 75;
-                step += autonDrive(-68, DL_pid, DR_pid, false);
+                step += autonDrive(-68, 200, DL_pid, DR_pid, false);
                 if (step == 1) {
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                     setDL(0);
@@ -50,7 +49,7 @@ void auton0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
             case 1:
                 setMGL(-127);
                 if (!digitalRead(MGL_LIM)) {
-                    step += autonDrive(15, DLturn_pid, DRturn_pid, true);
+                    step += autonDrive(15, 200, DLturn_pid, DRturn_pid, true);
                     if (step == 2) {
                         resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                         setDL(0);
@@ -61,7 +60,7 @@ void auton0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
                 }
                 break;
             case 2:
-                step += autonDrive(48, DL_pid, DR_pid, false);
+                step += autonDrive(48, 200, DL_pid, DR_pid, false);
                 if (stack(arm_pid, cb_pid, 0)) {
                     setClaw(25);
                 }
@@ -77,7 +76,7 @@ void auton0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
                 if (stack(arm_pid, cb_pid, 0)) {
                     setClaw(25);
                 }
-                step += autonDrive(145, DLturn_pid, DRturn_pid, true);
+                step += autonDrive(145, 200, DLturn_pid, DRturn_pid, true);
                 if (step == 4) {
                     setClaw(0);
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
@@ -178,20 +177,18 @@ void auton3(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
 void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid, PidVars *arm_pid, PidVars *cb_pid) {
     int step = 0, substep = 0;
     unsigned long t0 = millis();
+    double cbAngle = 150, armAngle = 72;
+    int turnT = 1000, driveT = 1000;
     while (true) {
-        double cbAngle = 130, armAngle = 72;
         pidArm(arm_pid, armAngle);
         pidCB(cb_pid, cbAngle);
         switch (step) {
             //-------- BEGIN 1st MG --------
             case 0:
-                setClaw(-25);
-                cbAngle = 130;
+                setClaw(-30);
+                cbAngle = 150;
                 armAngle = 72;
-                step += autonDrive(-41, DL_pid, DR_pid, false);
-                if (abs(DL_pid->target - DL_pid->sensVal) < 110 || abs(DR_pid->target - DR_pid->sensVal) < 110) {
-                    setMGL(-127);
-                }
+                step += autonDrive(-37, driveT, DL_pid, DR_pid, false);
                 if (step == 1) {
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                 }
@@ -203,70 +200,69 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                 }
                 break;
             case 2:
-                stack(arm_pid, cb_pid, 0);
-                step += autonDrive(180, DLturn_pid, DRturn_pid, true);
+                armAngle = getArm(0);
+                cbAngle = getCB(0);
+                step += autonDrive(180, turnT, DLturn_pid, DRturn_pid, true);
                 if (step == 3) {
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
-                    t0 = millis();
                 }
                 break;
             case 3:
-                setClaw(25);
-                step += autonDrive(-20, DL_pid, DR_pid, false);
+                setClaw(30);
+                step += autonDrive(-28, driveT, DL_pid, DR_pid, false);
                 if (step == 4) {
                     setClaw(0);
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                 }
                 break;
             case 4:
-                cbAngle = 130;
+                cbAngle = 150;
                 armAngle = 72;
-                step += autonDrive(15, DLturn_pid, DRturn_pid, true);
+                step += autonDrive(55, turnT, DLturn_pid, DRturn_pid, true);
                 if (step == 5) {
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
-                    t0 = millis();
                 }
                 break;
-            case 5: /*
-                 if (millis() - t0 < 1300) {
-                     setDL(-127);
-                     setDR(-127);
-                 } else if (millis() - t0 < 2300) {
-                     setMGL(127);
-                 } else if (millis() - t0 < 2500) {
-                     // spinCycle(t0);
-                     setDL(127);
-                     setDR(127);
-                 } else {
-                     t0 = millis();
-                     step++;
-                 }*/
+            case 5:
                 switch (substep) {
                     case 0:
-                        substep += autonDrive(-43, DL_pid, DR_pid, false);
+                        substep += autonDrive(-13, driveT, DL_pid, DR_pid, false);
                         if (substep == 1) {
+                            resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                        }
+                        break;
+                    case 1:
+                        substep += autonDrive(-55, turnT, DLturn_pid, DRturn_pid, true);
+                        if (substep == 2) {
+                            resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                        }
+                        break;
+                    case 2:
+                        substep += autonDrive(-27, driveT, DL_pid, DR_pid, false);
+                        if (killPID(90, 3, DL_pid) + killPID(90, 3, DR_pid) == 2) {
+                            substep++;
+                        };
+                        if (substep == 3) {
                             resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                             t0 = millis();
                         }
                         break;
-                    case 1:
-                        if (millis() - t0 < 600) {
+                    case 3:
+                        if (millis() - t0 < 900) {
                             setMGL(127);
                         } else {
                             substep++;
                             t0 = millis();
                         }
                         break;
-                    case 2:
-                        if (millis() - t0 < 500) {
-                            spinCycle(t0);
-                        } else {
-                            setMGL(0);
+                    case 4:
+                        spinCycle(t0);
+                        if (millis() - t0 > 400) {
+                            substep += autonDrive(30, driveT, DL_pid, DR_pid, false);
                         }
-                        substep += autonDrive(33, DL_pid, DR_pid, false);
-                        if (substep == 3) {
+                        if (substep == 5) {
+                            setMGL(0);
                             resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
-                            t0 = millis();
                         }
                         break;
                     default:
@@ -280,15 +276,15 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
             //-------- END 1st MG --------
             //-------- BEGIN 2nd MG --------
             case 7:
-                step += autonDrive(90, DLturn_pid, DRturn_pid, true);
+                step += autonDrive(90, turnT, DLturn_pid, DRturn_pid, true);
                 if (step == 8) {
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                     t0 = millis();
                 }
                 break;
             case 8:
-                step += autonDrive(-15, DL_pid, DR_pid, false);
-                if (millis() - t0 < 1000) {
+                step += autonDrive(-26, 1.5 * driveT, DL_pid, DR_pid, false);
+                if (millis() - t0 < 500) {
                     setMGL(127);
                 } else {
                     setMGL(0);
@@ -298,7 +294,7 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                 }
                 break;
             case 9:
-                step += autonDrive(90, DLturn_pid, DRturn_pid, true);
+                step += autonDrive(90, turnT, DLturn_pid, DRturn_pid, true);
                 if (millis() - t0 < 1000) {
                     setMGL(127);
                 } else {
@@ -309,7 +305,7 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                 }
                 break;
             case 10:
-                step += autonDrive(-40, DL_pid, DR_pid, false);
+                step += autonDrive(-37, driveT, DL_pid, DR_pid, false);
                 if (abs(DL_pid->target - DL_pid->sensVal) < 110 || abs(DR_pid->target - DR_pid->sensVal) < 110) {
                     setMGL(-127);
                 }
@@ -324,30 +320,36 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                 }
                 break;
             case 12:
-                step += autonDrive(177, DLturn_pid, DRturn_pid, true);
+                step += autonDrive(172, turnT, DLturn_pid, DRturn_pid, true);
                 if (step == 13) {
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                 }
                 break;
             case 13:
-                step += autonDrive(-53, DL_pid, DR_pid, false);
+                step += autonDrive(-52, driveT, DL_pid, DR_pid, false);
+                if (killPID(90, 3, DL_pid) + killPID(90, 3, DR_pid) == 2) {
+                    step++;
+                }
                 if (step == 14) {
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                     t0 = millis();
                 }
                 break;
             case 14:
-                if (millis() - t0 < 500) {
+                if (millis() - t0 < 1100) {
                     setMGL(127);
                 } else {
                     setMGL(0);
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                    t0 = millis();
                     step++;
                 }
                 break;
             case 15:
                 spinCycle(t0);
-                step += autonDrive(10, DL_pid, DR_pid, false);
+                if (millis() - t0 > 400) {
+                    step += autonDrive(13, driveT, DL_pid, DR_pid, false);
+                }
                 if (step == 16) {
                     setMGL(0);
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
@@ -357,33 +359,97 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
             //-------- END 2nd MG ----------
             //-------- BEGIN 3rd MG --------
             case 16:
-                step += autonDrive(-90, DLturn_pid, DRturn_pid, true);
+                setMGL(-127);
+                step += autonDrive(-90, turnT, DLturn_pid, DRturn_pid, true);
                 if (step == 17) {
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                 }
                 break;
             case 17:
-                step += autonDrive(-37, DL_pid, DR_pid, false);
+                step += autonDrive(-26, driveT, DL_pid, DR_pid, false);
                 if (step == 18) {
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                 }
                 break;
             case 18:
-                step += autonDrive(-79, DLturn_pid, DRturn_pid, true);
+                step += autonDrive(-88, 2 * turnT, DLturn_pid, DRturn_pid, true);
                 if (step == 19) {
+                    t0 = millis();
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                 }
                 break;
             case 19:
-                step += autonDrive(-65, DL_pid, DR_pid, false);
+                if (millis() - t0 > 800) {
+                    step += autonDrive(-68, driveT, DL_pid, DR_pid, false);
+                }
+                if (millis() - t0 < 1000) {
+                    setMGL(127);
+                } else {
+                    setMGL(0);
+                }
                 if (step == 20) {
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                    t0 = millis();
                 }
                 break;
             case 20:
                 setMGL(-127);
                 if (!digitalRead(MGL_LIM)) {
                     step++;
+                }
+                break;
+            case 21:
+                step += autonDrive(-32, driveT, DL_pid, DR_pid, false);
+                if (step == 22) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 22:
+                step += autonDrive(-55, turnT, DLturn_pid, DRturn_pid, true);
+                if (step == 23) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 23:
+                step += autonDrive(-13, driveT, DL_pid, DR_pid, false);
+                if (step == 24) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 24:
+                step += autonDrive(55, turnT, DLturn_pid, DRturn_pid, true);
+                if (step == 25) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                }
+                break;
+            case 25:
+                step += autonDrive(-24, driveT, DL_pid, DR_pid, false);
+                if (killPID(200, 3, DL_pid) + killPID(200, 3, DR_pid) == 2) {
+                    step++;
+                }
+                if (step == 26) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                    t0 = millis();
+                }
+                break;
+            case 26:
+                if (millis() - t0 < 900) {
+                    setMGL(127);
+                } else {
+                    step++;
+                    t0 = millis();
+                }
+                break;
+            case 27:
+                spinCycle(t0);
+                if (millis() - t0 < 500) {
+                    step += autonDrive(30, driveT, DL_pid, DR_pid, false);
+                } else {
+                    setMGL(0);
+                }
+                if (step == 28) {
+                    resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
+                    t0 = millis();
                 }
                 break;
             default:
@@ -404,7 +470,7 @@ void skills1(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
         pidCB(cb_pid, cbAngle);
         switch (step) {
             case 0:
-                step += autonDrive(-38, DL_pid, DR_pid, false);
+                step += autonDrive(-38, 200, DL_pid, DR_pid, false);
                 if (step == 1) {
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                     setDL(0);
@@ -418,7 +484,7 @@ void skills1(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                 }
                 break;
             case 2:
-                step += autonDrive(180, DLturn_pid, DRturn_pid, true);
+                step += autonDrive(180, 200, DLturn_pid, DRturn_pid, true);
                 if (step == 3) {
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                     setDL(0);
