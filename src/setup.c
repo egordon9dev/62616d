@@ -2,7 +2,7 @@
 #include "API.h"
 #include "pid.h"
 
-bool mglBut() { return digitalRead(MGL_LIM1) || digitalRead(MGL_LIM2); }
+bool mglBut() { return !digitalRead(MGL_LIM1) || !digitalRead(MGL_LIM2); }
 //////////////////////////////          MOTORS
 const int MAX_POWER = 127;
 void limMotorVal(int* n) {
@@ -104,9 +104,6 @@ void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, Pi
 void printEnc_pidArmCB(PidVars* arm_pid, PidVars* cb_pid) { printf("arm: %d/%d\tcb: %d/%d\n", (int)arm_pid->sensVal, (int)arm_pid->target, (int)cb_pid->sensVal, (int)cb_pid->target); }
 
 int autonMode = 0;
-#define AUTO_MAX 6
-#define nAutons 4
-#define nSkills 2
 void autoSelect() {
     static int prevBtn = 0;
     int btn = lcdReadButtons(LCD);
@@ -118,7 +115,7 @@ void autoSelect() {
                 autonMode--;
             }
         } else if (btn & LCD_BTN_RIGHT && !(prevBtn & LCD_BTN_RIGHT)) {
-            if (autonMode < AUTO_MAX) {
+            if (autonMode < nAutons + nSkills) {
                 autonMode++;
             }
         }
@@ -138,20 +135,21 @@ void autoSelect() {
                 case 3:
                     lcdSetText(LCD, 2, "MG + C 10pt RIGHT");
                     break;
-            }
-        } else if (autonMode < nAutons + nSkills) {
-            lcdPrint(LCD, 1, "<   Skills %d   >", autonMode - nAutons);
-            switch (autonMode) {
                 case 4:
-                    lcdSetText(LCD, 2, "3 Middle MG + C");
-                    break;
-                case 5:
-                    lcdSetText(LCD, 2, "ALERT: UNTESTED!");
+                    lcdSetText(LCD, 2, "MG + C 5pt ANY");
                     break;
             }
-        } else if (autonMode == AUTO_MAX) {
-            lcdSetText(LCD, 1, "Driver Skills");
-            lcdSetText(LCD, 2, "MG+C LEFT,OP= 8D");
+        } else if (autonMode <= nAutons + nSkills) {
+            switch (autonMode) {
+                case 5:
+                    lcdSetText(LCD, 1, "Prog Skills");
+                    lcdSetText(LCD, 2, "MGs 5.5in L side");
+                    break;
+                case 6:
+                    lcdSetText(LCD, 1, "Driver Skills");
+                    lcdSetText(LCD, 2, "MG+C LEFT,OP= 8D");
+                    break;
+            }
         } else {
             lcdSetText(LCD, 1, "--- INVALID ---");
             lcdSetText(LCD, 2, "--- INVALID ---");

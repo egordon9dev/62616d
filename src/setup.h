@@ -68,6 +68,10 @@ void printEnc_pidDrive(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, Pi
 void printEnc_pidArmCB(PidVars *arm_pid, PidVars *cb_pid);
 bool mglBut();
 void setupLCD();
+
+// auton
+#define nAutons 5
+#define nSkills 1
 extern int autonMode;
 void autoSelect();
 

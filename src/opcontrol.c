@@ -87,8 +87,8 @@ void test() {
     }
 }
 void operatorControl() {
-    if (autonMode == 6) {
-        driverSkillsAuton(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &arm_pid, &cb_pid);
+    if (autonMode == nAutons + nSkills) {
+        auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &arm_pid, &cb_pid, false, true);
     }
     bool clawOpen = false;
     long tClawOpen = millis();
