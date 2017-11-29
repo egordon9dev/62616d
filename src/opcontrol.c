@@ -1,7 +1,9 @@
-#include "auto.h"
-#include "main.h"
-#include "pid.h"
+//#include "auto.h"
+//#include "main.h"
+//#include "pid.h"
 #include "setup.h"
+#include "main.h"
+/*
 //----- updates Arm and Chain-Bar -----//
 unsigned long tLiftOff = 0, tCbOff = 0;
 double liftHoldAngle = 90, cbHoldAngle = 180;
@@ -85,16 +87,16 @@ void test() {
         printEnc_pidDrive(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid);
         delay(20);
     }
-}
-void operatorControl() {
+}*/
+void operatorControl() {/*
     if (autonMode == nAutons + nSkills) {
         auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &arm_pid, &cb_pid, false, true);
     }
     bool clawOpen = false;
     long tClawOpen = millis();
     bool mglHold = false;
-    bool mglAutoUp = false;
-    while (true) {
+    bool mglAutoUp = false;*/
+    while (true) {/*
         printEnc();
         updateLift(&arm_pid, &cb_pid);
         //----- mobile-goal lift -----//
@@ -142,7 +144,7 @@ void operatorControl() {
             } else {
                 setClaw(-15);  //-
             }
-        }
+        }*/
         //----- drive -----//
         const int td = 15;
         int j3 = joystickGetAnalog(1, 3);

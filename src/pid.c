@@ -83,7 +83,7 @@ int killPID(int d, int s, PidVars *p) {
         return 1;
     }
     return 0;
-}
+}/*
 void pidCB(PidVars *cb_pid, double a) {  // set chain-bar angle with PID
     cb_pid->target = a;
     cb_pid->sensVal = cbGet();
@@ -123,7 +123,7 @@ int getCB(int cone) { return stackAngles[cone][CB]; }
 void returnLift(PidVars *arm_pid, PidVars *cb_pid) {
     pidCB(cb_pid, returnAngle[CB]);
     pidArm(arm_pid, returnAngle[ARM]);
-}
+}*/
 // if turning, dist is in degrees
 // if not turning, dist is in inches
 void pidDrive(double dist, PidVars *left, PidVars *right, bool turning) {

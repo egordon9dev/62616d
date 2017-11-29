@@ -1,6 +1,6 @@
 #include "setup.h"
 #include "API.h"
-#include "pid.h"
+//#include "pid.h"
 
 bool mglBut() { return !digitalRead(MGL_LIM1) || !digitalRead(MGL_LIM2); }
 //////////////////////////////          MOTORS
@@ -14,29 +14,29 @@ int getLimMotorVal(int n) {
     if (n < -MAX_POWER) return -MAX_POWER;
     return n;
 }
-void setDL(int n) {  //	set left drive motors
+void setDR(int n) {  //	set left drive motors
     limMotorVal(&n);
-    motorSet(M0, n);
-    motorSet(M1_2, n);
+    motorSet(M0, -n);
+    motorSet(M1_2, -n);
 }
-void setDR(int n) {  //	set right drive motors
+void setDL(int n) {  //	set right drive motors
     limMotorVal(&n);
-    motorSet(M3, -n);
-    motorSet(M4_5, -n);
-}
+    motorSet(M3, n);
+    motorSet(M4_5, n);
+}/*
 void setArm(int n) {  //	set main 4 bar lift
     limMotorVal(&n);
     motorSet(M9_10, -n);
 }
 void setCB(int n) {  //	set chain bar lift
     /*int maxPow = 0;
-    int weakZone = 60;*/
+    int weakZone = 60;*
     limMotorVal(&n); /*
      if(cbGet() > CB_MAX - weakZone && n > maxPow) {
              n = maxPow;
      } else if(cbGet() < CB_MIN + weakZone && n < -maxPow) {
              n = -maxPow;
-     }*/
+     }*
     motorSet(M7_8, n);
 }
 void setClaw(int n) {  //	set claw
@@ -51,7 +51,7 @@ void setMGL(int n) {  //	set mobile goal lift
         return;
     }
     motorSet(M11, hold);
-}
+}*/
 void resetMotors() {
     for (int i = 1; i <= 10; i++) {
         motorSet(i, 0);

@@ -23,18 +23,18 @@
 
 //------- MOTOR -------
 // CORTEX
-#define M7_8 2
-#define M0 3
+#define M1_2 2
+#define M3 3
+#define M11 4
 
 // PWR EX
-#define M1_2 4
-#define M6 6
-#define M4_5 7
-#define M11 5
+#define M6_7 5
+#define M8_9 6
+#define M10 7
 
 // CORTEX
-#define M3 8
-#define M9_10 9
+#define M0 8
+#define M4_5 9
 
 #define CB_MAX 315
 #define CB_MIN 79
