@@ -3,78 +3,68 @@
 #include "pid.h"
 #include "setup.h"
 //----- updates Arm and Chain-Bar -----//
-unsigned long tLiftOff = 0, tFbOff = 0;
-double liftHoldAngle = 90, fbHoldAngle = 180;
-bool pidRunning = false, fbPidRunning = false;
+unsigned long tFbOff = 0, tDrfbOff = 0;
+double fbHoldAngle = 0, drfbHoldAngle = 0;
+bool fbPidRunning = false, drfbPidRunning = false;
 bool returning = false;
 void updateLift(PidVars *drfb_pid, PidVars *fb_pid) {
     //----- update arm -----//
-    if (mglBut()) {
-        if (joystickGetDigital(1, 7, JOY_RIGHT)) {
-            returning = true;
-        }
-        if (joystickGetDigital(1, 7, JOY_LEFT)) {
-            returning = false;
-        }
-        if (joystickGetDigital(1, 7, JOY_UP)) {
-            // insert auto stack code here..............
-            // c .........................................
-        }
-        //------ update chain bar -----//
-        if (joystickGetDigital(1, 5, JOY_UP)) {
-            setFB(-127);
-            tFbOff = millis();
-            fbPidRunning = false;
-            returning = false;
-        } else if (joystickGetDigital(1, 5, JOY_DOWN)) {
-            setFB(127);
-            tFbOff = millis();
-            fbPidRunning = false;
-            returning = false;
-        } else {
-            if (returning) {
-                returnLift(drfb_pid, fb_pid);
-                return;
-            } else if (millis() - tFbOff > 300) {
-                if (!fbPidRunning) {
-                    fbHoldAngle = fbGet();
-                    fbPidRunning = true;
-                }
-                fb_pid->sensVal = fbGet();
-                fb_pid->target = fbHoldAngle;
-                setFB(updatePID(fb_pid));
-            } else {
-                setFB(0);
-                fbPidRunning = false;
-            }
-        }
-        const int t = 15;
-        int j2 = joystickGetAnalog(1, 2);
-        if (abs(j2) > t) {
-            tLiftOff = millis();
-            returning = false;
-            pidRunning = false;
-            setDRFB(j2);
-        } else {
-            if (millis() - tLiftOff > 300) {
-                if (!pidRunning) {
-                    liftHoldAngle = drfbGet();
-                    pidRunning = true;
-                }
-                drfb_pid->sensVal = drfbGet();
-                drfb_pid->target = liftHoldAngle;
-                setDRFB(updatePID(drfb_pid));
-            } else {
-                setDRFB(0);
-                pidRunning = false;
-            }
-        }
-    } else {
+    if (joystickGetDigital(1, 7, JOY_RIGHT)) {
+        returning = true;
+    }
+    if (joystickGetDigital(1, 7, JOY_LEFT)) {
         returning = false;
-        pidRunning = false;
+    }
+    if (joystickGetDigital(1, 7, JOY_UP)) {
+        // insert auto stack code here..............
+        // c .........................................
+    }
+    //------ update four bar -----//
+    if (joystickGetDigital(1, 5, JOY_UP)) {
+        setFB(-127);
+        tFbOff = millis();
         fbPidRunning = false;
-        pidDRFB(drfb_pid, 72);
-        pidFB(fb_pid, 150);
+        returning = false;
+    } else if (joystickGetDigital(1, 5, JOY_DOWN)) {
+        setFB(127);
+        tFbOff = millis();
+        fbPidRunning = false;
+        returning = false;
+    } else {
+        if (returning) {
+            returnLift(drfb_pid, fb_pid);
+            return;
+        } else if (millis() - tFbOff > 300) {
+            if (!fbPidRunning) {
+                fbHoldAngle = fbGet();
+                fbPidRunning = true;
+            }
+            fb_pid->sensVal = fbGet();
+            fb_pid->target = fbHoldAngle;
+            setFB(updatePID(fb_pid));
+        } else {
+            setFB(0);
+            fbPidRunning = false;
+        }
+    }
+    const int t = 15;
+    int j2 = joystickGetAnalog(1, 2);
+    if (abs(j2) > t) {
+        tDrfbOff = millis();
+        drfbPidRunning = false;
+        returning = false;
+        setDRFB(j2);
+    } else if (millis() - tDrfbOff > 300) {
+        if (!drfbPidRunning) {
+            drfbHoldAngle = drfbGet();
+            drfbPidRunning = true;
+        }
+        drfb_pid->sensVal = drfbGet();
+        drfb_pid->target = drfbHoldAngle;
+        setDRFB(updatePID(drfb_pid));
+    } else {
+        setDRFB(0);
+        drfbPidRunning = false;
     }
 }
 // for testing auton pid
@@ -88,12 +78,12 @@ void test() {
 }
 void operatorControl() {
     if (autonMode == nAutons + nSkills) {
-        auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, true);
+        //auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, true);
     }
     bool clawOpen = false;
     long tClawOpen = millis();
-    bool mglHold = false;
     bool mglAutoUp = false;
+
     while (true) {
         printEnc();
         updateLift(&drfb_pid, &fb_pid);
@@ -102,25 +92,14 @@ void operatorControl() {
             mglAutoUp = true;
         } else if (joystickGetDigital(1, 8, JOY_UP)) {
             mglAutoUp = false;
-            if (!mglBut()) {
-                setMGL(-127);
-                mglHold = false;
-            } else {
-                setMGL(-28);
-                mglHold = true;
-            }
+            setMGL(-127);
         } else if (joystickGetDigital(1, 8, JOY_DOWN)) {
             setMGL(127);
-            mglHold = false;
             mglAutoUp = false;
+        } else if (mglAutoUp) {
+            setMGL(-127);  // automatically continue lifting mobile goal
         } else {
-            if (mglHold) {
-                setMGL(-28);  // hold mobile goal in place
-            } else if (mglAutoUp) {
-                setMGL(-127);  // automatically continue lifting mobile goal
-            } else {
-                setMGL(0);
-            }
+            setMGL(0);
         }
         //----- claw -----//
         if (joystickGetDigital(1, 6, JOY_DOWN)) {

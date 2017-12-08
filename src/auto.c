@@ -17,7 +17,7 @@ void spinCycle(unsigned long t0) {
     } else {
         setMGL(-127);
     }
-}
+}/*
 // MG 20pt LEFT SIDE, RIGHT SIDE
 void auton1(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid, PidVars *drfb_pid, PidVars *fb_pid, bool right, bool skills) {
     printf("starting auton.....");
@@ -354,9 +354,6 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                         break;
                     case 1:
                         substep += autonDrive(-65, turnT, DLturn_pid, DRturn_pid, true);
-                        /*if (killPID(100, 1, DL_pid) + killPID(100, 1, DR_pid) > 0) {
-                            substep++;
-                        };*/
                         if (substep == 2) {
                             resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                             t0 = millis();
@@ -453,10 +450,7 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                     resetDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
                 }
                 break;
-            case 13: /*
-                 if (killPID(300, 1, DL_pid) + killPID(300, 1, DR_pid) == 2) {
-                     step++;
-                 }*/
+            case 13:
                 step += autonDrive(-52, driveT, DL_pid, DR_pid, false);
                 if (killPID(300, 1, DL_pid) + killPID(300, 1, DR_pid) == 2) {
                     step++;
@@ -658,7 +652,7 @@ void skills1(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
         }
         delay(20);
     }
-}
+}*/
 /*
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -678,7 +672,7 @@ void skills1(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
  */
 void autonomous() {
     resetDriveEnc();
-    switch (autonMode) {
+    switch (autonMode) {/*
         case 0:
             auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, false);
             break;
@@ -696,6 +690,6 @@ void autonomous() {
             break;
         case 5:
             skills0(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid);
-            break;
+            break;*/
     }
 }

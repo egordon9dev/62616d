@@ -11,10 +11,13 @@
 #define DRIVE_R_ENC_BOT 3
 #define DRIVE_R_ENC_TOP 4
 
+#define MGL_LIM1 8
+#define MGL_LIM2 9
+
 //------- Analog -------
 
 #define POW_EXP 1
-#define MGL_POT 2
+#define ARML_POT 5
 #define DRFB_POT 3
 #define FB_POT 4
 
@@ -33,12 +36,8 @@
 #define M0 8
 #define M4_5 9
 
-#define FB_MAX 70 // 245
-#define FB_MIN 0
-#define DRFB_MAX 80
-#define DRFB_MIN 0
-#define MGL_MAX 50
-#define MGL_MIN 0
+#define FB_MAX 315
+#define FB_MIN 79
 
 // motors
 void limMotorVal(int *n);
@@ -55,7 +54,6 @@ void resetMotors();
 void setupEnc();
 double drfbGet();
 double fbGet();
-double mglGet();
 int eDLGet();
 int eDRGet();
 
@@ -67,7 +65,8 @@ void resetDrive(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *
 
 void printEnc();
 void printEnc_pidDrive(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid);
-void printEnc_pidDRFBFB(PidVars *arm_pid, PidVars *cb_pid);
+void printEnc_PidDRFBFB(PidVars *drfb_pid, PidVars *fb_pid);
+bool mglBut();
 void setupLCD();
 
 // auton

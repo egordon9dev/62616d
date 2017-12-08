@@ -2,7 +2,6 @@
 #include "API.h"
 #include "pid.h"
 
-bool mglBut() { return !digitalRead(MGL_LIM1) || !digitalRead(MGL_LIM2); }
 //////////////////////////////          MOTORS
 const int MAX_POWER = 127;
 void limMotorVal(int* n) {
@@ -14,50 +13,49 @@ int getLimMotorVal(int n) {
     if (n < -MAX_POWER) return -MAX_POWER;
     return n;
 }
-void setDL(int n) {  //	set left drive motors
+void setDR(int n) {  //	set left drive motors
     limMotorVal(&n);
-    motorSet(M0, n);
-    motorSet(M1_2, n);
+    motorSet(M0, -n);
+    motorSet(M1_2, -n);
 }
-void setDR(int n) {  //	set right drive motors
+void setDL(int n) {//	set right drive motors
     limMotorVal(&n);
-    motorSet(M3, -n);
-    motorSet(M4_5, -n);
+    motorSet(M3, n);
+    motorSet(M4_5, n);
 }
 void setDRFB(int n) {  //	set main 4 bar lift
     limMotorVal(&n);
-    motorSet(M9_10, -n);
+    int max = 0;
+    if((drfbGet() > DRFB_MAX && n > 0) || (drfbGet() < DRFB_MIN && n < 0)) {
+        n *= max / (double)n;
+    }
+    motorSet(M8_9, n);
 }
-void setFB(int n) {  //	set chain bar lift
-    /*int maxPow = 0;
-    int weakZone = 60;*/
-    limMotorVal(&n); /*
-     if(fbGet() > FB_MAX - weakZone && n > maxPow) {
-             n = maxPow;
-     } else if(fbGet() < FB_MIN + weakZone && n < -maxPow) {
-             n = -maxPow;
-     }*/
-    motorSet(M7_8, n);
+void setFB(int n) {
+    limMotorVal(&n);
+    int max = 0;
+    if((fbGet() > FB_MAX && n > 0) || (fbGet() < FB_MIN && n < 0)) {
+        n *= max / (double)n;
+    }
+    motorSet(M10, n);
 }
 void setClaw(int n) {  //	set claw
     limMotorVal(&n);
-    motorSet(M6, -n);
+    motorSet(M11, -n);
 }
 void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
-    int hold = -20;
-    if (n > hold || !mglBut()) {
-        motorSet(M11, n);
-        return;
+    int max = 0;
+    if((mglGet() > MGL_MAX && n > 0) || (mglGet() < MGL_MIN && n < 0)) {
+        n *= max / (double)n;
     }
-    motorSet(M11, hold);
+    motorSet(M6_7, n);
 }
 void resetMotors() {
     for (int i = 1; i <= 10; i++) {
         motorSet(i, 0);
     }
 }
-
 void setupLCD() {
     lcdInit(LCD);
     lcdClear(LCD);
@@ -73,10 +71,13 @@ void setupEnc() {
 }
 #define POT_SENSITIVITY 0.06105006105
 double drfbGet() {  //-
-    return (3955 - analogRead(ARML_POT) + analogRead(DRFB_POT) - 121) * (POT_SENSITIVITY / 2.0) + 69;
+    return (-analogRead(DRFB_POT) + 2750) * POT_SENSITIVITY;
 }
 double fbGet() {
-    return analogRead(FB_POT) * POT_SENSITIVITY + 107.5;  // 107.5
+    return (analogRead(FB_POT) - 1250) * POT_SENSITIVITY;
+}
+double mglGet() {
+    return (analogRead(MGL_POT) - 1500) * POT_SENSITIVITY;
 }
 int eDLGet() { return encoderGet(eDL); }
 int eDRGet() { return encoderGet(eDR); }
@@ -94,11 +95,9 @@ void resetDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* 
     setDR(0);
 }
 
-void printEnc() { printf("Arm: %lf\tCB: %lf\tDL: %d\tDR: %d\n", drfbGet(), fbGet(), eDLGet(), eDRGet()); }
+void printEnc() { printf("dr4b: %lf\tfb: %lf\tmgl: %lf\tDL: %d\tDR: %d\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet()); }
 void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid) {
-    printf(
-        "DL: %d/%d\tDR: %d/%d\tDLt: %d/%d\tDRt: %d/%d\tt: %ld\tdnR: "
-        "%ld\tdnL: %ld\tdnRt: %ld\tdnLt: %ld\n",
+    printf("DL: %d/%d\tDR: %d/%d\tDLt: %d/%d\tDRt: %d/%d\tt: %ld\tdnR: %ld\tdnL: %ld\tdnRt: %ld\tdnLt: %ld\n",
         (int)DL_pid->sensVal, (int)DL_pid->target, (int)DR_pid->sensVal, (int)DR_pid->target, (int)DLturn_pid->sensVal, (int)DLturn_pid->target, (int)DRturn_pid->sensVal, (int)DRturn_pid->target, millis(), DL_pid->doneTime, DR_pid->doneTime, DLturn_pid->doneTime, DRturn_pid->doneTime);
 }
 void printEnc_PidDRFBFB(PidVars* drfb_pid, PidVars* fb_pid) { printf("arm: %d/%d\tcb: %d/%d\n", (int)drfb_pid->sensVal, (int)drfb_pid->target, (int)fb_pid->sensVal, (int)fb_pid->target); }

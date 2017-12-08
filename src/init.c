@@ -8,8 +8,6 @@
  * cannot set up an LCD (lcdInit()).
  */
 void initializeIO() {
-    pinMode(MGL_LIM1, INPUT);
-    pinMode(MGL_LIM2, INPUT);
 }
 /*
  * Runs user initialization code. This function will be started in its own task
