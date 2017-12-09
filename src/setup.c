@@ -25,17 +25,19 @@ void setDL(int n) {//	set right drive motors
 }
 void setDRFB(int n) {  //	set main 4 bar lift
     limMotorVal(&n);
-    int max = 0;
+    int max = 20;
     if((drfbGet() > DRFB_MAX && n > 0) || (drfbGet() < DRFB_MIN && n < 0)) {
-        n *= max / (double)n;
+		if (n > max) n = max;
+		if (n < -max) n = -max;
     }
     motorSet(M8_9, n);
 }
 void setFB(int n) {
     limMotorVal(&n);
-    int max = 0;
+    int max = 20;
     if((fbGet() > FB_MAX && n > 0) || (fbGet() < FB_MIN && n < 0)) {
-        n *= max / (double)n;
+		if (n > max) n = max;
+		if (n < -max) n = -max;
     }
     motorSet(M10, n);
 }
@@ -45,9 +47,10 @@ void setClaw(int n) {  //	set claw
 }
 void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
-    int max = 0;
+    int max = 20;
     if((mglGet() > MGL_MAX && n > 0) || (mglGet() < MGL_MIN && n < 0)) {
-        n *= max / (double)n;
+		if (n > max) n = max;
+		if (n < -max) n = -max;
     }
     motorSet(M6_7, n);
 }
@@ -74,7 +77,7 @@ double drfbGet() {  //-
     return (-analogRead(DRFB_POT) + 2750) * POT_SENSITIVITY;
 }
 double fbGet() {
-    return (analogRead(FB_POT) - 1250) * POT_SENSITIVITY;
+	return (analogRead(FB_POT) - 1320) * POT_SENSITIVITY;
 }
 double mglGet() {
     return (analogRead(MGL_POT) - 1500) * POT_SENSITIVITY;

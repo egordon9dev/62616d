@@ -21,12 +21,12 @@ void updateLift(PidVars *drfb_pid, PidVars *fb_pid) {
     }
     //------ update four bar -----//
     if (joystickGetDigital(1, 5, JOY_UP)) {
-        setFB(-127);
+        setFB(127);
         tFbOff = millis();
         fbPidRunning = false;
         returning = false;
     } else if (joystickGetDigital(1, 5, JOY_DOWN)) {
-        setFB(127);
+        setFB(-127);
         tFbOff = millis();
         fbPidRunning = false;
         returning = false;
@@ -73,7 +73,7 @@ void test() {
     resetDrive(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid);
     while (!autonDrive(90, 20000, &DLturn_pid, &DRturn_pid, true)) {
         printEnc_pidDrive(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid);
-        delay(20);
+        delay(10);
     }
 }
 void operatorControl() {
@@ -84,23 +84,37 @@ void operatorControl() {
     long tClawOpen = millis();
     bool mglAutoUp = false;
 
+	unsigned long tMglOff = 0;
+	double mglHoldAngle = 0;
+	bool mglPidRunning = false;
     while (true) {
-        printEnc();
+		printEnc();
         updateLift(&drfb_pid, &fb_pid);
         //----- mobile-goal lift -----//
         if (joystickGetDigital(1, 8, JOY_RIGHT)) {
-            mglAutoUp = true;
+			mglHoldAngle = 0;
+			mglPidRunning = true;
+			tMglOff = 0;
         } else if (joystickGetDigital(1, 8, JOY_UP)) {
-            mglAutoUp = false;
+			mglHoldAngle = mglGet();
+			tMglOff = millis();
+			mglPidRunning = false;
             setMGL(-127);
         } else if (joystickGetDigital(1, 8, JOY_DOWN)) {
+			mglHoldAngle = mglGet();
+			tMglOff = millis();
+			mglPidRunning = false;
             setMGL(127);
-            mglAutoUp = false;
-        } else if (mglAutoUp) {
-            setMGL(-127);  // automatically continue lifting mobile goal
-        } else {
-            setMGL(0);
-        }
+        } else if (millis() - tMglOff > 250) {
+			if (!mglPidRunning) {
+				mglPidRunning = true;
+				mglHoldAngle = mglGet();
+			}
+			pidMGL(&mgl_pid, mglHoldAngle);
+		} else {
+			mglPidRunning = false;
+			setMGL(0);
+		}
         //----- claw -----//
         if (joystickGetDigital(1, 6, JOY_DOWN)) {
             // close
@@ -133,7 +147,6 @@ void operatorControl() {
             setDL(0);
             setDR(0);
         }
-
-        delay(20);
+        delay(10);
     }
 }

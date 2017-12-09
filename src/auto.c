@@ -124,7 +124,7 @@ void auton1(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
                 resetMotors();
         }
         printEnc_pidDrive(DL_pid, DR_pid, DLturn_pid, DRturn_pid);
-        delay(20);
+        delay(10);
     }
 }
 // MG 10pt LEFT SIDE, RIGHT SIDE
@@ -211,7 +211,7 @@ void auton3(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
             default:
                 resetMotors();
         }
-        delay(20);
+        delay(10);
     }
 }
 // MG 5pt
@@ -291,7 +291,7 @@ void auton4(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRtu
             default:
                 resetMotors();
         }
-        delay(20);
+        delay(10);
     }
 }
 // start: 5.5 inches from wall = 8in from Erik wall
@@ -431,7 +431,7 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                 break;
             case 10:
                 step += autonDrive(-37, driveT, DL_pid, DR_pid, false);
-                if (abs(DL_pid->target - DL_pid->sensVal) < 110 || abs(DR_pid->target - DR_pid->sensVal) < 110) {
+                if (fabs(DL_pid->target - DL_pid->sensVal) < 110 || fabs(DR_pid->target - DR_pid->sensVal) < 110) {
                     setMGL(-127);
                 }
                 if (step == 11) {
@@ -580,7 +580,7 @@ void skills0(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
             default:
                 resetMotors();
         }
-        delay(20);
+        delay(10);
     }
 }
 
@@ -650,7 +650,7 @@ void skills1(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRt
                 }
                 break;
         }
-        delay(20);
+        delay(10);
     }
 }*/
 /*

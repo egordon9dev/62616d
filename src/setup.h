@@ -33,12 +33,12 @@
 #define M0 8
 #define M4_5 9
 
-#define FB_MAX 70 // 245
-#define FB_MIN 0
-#define DRFB_MAX 80
-#define DRFB_MIN 0
-#define MGL_MAX 50
-#define MGL_MIN 0
+#define FB_MAX 134 // 142
+#define FB_MIN 8
+#define DRFB_MAX 115 //121
+#define DRFB_MIN 5
+#define MGL_MAX 114//118.5
+#define MGL_MIN 5
 
 // motors
 void limMotorVal(int *n);
