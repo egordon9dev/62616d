@@ -8,11 +8,13 @@ typedef struct PidVars {
 typedef struct LPF {
 	double a, out;
 } LPF;
-extern LPF lpf;
+extern LPF fb_lpf, drfb_lpf, mgl_lpf, DL_lpf, DR_lpf;
 extern PidVars pidDef, drfb_pid, fb_pid, mgl_pid, DL_pid, DR_pid, DLturn_pid, DRturn_pid;
 #define LONG_MAX 2147483647
 #define DBL_MAX 999999999.999999
 void resetDone(PidVars *pidVars);
+
+double updateLPF(LPF* lpf, double in);
 
 //----- proportional + integral + derivative control feedback -----//
 double updatePID(PidVars *pidVars);

@@ -13,7 +13,14 @@
      prevError, errTot, prevTime
      -------------------------
 */
-LPF lpf = {.a = }
+#define A 0.7
+LPF fb_lpf = { .a = A,.out = 0.0 };
+LPF drfb_lpf = { .a = A,.out = 0.0 };
+LPF mgl_lpf = { .a = A,.out = 0.0 };
+LPF DL_lpf = { .a = A,.out = 0.0 };
+LPF DR_lpf = { .a = A,.out = 0.0 };
+LPF DL_lpf_auto = { .a = 0.98,.out = 0.0 };
+LPF DR_lpf_auto = { .a = 0.98,.out = 0.0 };
 PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0};
 PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 7.0, .ki = 0.02, .kd = 600.0, .prevTime = 0};
 PidVars fb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2.55, .ki = 0.0, .kd = 220.0, .prevTime = 0};
@@ -29,6 +36,11 @@ PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 50, .tar
 PidVars DLturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 15, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dtkp, .ki = dtki, .kd = dtkd, .prevTime = 0};
 PidVars DRturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 15, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dtkp, .ki = dtki, .kd = dtkd, .prevTime = 0};
 void resetDone(PidVars *pidVars) { pidVars->doneTime = LONG_MAX; }
+
+double updateLPF(LPF* lpf, double in) {
+	lpf->out = lpf->out * lpf->a + in * (1 - lpf->a);
+	return lpf->out;
+}
 // proportional + integral + derivative control feedback
 double updatePID(PidVars *pidVars) {
 	unsigned long dt = millis() - pidVars->prevTime;

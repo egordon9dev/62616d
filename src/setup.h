@@ -17,6 +17,7 @@
 #define MGL_POT 2
 #define DRFB_POT 3
 #define FB_POT 4
+#define GYRO 5
 
 //------- MOTOR -------
 // CORTEX

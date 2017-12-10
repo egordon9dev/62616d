@@ -13,15 +13,23 @@ int getLimMotorVal(int n) {
     if (n < -MAX_POWER) return -MAX_POWER;
     return n;
 }
+void setDL(int n) {//	set right drive motors
+	limMotorVal(&n);
+	if (isAutonomous()) {
+	} else {
+		n = updateLPF(&DL_lpf, n);
+	}
+	motorSet(M3, n);
+	motorSet(M4_5, n);
+}
 void setDR(int n) {  //	set left drive motors
     limMotorVal(&n);
-    motorSet(M0, -n);
-    motorSet(M1_2, -n);
-}
-void setDL(int n) {//	set right drive motors
-    limMotorVal(&n);
-    motorSet(M3, n);
-    motorSet(M4_5, n);
+	if (isAutonomous()) {
+	} else {
+		n = updateLPF(&DR_lpf, n);
+	}
+	motorSet(M0, -n);
+	motorSet(M1_2, -n);
 }
 void setDRFB(int n) {  //	set main 4 bar lift
     limMotorVal(&n);
@@ -30,6 +38,11 @@ void setDRFB(int n) {  //	set main 4 bar lift
 		if (n > max) n = max;
 		if (n < -max) n = -max;
     }
+	if (isAutonomous()) {
+	}
+	else {
+		n = updateLPF(&drfb_lpf, n);
+	}
     motorSet(M8_9, n);
 }
 void setFB(int n) {
@@ -39,11 +52,16 @@ void setFB(int n) {
 		if (n > max) n = max;
 		if (n < -max) n = -max;
     }
+	if (isAutonomous()) {
+	}
+	else {
+		n = updateLPF(&fb_lpf, n);
+	}
     motorSet(M10, n);
 }
 void setClaw(int n) {  //	set claw
     limMotorVal(&n);
-    motorSet(M11, -n);
+    motorSet(M11, n);
 }
 void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
@@ -52,6 +70,11 @@ void setMGL(int n) {  //	set mobile goal lift
 		if (n > max) n = max;
 		if (n < -max) n = -max;
     }
+	if (isAutonomous()) {
+	}
+	else {
+		n = updateLPF(&mgl_lpf, n);
+	}
     motorSet(M6_7, n);
 }
 void resetMotors() {
