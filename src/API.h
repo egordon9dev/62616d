@@ -22,10 +22,10 @@
 #define API_H_
 
 // System includes
-#include <stdlib.h>
-#include <stdbool.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 // Begin C++ extern to C
 #ifdef __cplusplus
@@ -111,8 +111,7 @@ int joystickGetAnalog(unsigned char joystick, unsigned char axis);
  * @param button one of JOY_UP, JOY_DOWN, JOY_LEFT, or JOY_RIGHT; requesting JOY_LEFT or
  * JOY_RIGHT for groups 5 or 6 will cause an undefined value to be returned
  */
-bool joystickGetDigital(unsigned char joystick, unsigned char buttonGroup,
-	unsigned char button);
+bool joystickGetDigital(unsigned char joystick, unsigned char buttonGroup, unsigned char button);
 /**
  * Returns the backup battery voltage in millivolts.
  *
@@ -426,7 +425,7 @@ void speakerInit();
  *
  * @param songs an array of up to three (3) RTTTL songs as string values to play
  */
-void speakerPlayArray(const char * * songs);
+void speakerPlayArray(const char **songs);
 /**
  * Plays an RTTTL (Ring Tone Text Transfer Language) song over the VEX speaker. Many simple
  * songs are available in RTTTL format online, or compose your own.
@@ -545,7 +544,7 @@ void imeShutdown();
  * Gyro information is stored as an opaque pointer to a structure in memory; as this is a
  * pointer type, it can be safely passed or stored by value.
  */
-typedef void * Gyro;
+typedef void *Gyro;
 
 /**
  * Gets the current gyro angle in degrees, rounded to the nearest degree.
@@ -557,6 +556,7 @@ typedef void * Gyro;
  * since the last start or reset
  */
 int gyroGet(Gyro gyro);
+int myGyroGet(Gyro gyro);
 /**
  * Initializes and enables a gyro on an analog port.
  *
@@ -602,7 +602,7 @@ void gyroShutdown(Gyro gyro);
  * Encoder information is stored as an opaque pointer to a structure in memory; as this is a
  * pointer type, it can be safely passed or stored by value.
  */
-typedef void * Encoder;
+typedef void *Encoder;
 /**
  * Gets the number of ticks recorded by the encoder.
  *
@@ -650,7 +650,7 @@ void encoderShutdown(Encoder enc);
  * Ultrasonic information is stored as an opaque pointer to a structure in memory; as this is a
  * pointer type, it can be safely passed or stored by value.
  */
-typedef void * Ultrasonic;
+typedef void *Ultrasonic;
 /**
  * Gets the current ultrasonic sensor value in centimeters.
  *
@@ -834,21 +834,21 @@ void usartShutdown(FILE *usart);
  * SEEK_SET is used in fseek() to denote an absolute position in bytes from the start of the
  * file.
  */
-#define	SEEK_SET 0
+#define SEEK_SET 0
 #endif
 #ifndef SEEK_CUR
 /**
  * SEEK_CUR is used in fseek() to denote an relative position in bytes from the current file
  * location.
  */
-#define	SEEK_CUR 1
+#define SEEK_CUR 1
 #endif
 #ifndef SEEK_END
 /**
  * SEEK_END is used in fseek() to denote an absolute position in bytes from the end of the
  * file. The offset will most likely be negative in this case.
  */
-#define	SEEK_END 2
+#define SEEK_END 2
 #endif
 
 /**
@@ -925,7 +925,7 @@ int fgetc(FILE *stream);
  * @param stream the channel to read (stdin, uart1, uart2, or an open file in Read mode)
  * @return str, or NULL if zero characters could be read
  */
-char* fgets(char *str, int num, FILE *stream);
+char *fgets(char *str, int num, FILE *stream);
 /**
  * Opens the given file in the specified mode. The file name is truncated to eight characters.
  * Only four files can be in use simultaneously in any given time, with at most one of those
@@ -949,7 +949,7 @@ char* fgets(char *str, int num, FILE *stream);
  * @param mode the file mode
  * @return a file descriptor pointing to the new file, or NULL if the file could not be opened
  */
-FILE * fopen(const char *file, const char *mode);
+FILE *fopen(const char *file, const char *mode);
 /**
  * Prints the simple string to the specified stream.
  *
@@ -1162,8 +1162,7 @@ void lcdInit(FILE *lcdPort);
 #ifdef DOXYGEN
 void lcdPrint(FILE *lcdPort, unsigned char line, const char *formatString, ...);
 #else
-void __attribute__ ((format (printf, 3, 4))) lcdPrint(FILE *lcdPort, unsigned char line,
-	const char *formatString, ...);
+void __attribute__((format(printf, 3, 4))) lcdPrint(FILE *lcdPort, unsigned char line, const char *formatString, ...);
 #endif
 /**
  * Reads the user button status from the LCD display.
@@ -1250,7 +1249,7 @@ void lcdShutdown(FILE *lcdPort);
  * Function calls and other seemingly innocent constructs may place information on the stack.
  * Err on the side of a larger stack when possible.
  */
-#define TASK_MINIMAL_STACK_SIZE	64
+#define TASK_MINIMAL_STACK_SIZE 64
 
 /**
  * Constant returned from taskGetState() when the task is dead or nonexistant.
@@ -1280,19 +1279,19 @@ void lcdShutdown(FILE *lcdPort);
  *
  * As this is a pointer type, it can be safely passed or stored by value.
  */
-typedef void * TaskHandle;
+typedef void *TaskHandle;
 /**
  * Type by which mutexes are referenced.
  *
  * As this is a pointer type, it can be safely passed or stored by value.
  */
-typedef void * Mutex;
+typedef void *Mutex;
 /**
  * Type by which semaphores are referenced.
  *
  * As this is a pointer type, it can be safely passed or stored by value.
  */
-typedef void * Semaphore;
+typedef void *Semaphore;
 /**
  * Type for defining task functions. Task functions must accept one parameter of type
  * "void *"; they need not use it.
@@ -1316,8 +1315,7 @@ typedef void (*TaskCode)(void *);
  * initial priority of the task
  * @return a handle to the created task, or NULL if an error occurred
  */
-TaskHandle taskCreate(TaskCode taskCode, const unsigned int stackDepth, void *parameters,
-	const unsigned int priority);
+TaskHandle taskCreate(TaskCode taskCode, const unsigned int stackDepth, void *parameters, const unsigned int priority);
 /**
  * Delays the current task for a given number of milliseconds.
  *

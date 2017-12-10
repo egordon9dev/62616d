@@ -13,50 +13,48 @@ int getLimMotorVal(int n) {
     if (n < -MAX_POWER) return -MAX_POWER;
     return n;
 }
-void setDL(int n) {//	set right drive motors
-	limMotorVal(&n);
-	if (isAutonomous()) {
-	} else {
-		n = updateLPF(&DL_lpf, n);
-	}
-	motorSet(M3, n);
-	motorSet(M4_5, n);
+void setDL(int n) {  //	set right drive motors
+    limMotorVal(&n);
+    if (isAutonomous()) {
+    } else {
+        n = updateLPF(&DL_lpf, n);
+    }
+    motorSet(M3, n);
+    motorSet(M4_5, n);
 }
 void setDR(int n) {  //	set left drive motors
     limMotorVal(&n);
-	if (isAutonomous()) {
-	} else {
-		n = updateLPF(&DR_lpf, n);
-	}
-	motorSet(M0, -n);
-	motorSet(M1_2, -n);
+    if (isAutonomous()) {
+    } else {
+        n = updateLPF(&DR_lpf, n);
+    }
+    motorSet(M0, -n);
+    motorSet(M1_2, -n);
 }
 void setDRFB(int n) {  //	set main 4 bar lift
     limMotorVal(&n);
     int max = 20;
-    if((drfbGet() > DRFB_MAX && n > 0) || (drfbGet() < DRFB_MIN && n < 0)) {
-		if (n > max) n = max;
-		if (n < -max) n = -max;
+    if ((drfbGet() > DRFB_MAX && n > 0) || (drfbGet() < DRFB_MIN && n < 0)) {
+        if (n > max) n = max;
+        if (n < -max) n = -max;
     }
-	if (isAutonomous()) {
-	}
-	else {
-		n = updateLPF(&drfb_lpf, n);
-	}
+    if (isAutonomous()) {
+    } else {
+        n = updateLPF(&drfb_lpf, n);
+    }
     motorSet(M8_9, n);
 }
 void setFB(int n) {
     limMotorVal(&n);
     int max = 20;
-    if((fbGet() > FB_MAX && n > 0) || (fbGet() < FB_MIN && n < 0)) {
-		if (n > max) n = max;
-		if (n < -max) n = -max;
+    if ((fbGet() > FB_MAX && n > 0) || (fbGet() < FB_MIN && n < 0)) {
+        if (n > max) n = max;
+        if (n < -max) n = -max;
     }
-	if (isAutonomous()) {
-	}
-	else {
-		n = updateLPF(&fb_lpf, n);
-	}
+    if (isAutonomous()) {
+    } else {
+        n = updateLPF(&fb_lpf, n);
+    }
     motorSet(M10, n);
 }
 void setClaw(int n) {  //	set claw
@@ -66,15 +64,14 @@ void setClaw(int n) {  //	set claw
 void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
     int max = 20;
-    if((mglGet() > MGL_MAX && n > 0) || (mglGet() < MGL_MIN && n < 0)) {
-		if (n > max) n = max;
-		if (n < -max) n = -max;
+    if ((mglGet() > MGL_MAX && n > 0) || (mglGet() < MGL_MIN && n < 0)) {
+        if (n > max) n = max;
+        if (n < -max) n = -max;
     }
-	if (isAutonomous()) {
-	}
-	else {
-		n = updateLPF(&mgl_lpf, n);
-	}
+    if (isAutonomous()) {
+    } else {
+        n = updateLPF(&mgl_lpf, n);
+    }
     motorSet(M6_7, n);
 }
 void resetMotors() {
@@ -90,25 +87,20 @@ void setupLCD() {
 Gyro gyro;
 Encoder eDL, eDR;
 void setupSens() {
-	gyro = gyroInit(GYRO, 196);
+    gyro = gyroInit(GYRO, 196);
     eDL = encoderInit(DRIVE_L_ENC_TOP, DRIVE_L_ENC_BOT, false);
     eDR = encoderInit(DRIVE_R_ENC_TOP, DRIVE_R_ENC_BOT, false);
     encoderReset(eDL);
     encoderReset(eDR);
 }
-int yawGet() {
-	return gyroGet(gyro);
-}
+int yawGet() { return myGyroGet(gyro); }
 #define POT_SENSITIVITY 0.06105006105
 double drfbGet() {  //-
+    ;
     return (-analogRead(DRFB_POT) + 2750) * POT_SENSITIVITY;
 }
-double fbGet() {
-	return (analogRead(FB_POT) - 1320) * POT_SENSITIVITY;
-}
-double mglGet() {
-    return (analogRead(MGL_POT) - 1500) * POT_SENSITIVITY;
-}
+double fbGet() { return (analogRead(FB_POT) - 1320) * POT_SENSITIVITY; }
+double mglGet() { return (analogRead(MGL_POT) - 1500) * POT_SENSITIVITY; }
 int eDLGet() { return encoderGet(eDL); }
 int eDRGet() { return encoderGet(eDR); }
 void resetDriveEnc() {
@@ -126,10 +118,7 @@ void resetDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* 
 }
 
 void printEnc() { printf("dr4b: %lf\tfb: %lf\tmgl: %lf\tDL: %d\tDR: %d\tyaw: %d\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet(), yawGet()); }
-void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid) {
-    printf("DL: %d/%d\tDR: %d/%d\tDLt: %d/%d\tDRt: %d/%d\tt: %ld\tdnR: %ld\tdnL: %ld\tdnRt: %ld\tdnLt: %ld\n",
-        (int)DL_pid->sensVal, (int)DL_pid->target, (int)DR_pid->sensVal, (int)DR_pid->target, (int)DLturn_pid->sensVal, (int)DLturn_pid->target, (int)DRturn_pid->sensVal, (int)DRturn_pid->target, millis(), DL_pid->doneTime, DR_pid->doneTime, DLturn_pid->doneTime, DRturn_pid->doneTime);
-}
+void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid) { printf("DL: %d/%d\tDR: %d/%d\tDLt: %d/%d\tDRt: %d/%d\tt: %ld\tdnR: %ld\tdnL: %ld\tdnRt: %ld\tdnLt: %ld\n", (int)DL_pid->sensVal, (int)DL_pid->target, (int)DR_pid->sensVal, (int)DR_pid->target, (int)DLturn_pid->sensVal, (int)DLturn_pid->target, (int)DRturn_pid->sensVal, (int)DRturn_pid->target, millis(), DL_pid->doneTime, DR_pid->doneTime, DLturn_pid->doneTime, DRturn_pid->doneTime); }
 void printEnc_PidDRFBFB(PidVars* drfb_pid, PidVars* fb_pid) { printf("arm: %d/%d\tcb: %d/%d\n", (int)drfb_pid->sensVal, (int)drfb_pid->target, (int)fb_pid->sensVal, (int)fb_pid->target); }
 
 int autonMode = 0;
