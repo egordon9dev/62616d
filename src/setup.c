@@ -87,13 +87,17 @@ void setupLCD() {
     lcdClear(LCD);
     lcdSetBacklight(LCD, true);
 }
-//////////////////////////////          ENCODERS
-static Encoder eDL, eDR;
-void setupEnc() {
+Gyro gyro;
+Encoder eDL, eDR;
+void setupSens() {
+	gyro = gyroInit(GYRO, 196);
     eDL = encoderInit(DRIVE_L_ENC_TOP, DRIVE_L_ENC_BOT, false);
     eDR = encoderInit(DRIVE_R_ENC_TOP, DRIVE_R_ENC_BOT, false);
     encoderReset(eDL);
     encoderReset(eDR);
+}
+int yawGet() {
+	return gyroGet(gyro);
 }
 #define POT_SENSITIVITY 0.06105006105
 double drfbGet() {  //-
@@ -121,7 +125,7 @@ void resetDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* 
     setDR(0);
 }
 
-void printEnc() { printf("dr4b: %lf\tfb: %lf\tmgl: %lf\tDL: %d\tDR: %d\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet()); }
+void printEnc() { printf("dr4b: %lf\tfb: %lf\tmgl: %lf\tDL: %d\tDR: %d\tyaw: %d\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet(), yawGet()); }
 void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* DLturn_pid, PidVars* DRturn_pid) {
     printf("DL: %d/%d\tDR: %d/%d\tDLt: %d/%d\tDRt: %d/%d\tt: %ld\tdnR: %ld\tdnL: %ld\tdnRt: %ld\tdnLt: %ld\n",
         (int)DL_pid->sensVal, (int)DL_pid->target, (int)DR_pid->sensVal, (int)DR_pid->target, (int)DLturn_pid->sensVal, (int)DLturn_pid->target, (int)DRturn_pid->sensVal, (int)DRturn_pid->target, millis(), DL_pid->doneTime, DR_pid->doneTime, DLturn_pid->doneTime, DRturn_pid->doneTime);

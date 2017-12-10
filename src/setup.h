@@ -52,8 +52,8 @@ void setClaw(int n);
 void setMGL(int n);
 void resetMotors();
 
-// encoders
-void setupEnc();
+int yawGet();
+void setupSens();
 double drfbGet();
 double fbGet();
 double mglGet();

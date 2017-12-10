@@ -82,14 +82,14 @@ void operatorControl() {
     }
     bool clawOpen = false;
     long tClawOpen = millis();
-    bool mglAutoUp = false;
 
 	unsigned long tMglOff = 0;
 	double mglHoldAngle = 0;
 	bool mglPidRunning = false;
     while (true) {
 		printEnc();
-        updateLift(&drfb_pid, &fb_pid);
+		//lcdPrint(LCD, 1, "%d", yawGet());
+		updateLift(&drfb_pid, &fb_pid);
         //----- mobile-goal lift -----//
         if (joystickGetDigital(1, 8, JOY_RIGHT)) {
 			mglHoldAngle = 0;

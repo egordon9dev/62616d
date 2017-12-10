@@ -24,17 +24,13 @@ void initializeIO() {
  */
 void initialize() {
     setupLCD();
-    setupEnc();
+    setupSens();
     lcdClear(LCD);
     lcdSetText(LCD, 1, "INIT.");
     delay(2000);
     while (!isEnabled()) {
         autoSelect();
-        
-		
-		
-		
-		(10);
+        delay(10);
     }
     lcdSetText(LCD, 1, "RUNNING");
 }
