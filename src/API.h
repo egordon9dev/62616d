@@ -218,6 +218,7 @@ void setTeamName(const char *name);
  * @return the average sensor value computed by this function
  */
 int analogCalibrate(unsigned char channel);
+void myAnalogCalibrate(unsigned char channel);
 /**
  * Reads an analog input channel and returns the 12-bit value.
  *
@@ -249,6 +250,7 @@ int analogRead(unsigned char channel);
  * @return the difference of the sensor value from its calibrated default from -4095 to 4095
  */
 int analogReadCalibrated(unsigned char channel);
+double myAnalogReadCalibrated(unsigned char channel);
 /**
  * Reads the calibrated value of an analog input channel 1-8 with enhanced precision.
  *
@@ -577,6 +579,7 @@ int myGyroGet(Gyro gyro);
  * @return a Gyro object to be stored and used for later calls to gyro functions
  */
 Gyro gyroInit(unsigned char port, unsigned short multiplier);
+Gyro myGyroInit(unsigned char port);
 /**
  * Resets the gyro to zero.
  *

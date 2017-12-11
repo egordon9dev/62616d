@@ -87,13 +87,13 @@ void setupLCD() {
 Gyro gyro;
 Encoder eDL, eDR;
 void setupSens() {
-    gyro = gyroInit(GYRO, 196);
+    gyro = gyroInit(GYRO, 200);
     eDL = encoderInit(DRIVE_L_ENC_TOP, DRIVE_L_ENC_BOT, false);
     eDR = encoderInit(DRIVE_R_ENC_TOP, DRIVE_R_ENC_BOT, false);
     encoderReset(eDL);
     encoderReset(eDR);
 }
-int yawGet() { return myGyroGet(gyro); }
+int yawGet() { return gyroGet(gyro); }
 #define POT_SENSITIVITY 0.06105006105
 double drfbGet() {  //-
     ;

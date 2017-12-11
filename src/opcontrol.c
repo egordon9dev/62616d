@@ -78,43 +78,43 @@ void test() {
 }
 void operatorControl() {
     if (autonMode == nAutons + nSkills) {
-        //auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, true);
+        // auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, true);
     }
     bool clawOpen = false;
     long tClawOpen = millis();
 
-	unsigned long tMglOff = 0;
-	double mglHoldAngle = 0;
-	bool mglPidRunning = false;
+    unsigned long tMglOff = 0;
+    double mglHoldAngle = 0;
+    bool mglPidRunning = false;
     while (true) {
-		printEnc();
-		//lcdPrint(LCD, 1, "%d", yawGet());
-		updateLift(&drfb_pid, &fb_pid);
+        printEnc();
+        lcdPrint(LCD, 1, "%d", yawGet());
+        updateLift(&drfb_pid, &fb_pid);
         //----- mobile-goal lift -----//
         if (joystickGetDigital(1, 8, JOY_RIGHT)) {
-			mglHoldAngle = 0;
-			mglPidRunning = true;
-			tMglOff = 0;
+            mglHoldAngle = 0;
+            mglPidRunning = true;
+            tMglOff = 0;
         } else if (joystickGetDigital(1, 8, JOY_UP)) {
-			mglHoldAngle = mglGet();
-			tMglOff = millis();
-			mglPidRunning = false;
+            mglHoldAngle = mglGet();
+            tMglOff = millis();
+            mglPidRunning = false;
             setMGL(-127);
         } else if (joystickGetDigital(1, 8, JOY_DOWN)) {
-			mglHoldAngle = mglGet();
-			tMglOff = millis();
-			mglPidRunning = false;
+            mglHoldAngle = mglGet();
+            tMglOff = millis();
+            mglPidRunning = false;
             setMGL(127);
         } else if (millis() - tMglOff > 250) {
-			if (!mglPidRunning) {
-				mglPidRunning = true;
-				mglHoldAngle = mglGet();
-			}
-			pidMGL(&mgl_pid, mglHoldAngle);
-		} else {
-			mglPidRunning = false;
-			setMGL(0);
-		}
+            if (!mglPidRunning) {
+                mglPidRunning = true;
+                mglHoldAngle = mglGet();
+            }
+            pidMGL(&mgl_pid, mglHoldAngle);
+        } else {
+            mglPidRunning = false;
+            setMGL(0);
+        }
         //----- claw -----//
         if (joystickGetDigital(1, 6, JOY_DOWN)) {
             // close

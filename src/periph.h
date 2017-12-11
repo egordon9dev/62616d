@@ -119,37 +119,46 @@ typedef void (*InterruptHandler)(unsigned char pin);
 // WARNING: This structure is used in the assembly source code "encoder_isr.s". Changes made
 // here may have unintended results and will require adjustments accordingly.
 typedef struct {
-	// Sensor value field; read by the appropriate poll function
-	volatile int32_t value;
-	volatile uint16_t flags;
-	// Dual-port sensors like the sonar or encoder will use these to link the ports together
-	volatile uint8_t portTop;
-	volatile uint8_t portBottom;
-	// Event trigger function
-	volatile InterruptHandler eventTrigger;
-	// Last value, calibrated value, or some other type of value storage
-	volatile uint32_t lastValue;
+    // Sensor value field; read by the appropriate poll function
+    volatile int32_t value;
+    volatile uint16_t flags;
+    // Dual-port sensors like the sonar or encoder will use these to link the ports together
+    volatile uint8_t portTop;
+    volatile uint8_t portBottom;
+    // Event trigger function
+    volatile InterruptHandler eventTrigger;
+    // Last value, calibrated value, or some other type of value storage
+    volatile uint32_t lastValue;
 } Sensor_TypeDef;
 
 typedef struct {
-	// Sensor value field; read by the appropriate poll function
-	volatile int32_t value;
-	volatile uint8_t flags;
-	volatile uint8_t RESERVED;
-	// Calibrated value from analogCalibrate()
-	volatile uint16_t calibValue;
-	// Last value, calibrated value, or some other type of value storage
-	volatile uint32_t lastValue;
+    // Sensor value field; read by the appropriate poll function
+    volatile int32_t value;
+    volatile uint8_t flags;
+    volatile uint8_t RESERVED;
+    // Calibrated value from analogCalibrate()
+    volatile uint16_t calibValue;
+    // Last value, calibrated value, or some other type of value storage
+    volatile uint32_t lastValue;
 } Analog_TypeDef;
-
+typedef struct {
+    // Sensor value field; read by the appropriate poll function
+    volatile double value;
+    volatile uint8_t flags;
+    volatile uint8_t RESERVED;
+    // Calibrated value from analogCalibrate()
+    volatile double calibValue;
+    // Last value, calibrated value, or some other type of value storage
+    volatile double lastValue;
+} MyAnalog_TypeDef;
 // Encoder information is stored as an opaque pointer to a structure in memory
-typedef void * Encoder;
+typedef void* Encoder;
 
 // Ultrasonic information is stored as an opaque pointer to a structure in memory
-typedef void * Ultrasonic;
+typedef void* Ultrasonic;
 
 // Gyro information is stored as an opaque pointer to a structure in memory
-typedef void * Gyro;
+typedef void* Gyro;
 
 // Pin lookup tables
 extern const uint8_t _adcChannelTable[BOARD_NR_ADC_PINS];
@@ -163,62 +172,62 @@ extern Analog_TypeDef _analogState[BOARD_NR_ADC_PINS];
 // Schedules a task to occur on the high-resolution timer tick in the given number of us
 // us must be at least two and less than 60000 for proper operation
 static INLINE void _highResSchedule(uint8_t channel, uint16_t diff) {
-	/* In the future, for the user high-res timer (probably a separate one like TIM2), we will
-	 * do what this timer used to do
-	if (timedTasks[0] == 0) {
-		timedTasks[0] = task;
-		TIM8->CCR1 = TIM8->CNT + diff;
-		TIM8->SR &= ~TIM_SR_CC1IF;
-		TIM8->DIER |= TIM_DIER_CC1IE;
-	}*/
-	switch (channel) {
-	case 0:
-		// TIM8 CCR 1
-		TIM8->CCR1 = TIM8->CNT + diff;
-		TIM8->SR = ~TIM_SR_CC1IF & 0x1EFF;
-		TIM8->DIER |= TIM_DIER_CC1IE;
-		break;
-	case 1:
-		// TIM8 CCR 2
-		TIM8->CCR2 = TIM8->CNT + diff;
-		TIM8->SR = ~TIM_SR_CC2IF & 0x1EFF;
-		TIM8->DIER |= TIM_DIER_CC2IE;
-		break;
-	case 2:
-		// TIM8 CCR 3
-		TIM8->CCR3 = TIM8->CNT + diff;
-		TIM8->SR = ~TIM_SR_CC3IF & 0x1EFF;
-		TIM8->DIER |= TIM_DIER_CC3IE;
-		break;
-	case 3:
-		// TIM8 CCR 4
-		TIM8->CCR4 = TIM8->CNT + diff;
-		TIM8->SR = ~TIM_SR_CC4IF & 0x1EFF;
-		TIM8->DIER |= TIM_DIER_CC4IE;
-		break;
-	}
+    /* In the future, for the user high-res timer (probably a separate one like TIM2), we will
+     * do what this timer used to do
+    if (timedTasks[0] == 0) {
+            timedTasks[0] = task;
+            TIM8->CCR1 = TIM8->CNT + diff;
+            TIM8->SR &= ~TIM_SR_CC1IF;
+            TIM8->DIER |= TIM_DIER_CC1IE;
+    }*/
+    switch (channel) {
+        case 0:
+            // TIM8 CCR 1
+            TIM8->CCR1 = TIM8->CNT + diff;
+            TIM8->SR = ~TIM_SR_CC1IF & 0x1EFF;
+            TIM8->DIER |= TIM_DIER_CC1IE;
+            break;
+        case 1:
+            // TIM8 CCR 2
+            TIM8->CCR2 = TIM8->CNT + diff;
+            TIM8->SR = ~TIM_SR_CC2IF & 0x1EFF;
+            TIM8->DIER |= TIM_DIER_CC2IE;
+            break;
+        case 2:
+            // TIM8 CCR 3
+            TIM8->CCR3 = TIM8->CNT + diff;
+            TIM8->SR = ~TIM_SR_CC3IF & 0x1EFF;
+            TIM8->DIER |= TIM_DIER_CC3IE;
+            break;
+        case 3:
+            // TIM8 CCR 4
+            TIM8->CCR4 = TIM8->CNT + diff;
+            TIM8->SR = ~TIM_SR_CC4IF & 0x1EFF;
+            TIM8->DIER |= TIM_DIER_CC4IE;
+            break;
+    }
 }
 
 // ioGetInput - Gets the digital value (1 or 0) of a pin configured as a digital input
 static INLINE bool ioGetInput(GPIO_TypeDef* port, uint32_t pin) {
-	// Shift right that many bits, then mask everything but the ones
-	return ((port->IDR >> (pin & 0x0F)) & 0x01) != 0;
+    // Shift right that many bits, then mask everything but the ones
+    return ((port->IDR >> (pin & 0x0F)) & 0x01) != 0;
 }
 
 // ioGetOutput - Gets the current value (1 or 0) of a pin configured as a digital output
 static INLINE bool ioGetOutput(GPIO_TypeDef* port, uint32_t pin) {
-	// Shift right that many bits, then mask everything but the ones
-	return ((port->ODR >> (pin & 0x0F)) & 0x01) != 0;
+    // Shift right that many bits, then mask everything but the ones
+    return ((port->ODR >> (pin & 0x0F)) & 0x01) != 0;
 }
 
 // ioSetOutput - Sets the digital value (1 or 0) of a pin configured as a digital output
 static INLINE void ioSetOutput(GPIO_TypeDef* port, uint32_t pin, bool value) {
-	if (value)
-		// Atomic bit set
-		port->BSRR = ((uint32_t)0x00000001) << (pin & 0x0F);
-	else
-		// Atomic bit reset
-		port->BRR = ((uint32_t)0x00000001) << (pin & 0x0F);
+    if (value)
+        // Atomic bit set
+        port->BSRR = ((uint32_t)0x00000001) << (pin & 0x0F);
+    else
+        // Atomic bit reset
+        port->BRR = ((uint32_t)0x00000001) << (pin & 0x0F);
 }
 
 // Library functions
@@ -256,24 +265,24 @@ void gyroReset(Gyro g);
 void gyroShutdown(Gyro g);
 
 // i2cRead - Reads the specified number of data bytes from the specified address
-bool i2cRead(uint8_t addr, uint8_t *data, uint16_t count);
+bool i2cRead(uint8_t addr, uint8_t* data, uint16_t count);
 // i2cReadRegister - Reads the specified amount of data from the given register address on
 // the specified I2C address
-bool i2cReadRegister(uint8_t addr, uint8_t reg, uint8_t *value, uint16_t count);
+bool i2cReadRegister(uint8_t addr, uint8_t reg, uint8_t* value, uint16_t count);
 // i2cSetAddress - Sets the Cortex's I2C address; must be used when I2C is off
 void i2cSetAddress(uint8_t addr);
 // i2cWrite - Writes the specified number of data bytes to the specified address
-bool i2cWrite(uint8_t addr, uint8_t *data, uint16_t count);
+bool i2cWrite(uint8_t addr, uint8_t* data, uint16_t count);
 // i2cWriteRegister - Writes the specified data to a register on the specified I2C address
 bool i2cWriteRegister(uint8_t addr, uint8_t reg, uint16_t value);
 
 // imeInitializeAll - Initializes all IMEs and returns the number of IMEs thus initialized
 unsigned int imeInitializeAll();
 // imeGet - Gets the current 32-bit count of the specified IME address
-bool imeGet(unsigned char address, int *value);
+bool imeGet(unsigned char address, int* value);
 // imeGetVelocity - Gets the current velocity of the specified IME in units of rpm of encoder
 // Divide by 30.056 (269), 39.2 (393), or 24.5 (393 HS) to get output shaft RPM
-bool imeGetVelocity(unsigned char address, int *value);
+bool imeGetVelocity(unsigned char address, int* value);
 // imeReset - Resets the specified IME's counters to zero
 bool imeReset(unsigned char address);
 // imeShutdown - Shuts down all IMEs on the chain
@@ -327,10 +336,10 @@ void pwmWrite(uint32_t pin, uint16_t value);
 // Speaker library increases RAM usage by ~1K and FLASH usage by ~4K, be warned!
 void speakerInit();
 // speakerPlayArray - Play up to 3 RTTTL tracks simultaneously
-void speakerPlayArray(const char * * rttl);
+void speakerPlayArray(const char** rttl);
 // speakerPlayRtttl - Play a single RTTTL string encoded track
 // To play polyphonic sound, use speakerPlayArray
-void speakerPlayRtttl(const char *rttl);
+void speakerPlayRtttl(const char* rttl);
 // speakerShutdown - Power down the speaker, kill interrupt, stop tones
 void speakerShutdown();
 
