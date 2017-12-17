@@ -91,10 +91,11 @@ int autonDrive(double dist, int wait, PidVars *left, PidVars *right);
 int autonTurn(double angle, int wait, PidVars *pid);
 void test() {
     resetDrive(&DL_pid, &DR_pid, &turn_pid);
-    while (!autonTurn(90, 20000, &turn_pid)) {
+    while (!autonTurn(-5, 20000, &turn_pid)) {
         printEnc_pidDrive(&DL_pid, &DR_pid, &turn_pid);
         delay(10);
     }
+    resetDrive(&DL_pid, &DR_pid, &turn_pid);
 }
 void operatorControl() {
     test();
