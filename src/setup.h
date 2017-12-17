@@ -34,11 +34,11 @@
 #define M0 8
 #define M4_5 9
 
-#define FB_MAX 134 // 142
+#define FB_MAX 134  // 142
 #define FB_MIN 8
-#define DRFB_MAX 115 //121
+#define DRFB_MAX 115  // 121
 #define DRFB_MIN 5
-#define MGL_MAX 114//118.5
+#define MGL_MAX 114  // 118.5
 #define MGL_MIN 5
 
 // motors
@@ -64,10 +64,10 @@ int eDRGet();
 void resetDriveEnc();
 
 // resets drive in preparation for using PID with drive
-void resetDrive(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid);
+void resetDrive(PidVars *DL_pid, PidVars *DR_pid, PidVars *turn_pid);
 
 void printEnc();
-void printEnc_pidDrive(PidVars *DL_pid, PidVars *DR_pid, PidVars *DLturn_pid, PidVars *DRturn_pid);
+void printEnc_pidDrive(PidVars *DL_pid, PidVars *DR_pid, PidVars *turn_pid);
 void printEnc_pidDRFBFB(PidVars *arm_pid, PidVars *cb_pid);
 void setupLCD();
 

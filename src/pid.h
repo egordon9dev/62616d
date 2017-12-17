@@ -6,15 +6,15 @@ typedef struct PidVars {
     unsigned long prevTime, doneTime;
 } PidVars;
 typedef struct LPF {
-	double a, out;
+    double a, out;
 } LPF;
-extern LPF fb_lpf, drfb_lpf, mgl_lpf, DL_lpf, DR_lpf;
-extern PidVars pidDef, drfb_pid, fb_pid, mgl_pid, DL_pid, DR_pid, DLturn_pid, DRturn_pid;
+extern LPF fb_lpf, drfb_lpf, mgl_lpf, DL_lpf, DR_lpf, DL_lpf_auto, DR_lpf_auto;
+extern PidVars pidDef, drfb_pid, fb_pid, mgl_pid, DL_pid, DR_pid, turn_pid;
 #define LONG_MAX 2147483647
 #define DBL_MAX 999999999.999999
 void resetDone(PidVars *pidVars);
 
-double updateLPF(LPF* lpf, double in);
+double updateLPF(LPF *lpf, double in);
 
 //----- proportional + integral + derivative control feedback -----//
 double updatePID(PidVars *pidVars);
@@ -40,8 +40,9 @@ int getFB(int cone);
 // return lift to pick up cones
 void returnLift(PidVars *drfb_pid, PidVars *fb_pid);
 
-// if turning, dist is in degrees
-// if not turning, dist is in inches
-void pidDrive(double dist, PidVars *left, PidVars *right, bool turning);
+// dist: inches
+void pidDrive(double dist, PidVars *left, PidVars *right);
+// angle: degrees
+void pidTurn(double angle, PidVars *pid);
 
 #endif
