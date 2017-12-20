@@ -60,7 +60,7 @@ void updateLift(PidVars *drfb_pid, PidVars *fb_pid) {
             }
             fb_pid->sensVal = fbGet();
             fb_pid->target = fbHoldAngle;
-            setFB(updatePID(fb_pid));
+            setFB(-updatePID(fb_pid));
         } else {
             setFB(0);
             fbPidRunning = false;
@@ -102,10 +102,10 @@ void test(int n) {
         case 1:
             while (true) {
                 printEnc_pidDRFBFB(&drfb_pid, &fb_pid);
-                drfb_pid.target = 80;
-                drfb_pid.sensVal = drfbGet();
-                int p = updatePID(&drfb_pid);
-                setDRFB(p);
+                fb_pid.target = 40;
+                fb_pid.sensVal = fbGet();
+                int p = updatePID(&fb_pid);
+                setFB(p);
                 printf("power: %d\t", p);
                 delay(10);
             }

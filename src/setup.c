@@ -117,7 +117,7 @@ void resetDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* turn_pid) {
     setDR(0);
 }
 
-void printEnc() { printf("dr4b: %lf\tfb: %lf\tmgl: %lf\tDL: %d\tDR: %d\tyaw: %d\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet(), yawGet()); }
+void printEnc() { printf("dr4b: %d\tfb: %d\tmgl: %d\tDL: %d\tDR: %d\tyaw: %d\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet(), yawGet()); }
 void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* turn_pid) { printf("DL: %d/%d\tDR: %d/%d\tTurn: %d/%d\tt: %ld\tdnL: %ld\tdnR: %ld\tdnT: %ld\n", (int)DL_pid->sensVal, (int)DL_pid->target, (int)DR_pid->sensVal, (int)DR_pid->target, (int)turn_pid->sensVal, (int)turn_pid->target, millis(), DL_pid->doneTime, DR_pid->doneTime, turn_pid->doneTime); }
 void printEnc_pidDRFBFB(PidVars* drfb_pid, PidVars* fb_pid) { printf("drfb: %d/%d\tfb: %d/%d\n", (int)drfb_pid->sensVal, (int)drfb_pid->target, (int)fb_pid->sensVal, (int)fb_pid->target); }
 
