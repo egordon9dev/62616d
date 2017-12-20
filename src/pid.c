@@ -22,7 +22,7 @@ LPF DR_lpf = {.a = A, .out = 0.0};
 LPF DL_lpf_auto = {.a = 0.95, .out = 0.0};
 LPF DR_lpf_auto = {.a = 0.95, .out = 0.0};
 PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0};
-PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 7.0, .ki = 0.02, .kd = 600.0, .prevTime = 0, .unwind = 0};
+PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = 35, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.1, .ki = 0.035, .kd = 900, .prevTime = 0, .unwind = 0};
 PidVars fb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2.55, .ki = 0.0, .kd = 220.0, .prevTime = 0, .unwind = 0};
 PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 15, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5.0, .ki = 0.0, .kd = 400.0, .prevTime = 0, .unwind = 0};
 #define dkp 0.7
@@ -49,9 +49,10 @@ double updatePID(PidVars *pidVars) {
     double maxErrTot = pidVars->maxIntegral / pidVars->ki;
     if (pidVars->errTot > maxErrTot) pidVars->errTot = maxErrTot;
     if (pidVars->errTot < -maxErrTot) pidVars->errTot = -maxErrTot;
-    if ((err > 0 && pidVars->errTot < 0) || (err < 0 && pidVars->errTot > 0)) {
+    if (((err > 0.0 && pidVars->errTot < 0.0) || (err < 0.0 && pidVars->errTot > 0.0)) && abs(err) > 0.001) {
         if (fabs(err) >= pidVars->unwind) {
-            pidVars->errTot = 0;
+            pidVars->errTot = 0.0;
+            printf("UNWIND\n");
         }
     }
     double i = pidVars->errTot * pidVars->ki;
@@ -66,11 +67,12 @@ double updatePID(PidVars *pidVars) {
         printf("DONE\n");
     }
     // derivative action: slowing down
-    if (fabs(d) > fabs(p) * 20) {
-        pidVars->errTot = 0;
+    if (fabs(d) > fabs(p) * 20.0) {
+        pidVars->errTot = 0.0;
     }
     pidVars->prevErr = err;
     pidVars->prevSensVal = pidVars->sensVal;
+    printf("p: %lf, i: %lf, d: %lf\t", p, i, d);
     // OUTPUT
     return p + i + d;
 }

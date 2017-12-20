@@ -97,11 +97,11 @@ void setupSens() {
 }
 int yawGet() { return -gyroGet(gyro); }
 #define POT_SENSITIVITY 0.06105006105
-double drfbGet() {  //-s
+int drfbGet() {  //-s
     return (-analogRead(DRFB_POT) + 2750) * POT_SENSITIVITY;
 }
-double fbGet() { return (analogRead(FB_POT) - 1320) * POT_SENSITIVITY; }
-double mglGet() { return (analogRead(MGL_POT) - 1500) * POT_SENSITIVITY; }
+int fbGet() { return (analogRead(FB_POT) - 1320) * POT_SENSITIVITY; }
+int mglGet() { return (analogRead(MGL_POT) - 1500) * POT_SENSITIVITY; }
 int eDLGet() { return encoderGet(eDL); }
 int eDRGet() { return encoderGet(eDR); }
 void resetDriveEnc() {
@@ -119,7 +119,7 @@ void resetDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* turn_pid) {
 
 void printEnc() { printf("dr4b: %lf\tfb: %lf\tmgl: %lf\tDL: %d\tDR: %d\tyaw: %d\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet(), yawGet()); }
 void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* turn_pid) { printf("DL: %d/%d\tDR: %d/%d\tTurn: %d/%d\tt: %ld\tdnL: %ld\tdnR: %ld\tdnT: %ld\n", (int)DL_pid->sensVal, (int)DL_pid->target, (int)DR_pid->sensVal, (int)DR_pid->target, (int)turn_pid->sensVal, (int)turn_pid->target, millis(), DL_pid->doneTime, DR_pid->doneTime, turn_pid->doneTime); }
-void printEnc_PidDRFBFB(PidVars* drfb_pid, PidVars* fb_pid) { printf("arm: %d/%d\tcb: %d/%d\n", (int)drfb_pid->sensVal, (int)drfb_pid->target, (int)fb_pid->sensVal, (int)fb_pid->target); }
+void printEnc_pidDRFBFB(PidVars* drfb_pid, PidVars* fb_pid) { printf("drfb: %d/%d\tfb: %d/%d\n", (int)drfb_pid->sensVal, (int)drfb_pid->target, (int)fb_pid->sensVal, (int)fb_pid->target); }
 
 int autonMode = 0;
 void autoSelect() {

@@ -54,9 +54,9 @@ void resetMotors();
 
 int yawGet();
 void setupSens();
-double drfbGet();
-double fbGet();
-double mglGet();
+int drfbGet();
+int fbGet();
+int mglGet();
 int eDLGet();
 int eDRGet();
 
@@ -68,7 +68,7 @@ void resetDrive(PidVars *DL_pid, PidVars *DR_pid, PidVars *turn_pid);
 
 void printEnc();
 void printEnc_pidDrive(PidVars *DL_pid, PidVars *DR_pid, PidVars *turn_pid);
-void printEnc_pidDRFBFB(PidVars *arm_pid, PidVars *cb_pid);
+void printEnc_pidDRFBFB(PidVars *drfb_pid, PidVars *fb_pid);
 void setupLCD();
 
 // auton
