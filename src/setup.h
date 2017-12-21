@@ -34,10 +34,11 @@
 #define M0 8
 #define M4_5 9
 
-#define FB_MAX 134  // 142
-#define FB_MIN 8
-#define DRFB_MAX 115  // 121
-#define DRFB_MIN 5
+#define FB_MAX 130  // 141
+#define FB_MIN 10
+#define DRFB_MAX 114  // 121
+#define DRFB_MAX_CUT 104
+#define DRFB_MIN 6
 #define MGL_MAX 114  // 118.5
 #define MGL_MIN 5
 

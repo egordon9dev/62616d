@@ -11,17 +11,6 @@ bool returning = false;
 uint8_t DM = 1;
 
 void updateLift(PidVars *drfb_pid, PidVars *fb_pid) {
-    //----- update arm -----//
-    if (joystickGetDigital(1, 7, JOY_RIGHT)) {
-        returning = true;
-    }
-    if (joystickGetDigital(1, 7, JOY_RIGHT)) {
-        returning = false;
-    }
-    if (joystickGetDigital(1, 7, JOY_UP)) {
-        // insert auto stack code here..............
-        // c .........................................
-    }
     //------ update four bar -----//
     bool moving = true;
     if (DM == 0) {
@@ -48,11 +37,17 @@ void updateLift(PidVars *drfb_pid, PidVars *fb_pid) {
         } else {
             moving = false;
         }
+        if (joystickGetDigital(1, 8, JOY_UP)) {
+            fbHoldAngle = 141;
+        } else if (joystickGetDigital(1, 8, JOY_RIGHT)) {
+            fbHoldAngle = 40;
+        } else if (joystickGetDigital(1, 8, JOY_DOWN)) {
+            returning = true;
+        }
     }
     if (!moving) {
         if (returning) {
             returnLift(drfb_pid, fb_pid);
-            return;
         } else if (millis() - tFbOff > 300) {
             if (!fbPidRunning) {
                 fbHoldAngle = fbGet();
@@ -60,7 +55,7 @@ void updateLift(PidVars *drfb_pid, PidVars *fb_pid) {
             }
             fb_pid->sensVal = fbGet();
             fb_pid->target = fbHoldAngle;
-            setFB(-updatePID(fb_pid));
+            setFB(updatePID(fb_pid));
         } else {
             setFB(0);
             fbPidRunning = false;
@@ -79,6 +74,7 @@ void updateLift(PidVars *drfb_pid, PidVars *fb_pid) {
             drfbPidRunning = true;
         }
         drfb_pid->sensVal = drfbGet();
+        if (drfbHoldAngle > DRFB_MAX_CUT) drfbHoldAngle = DRFB_MAX_CUT;
         drfb_pid->target = drfbHoldAngle;
         setDRFB(updatePID(drfb_pid));
     } else {
@@ -102,7 +98,7 @@ void test(int n) {
         case 1:
             while (true) {
                 printEnc_pidDRFBFB(&drfb_pid, &fb_pid);
-                fb_pid.target = 40;
+                fb_pid.target = 120;
                 fb_pid.sensVal = fbGet();
                 int p = updatePID(&fb_pid);
                 setFB(p);
@@ -110,19 +106,32 @@ void test(int n) {
                 delay(10);
             }
             break;
+        case 2:
+            while (true) {
+                printEnc_pidDRFBFB(&drfb_pid, &fb_pid);
+                drfb_pid.target = 5;
+                drfb_pid.sensVal = drfbGet();
+                int p = updatePID(&drfb_pid);
+                setDRFB(p);
+                printf("power: %d\t", p);
+                delay(10);
+            }
+            break;
     }
 }
 void operatorControl() {
-    if (1) {
-        test(1);
-        return;
-    }
     if (autonMode == nAutons + nSkills) {
         // auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, true);
     }
     bool clawOpen = false;
     long tClawOpen = millis();
-
+    while (0) {
+        printEnc();
+        delay(10);
+    }
+    if (0) {
+        test(2);
+    }
     unsigned long tMglOff = 0;
     double mglHoldAngle = 0;
     bool mglPidRunning = false;
@@ -138,11 +147,15 @@ void operatorControl() {
         lcdPrint(LCD, 1, "%d", yawGet());
         updateLift(&drfb_pid, &fb_pid);
         //----- mobile-goal lift -----//
-        if (joystickGetDigital(DM + 1, 8, JOY_RIGHT) || (DM == 1 && joystickGetDigital(2, 5, JOY_DOWN))) {
+        if (joystickGetDigital(DM + 1, 8, JOY_RIGHT) || (DM == 1 && joystickGetDigital(2, 6, JOY_UP))) {
             mglHoldAngle = 0;
             mglPidRunning = true;
             tMglOff = 0;
-        } else if (joystickGetDigital(DM + 1, 8, JOY_UP) || (DM == 1 && joystickGetDigital(2, 6, JOY_UP))) {
+        } else if (DM == 1 && joystickGetDigital(2, 5, JOY_DOWN)) {
+            mglHoldAngle = 93;
+            mglPidRunning = true;
+            tMglOff = 0;
+        } else if (joystickGetDigital(DM + 1, 8, JOY_UP) || (DM == 1 && joystickGetDigital(2, 5, JOY_UP))) {
             mglHoldAngle = mglGet();
             tMglOff = millis();
             mglPidRunning = false;
@@ -157,7 +170,7 @@ void operatorControl() {
                 mglPidRunning = true;
                 mglHoldAngle = mglGet();
             }
-            pidMGL(&mgl_pid, mglHoldAngle);
+            pidMGL(&mgl_pid, mglHoldAngle, 0);
         } else {
             mglPidRunning = false;
             setMGL(0);

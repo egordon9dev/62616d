@@ -22,9 +22,9 @@ LPF DR_lpf = {.a = A, .out = 0.0};
 LPF DL_lpf_auto = {.a = 0.95, .out = 0.0};
 LPF DR_lpf_auto = {.a = 0.95, .out = 0.0};
 PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0};
-PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = 35, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.1, .ki = 0.035, .kd = 900, .prevTime = 0, .unwind = 0};
-PidVars fb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = 35, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 4.5, .ki = 0.04, .kd = 900.0, .prevTime = 0, .unwind = 0};
-PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 15, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5.0, .ki = 0.0, .kd = 400.0, .prevTime = 0, .unwind = 0};
+PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 1.9, .ki = 0.035, .kd = 800, .prevTime = 0, .unwind = 0};
+PidVars fb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 35, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 1.8, .ki = 0.025, .kd = 840.0, .prevTime = 0, .unwind = 0};
+PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 15, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5.0, .ki = 0.0, .kd = 400.0, .prevTime = 0, .unwind = 0};
 #define dkp 0.7
 #define dki 0.003
 #define dkd 75.0
@@ -83,35 +83,50 @@ int killPID(int d, int s, PidVars *p) {
     }
     return 0;
 }
-void pidFB(PidVars *fb_pid, double a) {  // set chain-bar angle with PID
+int pidFB(PidVars *fb_pid, double a, int wait) {  // set chain-bar angle with PID
     fb_pid->target = a;
     fb_pid->sensVal = fbGet();
     setFB(updatePID(fb_pid));
+    if (fb_pid->doneTime + wait < millis()) {
+        fb_pid->doneTime = LONG_MAX;
+        return 1;
+    }
+    return 0;
 }
-void pidDRFB(PidVars *drfb_pid, double a) {  // set arm angle with PID
+int pidDRFB(PidVars *drfb_pid, double a, int wait) {  // set arm angle with PID
     drfb_pid->target = a;
     drfb_pid->sensVal = drfbGet();
     setDRFB(updatePID(drfb_pid));
+    if (drfb_pid->doneTime + wait < millis()) {
+        drfb_pid->doneTime = LONG_MAX;
+        return 1;
+    }
+    return 0;
 }
-void pidMGL(PidVars *mgl_pid, double a) {  // set chain-bar angle with PID
+int pidMGL(PidVars *mgl_pid, double a, int wait) {  // set chain-bar angle with PID
     mgl_pid->target = a;
     mgl_pid->sensVal = mglGet();
     setMGL(updatePID(mgl_pid));
+    if (mgl_pid->doneTime + wait < millis()) {
+        mgl_pid->doneTime = LONG_MAX;
+        return 1;
+    }
+    return 0;
 }
 // angle settings for autonomous cone stacking
-const int ARM = 0, CB = 1;
+const int DRFB = 0, FB = 1;
 int stackAngles[][2] = {
     //	  ARM | CB
     {75, 110},
     {75, 120},
     {75, 130},
 };
-int returnAngle[] = {73, 305};
+int returnAngle[] = {0, 15};
 // set chain bar and arm with PID to stack given cone
 int stack(PidVars *drfb_pid, PidVars *fb_pid, int cone) {
-    pidFB(fb_pid, stackAngles[cone][CB]);
+    pidFB(fb_pid, stackAngles[cone][FB], 0);
     if (fb_pid->doneTime < millis()) {
-        pidDRFB(drfb_pid, stackAngles[cone][ARM]);
+        pidDRFB(drfb_pid, stackAngles[cone][DRFB], 0);
     }
     int wait = 200;
     if (drfb_pid->doneTime + wait < millis() && fb_pid->doneTime + wait < millis()) {
@@ -121,12 +136,15 @@ int stack(PidVars *drfb_pid, PidVars *fb_pid, int cone) {
     }
     return 0;
 }
-int getDRFB(int cone) { return stackAngles[cone][ARM]; }
-int getFB(int cone) { return stackAngles[cone][CB]; }
+int getDRFB(int cone) { return stackAngles[cone][DRFB]; }
+int getFB(int cone) { return stackAngles[cone][FB]; }
 // return lift to pick up cones
 void returnLift(PidVars *drfb_pid, PidVars *fb_pid) {
-    pidFB(fb_pid, returnAngle[CB]);
-    pidDRFB(drfb_pid, returnAngle[ARM]);
+    if (pidFB(fb_pid, 40, 0)) {
+        if (pidDRFB(drfb_pid, returnAngle[DRFB], 0)) {
+            pidFB(fb_pid, returnAngle[FB], 0);
+        }
+    }
 }
 // dist is in inches
 void pidDrive(double dist, PidVars *left, PidVars *right) {

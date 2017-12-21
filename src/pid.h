@@ -26,12 +26,12 @@ double updatePID(PidVars *pidVars);
 int killPID(int d, int s, PidVars *p);
 
 // set chain-bar angle with PID
-void pidFB(PidVars *fb_pid, double a);
+int pidFB(PidVars *fb_pid, double a, int wait);
 
 // set arm angle with PID
-void pidDRFB(PidVars *drfb_pid, double a);
+int pidDRFB(PidVars *drfb_pid, double a, int wait);
 
-void pidMGL(PidVars *mgl_pid, double a);
+int pidMGL(PidVars *mgl_pid, double a, int wait);
 
 // set chain bar and arm with PID to stack given cone
 int stack(PidVars *drfb_pid, PidVars *fb_pid, int cone);

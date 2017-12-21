@@ -40,10 +40,10 @@ void setDRFB(int n) {  //	set main 4 bar lift
         if (n > max) n = max;
         if (n < -max) n = -max;
     }
-    if (isAutonomous()) {
-    } else {
-        n = updateLPF(&drfb_lpf, n);
+    if (drfbGet() > DRFB_MAX_CUT && n > 0) {
+        n = 0;
     }
+    n = updateLPF(&drfb_lpf, n);
     motorSet(M8_9, n);
 }
 void setFB(int n) {
@@ -53,10 +53,7 @@ void setFB(int n) {
         if (n > max) n = max;
         if (n < -max) n = -max;
     }
-    if (isAutonomous()) {
-    } else {
-        n = updateLPF(&fb_lpf, n);
-    }
+    n = updateLPF(&fb_lpf, n);
     motorSet(M10, n);
 }
 void setClaw(int n) {  //	set claw
@@ -70,10 +67,7 @@ void setMGL(int n) {  //	set mobile goal lift
         if (n > max) n = max;
         if (n < -max) n = -max;
     }
-    if (isAutonomous()) {
-    } else {
-        n = updateLPF(&mgl_lpf, n);
-    }
+    n = updateLPF(&mgl_lpf, n);
     motorSet(M6_7, n);
 }
 void resetMotors() {
