@@ -10,7 +10,7 @@ bool returning = false;
 // MUST BE EITHER 0 or 1 !!!!!!!
 uint8_t DM = 1;
 
-void updateLift(PidVars *drfb_pid, PidVars *fb_pid) {
+void updateLift() {
     //------ update four bar -----//
     bool moving = true;
     if (DM == 0) {
@@ -47,15 +47,17 @@ void updateLift(PidVars *drfb_pid, PidVars *fb_pid) {
     }
     if (!moving) {
         if (returning) {
-            returnLift(drfb_pid, fb_pid);
+            returnLift();
         } else if (millis() - tFbOff > 300) {
             if (!fbPidRunning) {
                 fbHoldAngle = fbGet();
                 fbPidRunning = true;
             }
-            fb_pid->sensVal = fbGet();
-            fb_pid->target = fbHoldAngle;
-            setFB(updatePID(fb_pid));
+            fb_pid.sensVal = fbGet();
+            int cut = FB_MIN_CUT - drfbGet();
+            if (fbHoldAngle < cut) fbHoldAngle = cut;
+            fb_pid.target = fbHoldAngle;
+            setFB(updatePID(&fb_pid));
         } else {
             setFB(0);
             fbPidRunning = false;
@@ -73,31 +75,39 @@ void updateLift(PidVars *drfb_pid, PidVars *fb_pid) {
             drfbHoldAngle = drfbGet();
             drfbPidRunning = true;
         }
-        drfb_pid->sensVal = drfbGet();
+        drfb_pid.sensVal = drfbGet();
         if (drfbHoldAngle > DRFB_MAX_CUT) drfbHoldAngle = DRFB_MAX_CUT;
-        drfb_pid->target = drfbHoldAngle;
-        setDRFB(updatePID(drfb_pid));
+        drfb_pid.target = drfbHoldAngle;
+        setDRFB(updatePID(&drfb_pid));
     } else {
         setDRFB(0);
         drfbPidRunning = false;
     }
 }
 // for testing auton pid
-int autonDrive(double dist, int wait, PidVars *left, PidVars *right);
-int autonTurn(double angle, int wait, PidVars *pid);
+int autonDrive(double dist, int wait);
+int autonTurn(double angle, int wait);
 void test(int n) {
     switch (n) {
         case 0:
-            resetDrive(&DL_pid, &DR_pid, &turn_pid);
-            while (!autonTurn(-5, 20000, &turn_pid)) {
-                printEnc_pidDrive(&DL_pid, &DR_pid, &turn_pid);
+            resetDrive();
+            while (!autonDrive(-30, 20000)) {
+                printEnc_pidDrive();
                 delay(10);
             }
-            resetDrive(&DL_pid, &DR_pid, &turn_pid);
+            resetDrive();
             break;
         case 1:
+            resetDrive();
+            while (!autonTurn(-90, 20000)) {
+                printEnc_pidDrive();
+                delay(10);
+            }
+            resetDrive();
+            break;
+        case 2:
             while (true) {
-                printEnc_pidDRFBFB(&drfb_pid, &fb_pid);
+                printEnc_pidDRFBFB();
                 fb_pid.target = 120;
                 fb_pid.sensVal = fbGet();
                 int p = updatePID(&fb_pid);
@@ -106,10 +116,10 @@ void test(int n) {
                 delay(10);
             }
             break;
-        case 2:
+        case 3:
             while (true) {
-                printEnc_pidDRFBFB(&drfb_pid, &fb_pid);
-                drfb_pid.target = 5;
+                printEnc_pidDRFBFB();
+                drfb_pid.target = 95;
                 drfb_pid.sensVal = drfbGet();
                 int p = updatePID(&drfb_pid);
                 setDRFB(p);
@@ -129,8 +139,9 @@ void operatorControl() {
         printEnc();
         delay(10);
     }
-    if (0) {
-        test(2);
+    if (1) {
+        test(1);
+        return;
     }
     unsigned long tMglOff = 0;
     double mglHoldAngle = 0;
@@ -142,6 +153,11 @@ void operatorControl() {
         }
         delay(1);
     }
+    PidVars DL_brake = pidDef, DR_brake = pidDef;
+    DL_brake.kd = 50;
+    DR_brake.kd = 50;
+    unsigned long dt = 0, prevT = 0;
+    int DL_brake_out = 0, DR_brake_out = 0;
     while (true) {
         printEnc();
         lcdPrint(LCD, 1, "%d", yawGet());
@@ -170,7 +186,7 @@ void operatorControl() {
                 mglPidRunning = true;
                 mglHoldAngle = mglGet();
             }
-            pidMGL(&mgl_pid, mglHoldAngle, 0);
+            pidMGL(mglHoldAngle, 0);
         } else {
             mglPidRunning = false;
             setMGL(0);
@@ -199,6 +215,8 @@ void operatorControl() {
         //----- drive -----//
         const int td = 15;
         bool moving = true;
+        DL_brake_out = ((DL_brake.prevSensVal - eDLGet()) * DL_brake.kd) / dt;
+        DR_brake_out = ((DR_brake.prevSensVal - eDRGet()) * DR_brake.kd) / dt;
         if (DM == 0) {
             int j3 = joystickGetAnalog(1, 3);
             int j4 = joystickGetAnalog(1, 4);
@@ -211,6 +229,7 @@ void operatorControl() {
         } else {
             int j2 = joystickGetAnalog(2, 2);
             int j3 = joystickGetAnalog(2, 3);
+
             if ((abs(j2) > td) || (abs(j3) > td)) {
                 setDL(j3);
                 setDR(j2);
@@ -219,9 +238,13 @@ void operatorControl() {
             }
         }
         if (!moving) {
-            setDL(0);
-            setDR(0);
+            setDL(DL_brake_out);
+            setDR(DR_brake_out);
         }
+        DL_brake.prevSensVal = eDLGet();
+        DR_brake.prevSensVal = eDRGet();
+        dt = millis() - prevT;
+        prevT = millis();
         delay(10);
     }
 }

@@ -36,8 +36,9 @@
 
 #define FB_MAX 130  // 141
 #define FB_MIN 10
+#define FB_MIN_CUT 22
 #define DRFB_MAX 114  // 121
-#define DRFB_MAX_CUT 104
+#define DRFB_MAX_CUT 95
 #define DRFB_MIN 6
 #define MGL_MAX 114  // 118.5
 #define MGL_MIN 5
@@ -65,11 +66,11 @@ int eDRGet();
 void resetDriveEnc();
 
 // resets drive in preparation for using PID with drive
-void resetDrive(PidVars *DL_pid, PidVars *DR_pid, PidVars *turn_pid);
+void resetDrive();
 
 void printEnc();
-void printEnc_pidDrive(PidVars *DL_pid, PidVars *DR_pid, PidVars *turn_pid);
-void printEnc_pidDRFBFB(PidVars *drfb_pid, PidVars *fb_pid);
+void printEnc_pidDrive();
+void printEnc_pidDRFBFB();
 void setupLCD();
 
 // auton

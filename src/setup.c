@@ -18,8 +18,9 @@ void setDL(int n) {  //	set right drive motors
     if (isAutonomous()) {
         n = updateLPF(&DL_lpf_auto, n);
     } else {
-        n = updateLPF(&DL_lpf, n);
+        n = updateLPF(&DL_lpf_auto, n);
     }
+    printf("\tDL: %d", n);
     motorSet(M3, n);
     motorSet(M4_5, n);
 }
@@ -28,8 +29,9 @@ void setDR(int n) {  //	set left drive motors
     if (isAutonomous()) {
         n = updateLPF(&DR_lpf_auto, n);
     } else {
-        n = updateLPF(&DR_lpf, n);
+        n = updateLPF(&DR_lpf_auto, n);
     }
+    printf("\tDL: %d", n);
     motorSet(M0, -n);
     motorSet(M1_2, -n);
 }
@@ -46,6 +48,7 @@ void setDRFB(int n) {  //	set main 4 bar lift
     n = updateLPF(&drfb_lpf, n);
     motorSet(M8_9, n);
 }
+
 void setFB(int n) {
     limMotorVal(&n);
     int max = 20;
@@ -53,6 +56,7 @@ void setFB(int n) {
         if (n > max) n = max;
         if (n < -max) n = -max;
     }
+    if (fbGet() < FB_MIN_CUT - drfbGet() && n < -max) n = -max;
     n = updateLPF(&fb_lpf, n);
     motorSet(M10, n);
 }
@@ -102,18 +106,18 @@ void resetDriveEnc() {
     encoderReset(eDL);
     encoderReset(eDR);
 }
-void resetDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* turn_pid) {
+void resetDrive() {
     resetDriveEnc();
-    DL_pid->doneTime = LONG_MAX;
-    DR_pid->doneTime = LONG_MAX;
-    turn_pid->doneTime = LONG_MAX;
+    DL_pid.doneTime = LONG_MAX;
+    DR_pid.doneTime = LONG_MAX;
+    turn_pid.doneTime = LONG_MAX;
     setDL(0);
     setDR(0);
 }
 
 void printEnc() { printf("dr4b: %d\tfb: %d\tmgl: %d\tDL: %d\tDR: %d\tyaw: %d\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet(), yawGet()); }
-void printEnc_pidDrive(PidVars* DL_pid, PidVars* DR_pid, PidVars* turn_pid) { printf("DL: %d/%d\tDR: %d/%d\tTurn: %d/%d\tt: %ld\tdnL: %ld\tdnR: %ld\tdnT: %ld\n", (int)DL_pid->sensVal, (int)DL_pid->target, (int)DR_pid->sensVal, (int)DR_pid->target, (int)turn_pid->sensVal, (int)turn_pid->target, millis(), DL_pid->doneTime, DR_pid->doneTime, turn_pid->doneTime); }
-void printEnc_pidDRFBFB(PidVars* drfb_pid, PidVars* fb_pid) { printf("drfb: %d/%d\tfb: %d/%d\n", (int)drfb_pid->sensVal, (int)drfb_pid->target, (int)fb_pid->sensVal, (int)fb_pid->target); }
+void printEnc_pidDrive() { printf("DL: %d/%d\tDR: %d/%d\tTurn: %d/%d\tt: %ld\tdnL: %ld\tdnR: %ld\tdnT: %ld\n", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)turn_pid.sensVal, (int)turn_pid.target, millis(), DL_pid.doneTime, DR_pid.doneTime, turn_pid.doneTime); }
+void printEnc_pidDRFBFB() { printf("drfb: %d/%d\tfb: %d/%d\n", (int)drfb_pid.sensVal, (int)drfb_pid.target, (int)fb_pid.sensVal, (int)fb_pid.target); }
 
 int autonMode = 0;
 void autoSelect() {
