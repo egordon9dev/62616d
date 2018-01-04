@@ -36,12 +36,12 @@
 
 #define FB_MAX 130  // 141
 #define FB_MIN 10
-#define FB_MIN_CUT 22
+#define FB_MIN_CUT 20
 #define DRFB_MAX 114  // 121
 #define DRFB_MAX_CUT 95
-#define DRFB_MIN 6
-#define MGL_MAX 114  // 118.5
-#define MGL_MIN 5
+#define DRFB_MIN 30
+#define MGL_MAX 105  // 120
+#define MGL_MIN 10   // 1
 
 // motors
 void limMotorVal(int *n);
@@ -50,7 +50,7 @@ void setDL(int n);
 void setDR(int n);
 void setDRFB(int n);
 void setFB(int n);
-void setClaw(int n);
+void setRollers(int n);
 void setMGL(int n);
 void resetMotors();
 
@@ -67,6 +67,9 @@ void resetDriveEnc();
 
 // resets drive in preparation for using PID with drive
 void resetDrive();
+void resetMGL();
+void resetFB();
+void resetDRFB();
 
 void printEnc();
 void printEnc_pidDrive();

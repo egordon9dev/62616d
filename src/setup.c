@@ -4,6 +4,7 @@
 
 //////////////////////////////          MOTORS
 const int MAX_POWER = 127;
+const bool fakeAuton = true;
 void limMotorVal(int* n) {
     if (*n > MAX_POWER) *n = MAX_POWER;
     if (*n < -MAX_POWER) *n = -MAX_POWER;
@@ -15,30 +16,31 @@ int getLimMotorVal(int n) {
 }
 void setDL(int n) {  //	set right drive motors
     limMotorVal(&n);
-    if (isAutonomous()) {
+    if (isAutonomous() || fakeAuton) {
         n = updateLPF(&DL_lpf_auto, n);
     } else {
-        n = updateLPF(&DL_lpf_auto, n);
+        n = updateLPF(&DL_lpf, n);
     }
-    printf("\tDL: %d", n);
+    // printf("\tDL: %d", n);
     motorSet(M3, n);
     motorSet(M4_5, n);
 }
 void setDR(int n) {  //	set left drive motors
     limMotorVal(&n);
-    if (isAutonomous()) {
+    if (isAutonomous() || fakeAuton) {
         n = updateLPF(&DR_lpf_auto, n);
     } else {
-        n = updateLPF(&DR_lpf_auto, n);
+        n = updateLPF(&DR_lpf, n);
     }
-    printf("\tDL: %d", n);
+    // printf("\tDR: %d", n);
     motorSet(M0, -n);
     motorSet(M1_2, -n);
 }
 void setDRFB(int n) {  //	set main 4 bar lift
     limMotorVal(&n);
-    int max = 20;
+    int max = 50;
     if ((drfbGet() > DRFB_MAX && n > 0) || (drfbGet() < DRFB_MIN && n < 0)) {
+        if (drfbGet() < DRFB_MIN / 3) max /= 3;
         if (n > max) n = max;
         if (n < -max) n = -max;
     }
@@ -51,7 +53,7 @@ void setDRFB(int n) {  //	set main 4 bar lift
 
 void setFB(int n) {
     limMotorVal(&n);
-    int max = 20;
+    int max = 15;
     if ((fbGet() > FB_MAX && n > 0) || (fbGet() < FB_MIN && n < 0)) {
         if (n > max) n = max;
         if (n < -max) n = -max;
@@ -60,13 +62,13 @@ void setFB(int n) {
     n = updateLPF(&fb_lpf, n);
     motorSet(M10, n);
 }
-void setClaw(int n) {  //	set claw
+void setRollers(int n) {  //	set rollers
     limMotorVal(&n);
     motorSet(M11, n);
 }
 void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
-    int max = 20;
+    int max = 15;
     if ((mglGet() > MGL_MAX && n > 0) || (mglGet() < MGL_MIN && n < 0)) {
         if (n > max) n = max;
         if (n < -max) n = -max;
@@ -113,6 +115,18 @@ void resetDrive() {
     turn_pid.doneTime = LONG_MAX;
     setDL(0);
     setDR(0);
+}
+void resetMGL() {
+    mgl_pid.doneTime = LONG_MAX;
+    setMGL(0);
+}
+void resetFB() {
+    fb_pid.doneTime = LONG_MAX;
+    setFB(0);
+}
+void resetDRFB() {
+    drfb_pid_auto.doneTime = LONG_MAX;
+    setDRFB(0);
 }
 
 void printEnc() { printf("dr4b: %d\tfb: %d\tmgl: %d\tDL: %d\tDR: %d\tyaw: %d\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet(), yawGet()); }

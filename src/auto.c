@@ -2,22 +2,79 @@
 #include "pid.h"
 #include "setup.h"
 
-int autonDrive(double dist, int wait) {
-    pidDrive(dist);
-    if (DL_pid.doneTime + wait < millis() && DR_pid.doneTime + wait < millis()) {
-        DL_pid.doneTime = LONG_MAX;
-        DR_pid.doneTime = LONG_MAX;
-        return 1;
+void auton1() {
+    int i = 0;
+    printf("STEP %d\n", i);
+    i++;
+    while (!pidDrive(60, 200)) {
+        pidMGL(120, 200);
+        printEnc();
+        printEnc_pidDrive();
+        delay(20);
     }
-    return 0;
-}
-int autonTurn(double angle, int wait) {
-    pidTurn(angle);
-    if (turn_pid.doneTime + wait < millis()) {
-        turn_pid.doneTime = LONG_MAX;
-        return 1;
+    resetMGL();
+    resetDrive();
+    printf("STEP %d\n", i);
+    i++;
+    while (!pidMGL(5, 200)) {
+        printEnc();
+        delay(20);
     }
-    return 0;
+    resetMGL();
+    printf("STEP %d\n", i);
+    i++;
+    while (!pidDrive(-60, 200)) {
+        printEnc_pidDrive();
+        delay(20);
+    }
+    resetDrive();
+    printf("STEP %d\n", i);
+    i++;
+    while (!pidTurn(50, 200)) {
+        printEnc_pidDrive();
+        delay(20);
+    }
+    resetDrive();
+    printf("STEP %d\n", i);
+    i++;
+    while (!pidDrive(-17, 200)) {
+        printEnc_pidDrive();
+        delay(20);
+    }
+    resetDrive();
+    printf("STEP %d\n", i);
+    i++;
+    while (!pidTurn(140, 200)) {
+        printEnc_pidDrive();
+        delay(20);
+    }
+    printf("STEP %d\n", i);
+    resetDrive();
+    i++;
+    while (!pidDrive(20, 200)) {
+        printEnc_pidDrive();
+        delay(20);
+    }
+    printf("STEP %d\n", i);
+    resetDrive();
+    i++;
+    while (!pidMGL(100, 200)) {
+        printEnc();
+        delay(20);
+    }
+    resetMGL();
+    printf("STEP %d\n", i);
+    i++;
+    while (!pidDrive(-30, 200)) {
+        printEnc();
+        delay(20);
+    }
+    resetDrive();
+    printf("STEP %d\n", i);
+    i++;
+    while (true) {
+        delay(999);
+    }
 }
 
 /*

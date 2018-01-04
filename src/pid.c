@@ -19,11 +19,12 @@ LPF drfb_lpf = {.a = A, .out = 0.0};
 LPF mgl_lpf = {.a = A, .out = 0.0};
 LPF DL_lpf = {.a = A, .out = 0.0};
 LPF DR_lpf = {.a = A, .out = 0.0};
-LPF DL_lpf_auto = {.a = 0.95, .out = 0.0};
-LPF DR_lpf_auto = {.a = 0.95, .out = 0.0};
+LPF DL_lpf_auto = {.a = 0.98, .out = 0.0};
+LPF DR_lpf_auto = {.a = 0.98, .out = 0.0};
 PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0};
-PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.95, .ki = 0.035, .kd = 400, .prevTime = 0, .unwind = 0};
-PidVars fb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 35, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.9, .ki = 0.025, .kd = 420.0, .prevTime = 0, .unwind = 0};
+PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2, .ki = 0.0, .kd = 400, .prevTime = 0, .unwind = 0};
+PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 50, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.95, .ki = 0.035, .kd = 400, .prevTime = 0, .unwind = 0};
+PidVars fb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 35, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 1.6, .ki = 0.0, .kd = 300.0, .prevTime = 0, .unwind = 0};  // .9, .025, 420
 PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 15, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5.0, .ki = 0.0, .kd = 400.0, .prevTime = 0, .unwind = 0};
 #define dkp 0.55
 #define dki 0.006
@@ -72,82 +73,70 @@ double updatePID(PidVars *pidVars) {
     }
     pidVars->prevErr = err;
     pidVars->prevSensVal = pidVars->sensVal;
-    printf("p: %lf, i: %lf, d: %lf\t", p, i, d);
+    // printf("p: %lf, i: %lf, d: %lf\t", p, i, d);
     // OUTPUT
     return p + i + d;
 }
-int killPID(int d, int s, PidVars *p) {
+bool killPID(int d, int s, PidVars *p) {
     double err = p->target - p->sensVal;
     if (fabs(err) < d && fabs(err - p->prevErr) < s) {
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
-int pidFB(double a, int wait) {  // set chain-bar angle with PID
+bool pidFB(double a, int wait) {  // set chain-bar angle with PID
     fb_pid.target = a;
     fb_pid.sensVal = fbGet();
     setFB(updatePID(&fb_pid));
     if (fb_pid.doneTime + wait < millis()) {
         fb_pid.doneTime = LONG_MAX;
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
-int pidDRFB(double a, int wait) {  // set arm angle with PID
-    drfb_pid.target = a;
-    drfb_pid.sensVal = drfbGet();
-    setDRFB(updatePID(&drfb_pid));
-    if (drfb_pid.doneTime + wait < millis()) {
-        drfb_pid.doneTime = LONG_MAX;
-        return 1;
+bool pidDRFB(double a, int wait, bool auton) {  // set arm angle with PID
+    PidVars pid = auton ? drfb_pid_auto : drfb_pid;
+    pid.target = a;
+    pid.sensVal = drfbGet();
+    setDRFB(updatePID(&pid));
+    if (pid.doneTime + wait < millis()) {
+        pid.doneTime = LONG_MAX;
+        return true;
     }
-    return 0;
+    return false;
 }
-int pidMGL(double a, int wait) {  // set chain-bar angle with PID
+bool pidMGL(double a, int wait) {  // set chain-bar angle with PID
     mgl_pid.target = a;
     mgl_pid.sensVal = mglGet();
     setMGL(updatePID(&mgl_pid));
     if (mgl_pid.doneTime + wait < millis()) {
         mgl_pid.doneTime = LONG_MAX;
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
 // angle settings for autonomous cone stacking
 const int DRFB = 0, FB = 1;
-int stackAngles[][2] = {
+int stackAngles[3][2] = {
     //	  ARM | CB
     {75, 110},
     {75, 120},
     {75, 130},
 };
 int returnAngle[] = {0, FB_MIN_CUT};
-// set chain bar and arm with PID to stack given cone
-int stack(int cone) {
-    pidFB(stackAngles[cone][FB], 0);
-    if (fb_pid.doneTime < millis()) {
-        pidDRFB(stackAngles[cone][DRFB], 0);
-    }
-    int wait = 200;
-    if (drfb_pid.doneTime + wait < millis() && fb_pid.doneTime + wait < millis()) {
-        drfb_pid.doneTime = LONG_MAX;
-        fb_pid.doneTime = LONG_MAX;
-        return 1;
-    }
-    return 0;
-}
+
 int getDRFB(int cone) { return stackAngles[cone][DRFB]; }
 int getFB(int cone) { return stackAngles[cone][FB]; }
 // return lift to pick up cones
-void returnLift() {
+void returnLift(bool auton) {
     if (pidFB(40, 0)) {
-        if (pidDRFB(returnAngle[DRFB], 0)) {
+        if (pidDRFB(returnAngle[DRFB], 0, auton)) {
             pidFB(returnAngle[FB], 0);
         }
     }
 }
 // dist is in inches
-void pidDrive(double dist) {
+bool pidDrive(double dist, int wait) {
     DL_pid.sensVal = eDLGet();
     DR_pid.sensVal = eDRGet();
     // 89 inches = 2457 ticks : 2457.0/89.0 = 27.6067
@@ -155,11 +144,22 @@ void pidDrive(double dist) {
     DR_pid.target = dist * 27.6067;
     setDL(updatePID(&DL_pid));
     setDR(updatePID(&DR_pid));
+    if (DL_pid.doneTime + wait < millis() && DR_pid.doneTime + wait < millis()) {
+        DL_pid.doneTime = LONG_MAX;
+        DR_pid.doneTime = LONG_MAX;
+        return true;
+    }
+    return false;
 }
-void pidTurn(double angle) {
+bool pidTurn(double angle, int wait) {
     turn_pid.sensVal = yawGet();
     turn_pid.target = angle;
     int n = updatePID(&turn_pid);
     setDL(-n);
     setDR(n);
+    if (turn_pid.doneTime + wait < millis()) {
+        turn_pid.doneTime = LONG_MAX;
+        return true;
+    }
+    return false;
 }
