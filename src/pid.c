@@ -24,7 +24,7 @@ Slew DR_slew_auto = {.a = 1.0, .out = 0.0};
 PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX, .iActiveZone = 0.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0};
 PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 25, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5, .ki = 0.01, .kd = 400, .prevTime = 0, .unwind = 1};
 PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 25, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5, .ki = 0.01, .kd = 400, .prevTime = 0, .unwind = 1};
-PidVars fb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 40, .iActiveZone = 30.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 4.2, .ki = 0.01, .kd = 440.0, .prevTime = 0, .unwind = 1};  // .9, .025, 420
+PidVars fb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 35, .iActiveZone = 30.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2, .ki = 0.01, .kd = 300.0, .prevTime = 0, .unwind = 1};  // .9, .025, 420
 PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 15, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.0, .kd = 300.0, .prevTime = 0, .unwind = 0};
 #define dkp 0.55  // .32, .002, 185
 #define dki 0.0003
@@ -34,10 +34,10 @@ PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iAc
 PidVars turn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 1, .maxIntegral = 35, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.01, .kd = 600.0, .prevTime = 0, .unwind = 0};
 #define dkp_auto 0.55  // .32, .002, 185
 #define dki_auto 0.0003
-#define dkd 230.0
-PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = 120.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dkp, .ki = dki, .kd = dkd, .prevTime = 0, .unwind = 0};
-PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = 120.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dkp, .ki = dki, .kd = dkd, .prevTime = 0, .unwind = 0};
-PidVars turn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 1, .maxIntegral = 35, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.01, .kd = 600.0, .prevTime = 0, .unwind = 0};
+#define dkd_auto 230.0
+PidVars DL_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = 120.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dkp_auto, .ki = dki_auto, .kd = dkd_auto, .prevTime = 0, .unwind = 0};
+PidVars DR_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = 120.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dkp_auto, .ki = dki_auto, .kd = dkd_auto, .prevTime = 0, .unwind = 0};
+PidVars turn_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 1, .maxIntegral = 35, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.01, .kd = 600.0, .prevTime = 0, .unwind = 0};
 
 void resetDone(PidVars *pidVars) { pidVars->doneTime = LONG_MAX; }
 
@@ -102,28 +102,22 @@ bool killPID(int d, int s, PidVars *p) {
     }
     return false;
 }
-bool pidFB(double a, int wait) {  // set chain-bar angle with PID
+bool pidFB(double a, unsigned long wait) {  // set chain-bar angle with PID
+    if (fb_pid.doneTime + wait < millis()) return true;
     fb_pid.target = a;
     fb_pid.sensVal = fbGet();
     setFB(updatePID(&fb_pid));
-    if (fb_pid.doneTime + wait < millis()) {
-        fb_pid.doneTime = LONG_MAX;
-        return true;
-    }
     return false;
 }
-bool pidDRFB(double a, int wait, bool auton) {  // set arm angle with PID
+bool pidDRFB(double a, unsigned long wait, bool auton) {  // set arm angle with PID
     PidVars pid = auton ? drfb_pid_auto : drfb_pid;
+    if (pid.doneTime + wait < millis()) return true;
     pid.target = a;
     pid.sensVal = drfbGet();
     setDRFB(updatePID(&pid));
-    if (pid.doneTime + wait < millis()) {
-        pid.doneTime = LONG_MAX;
-        return true;
-    }
     return false;
 }
-bool pidMGL(double a, int wait) {  // set chain-bar angle with PID
+bool pidMGL(double a, unsigned long wait) {  // set chain-bar angle with PID
     mgl_pid.target = a;
     mgl_pid.sensVal = mglGet();
     setMGL(updatePID(&mgl_pid));
@@ -141,20 +135,42 @@ int stackAngles[3][2] = {
     {75, 120},
     {75, 130},
 };
-int returnAngle[] = {0, 50};
+int returnAngle[] = {0, 70};
 
 int getDRFB(int cone) { return stackAngles[cone][DRFB]; }
 int getFB(int cone) { return stackAngles[cone][FB]; }
 // return lift to pick up cones
-void returnLift(bool auton) {
-    if (pidFB(40, 100)) {
-        if (pidDRFB(returnAngle[DRFB], 100, auton)) {
-            pidFB(returnAngle[FB], 100);
-        }
+int retStep = 0;
+void startReturnLift() { retStep = 0; }
+bool contReturnLift(bool auton) {
+    return true;
+    printf("retStep: %d\t", retStep);
+    switch (retStep) {
+        case 0:
+            if (pidFB(40, 100)) {
+                retStep++;
+                resetFB();
+            }
+            break;
+        case 1:
+            if (pidDRFB(returnAngle[DRFB], 100, auton)) {
+                retStep++;
+                resetDRFB();
+            }
+            break;
+        case 2:
+            if (pidFB(returnAngle[FB], 9999999)) {
+                retStep++;
+                resetFB();
+            }
+            break;
+        default:
+            return true;
     }
+    return false;
 }
 // dist is in inches
-bool pidDrive(double dist, int wait) {
+bool pidDrive(double dist, unsigned long wait) {
     DL_pid.sensVal = eDLGet();
     DR_pid.sensVal = eDRGet();
     // 89 inches = 2457 ticks : 2457.0/89.0 = 27.6067
@@ -169,7 +185,7 @@ bool pidDrive(double dist, int wait) {
     }
     return false;
 }
-bool pidTurn(double angle, int wait) {
+bool pidTurn(double angle, unsigned long wait) {
     turn_pid.sensVal = yawGet();
     turn_pid.target = angle;
     int n = updatePID(&turn_pid);

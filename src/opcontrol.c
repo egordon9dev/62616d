@@ -39,16 +39,17 @@ void updateLift() {
             moving = false;
         }
         if (joystickGetDigital(1, 8, JOY_UP)) {
-            fbHoldAngle = 141;
+            fbHoldAngle = 133;
         } else if (joystickGetDigital(1, 8, JOY_RIGHT)) {
             fbHoldAngle = 40;
         } else if (joystickGetDigital(1, 8, JOY_DOWN)) {
-            returning = true;
+            // startReturnLift();
+            // returning = true;
         }
     }
     if (!moving) {
         if (returning) {
-            returnLift(false);
+            // contReturnLift(false);
         } else if (millis() - tFbOff > 300) {
             if (!fbPidRunning) {
                 fbHoldAngle = fbGet();
@@ -142,6 +143,12 @@ void controllerTest() {
 }
 #include "auto.h"
 void operatorControl() {
+    startReturnLift();
+    while (0) {
+        contReturnLift(false);
+        printEnc_pidDRFBFB();
+        delay(20);
+    }
     // delay(2000);
     if (autonMode == nAutons + nSkills) {
         // auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, true);
@@ -151,7 +158,7 @@ void operatorControl() {
         printEnc();
         delay(20);
     }
-    test(1);
+    // test(2);
     // auton1();
     unsigned long tMglOff = 0;
     double mglHoldAngle = 0;

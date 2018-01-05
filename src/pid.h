@@ -26,22 +26,23 @@ double updatePID(PidVars *pidVars);
 bool killPID(int d, int s, PidVars *p);
 
 // set chain-bar angle with PID
-bool pidFB(double a, int wait);
+bool pidFB(double a, unsigned long wait);
 
 // set arm angle with PID
-bool pidDRFB(double a, int wait, bool auton);
+bool pidDRFB(double a, unsigned long wait, bool auton);
 
-bool pidMGL(double a, int wait);
+bool pidMGL(double a, unsigned long wait);
 
 // set chain bar and arm with PID to stack given cone
 int getDRFB(int cone);
 int getFB(int cone);
-// return lift to pick up cones
-void returnLift(bool auton);
+// return lift to pick up cones (returns true if lift is returned)
+bool contReturnLift(bool auton);
+void startReturnLift();
 
 // dist: inches
-bool pidDrive(double dist, int wait);
+bool pidDrive(double dist, unsigned long wait);
 // angle: degrees
-bool pidTurn(double angle, int wait);
+bool pidTurn(double angle, unsigned long wait);
 
 #endif
