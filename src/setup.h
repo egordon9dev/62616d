@@ -34,11 +34,12 @@
 #define M0 8
 #define M4_5 9
 
-#define FB_MAX 130  // 141
-#define FB_MIN 10
-#define FB_MIN_CUT 20
+#define FB_MAX_CUT 140
+#define FB_MAX 140  // 153
+#define FB_MIN 0    // -13
+#define FB_MIN_CUT 26
+#define DRFB_MAX_CUT 100
 #define DRFB_MAX 114  // 121
-#define DRFB_MAX_CUT 95
 #define DRFB_MIN 30
 #define MGL_MAX 105  // 120
 #define MGL_MIN 10   // 1
@@ -80,6 +81,7 @@ void setupLCD();
 #define nAutons 5
 #define nSkills 1
 extern int autonMode;
+extern bool progSkills;
 void autoSelect();
 
 #endif  // SETUP_H

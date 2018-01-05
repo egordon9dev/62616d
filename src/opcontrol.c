@@ -89,42 +89,45 @@ void test(int n) {
     switch (n) {
         case 0:
             resetDrive();
-            while (!pidDrive(-40, 20000)) {
+            while (!pidDrive(20, 20000)) {
                 printEnc_pidDrive();
-                delay(10);
+                delay(20);
             }
             resetDrive();
             break;
         case 1:
             resetDrive();
-            while (!pidTurn(-90, 20000)) {
+            while (!pidTurn(-5, 20000)) {
                 printEnc_pidDrive();
-                delay(10);
+                delay(20);
             }
             resetDrive();
             break;
         case 2:
             while (true) {
                 printEnc_pidDRFBFB();
-                fb_pid.target = 120;
+                fb_pid.target = 140;
                 fb_pid.sensVal = fbGet();
                 int p = updatePID(&fb_pid);
                 setFB(p);
                 printf("power: %d\t", p);
-                delay(10);
+                delay(20);
             }
             break;
         case 3:
             while (true) {
                 printEnc_pidDRFBFB();
-                drfb_pid_auto.target = 95;
+                drfb_pid_auto.target = 20;
                 drfb_pid_auto.sensVal = drfbGet();
                 int p = updatePID(&drfb_pid_auto);
                 setDRFB(p);
                 printf("power: %d\t", p);
-                delay(10);
+                delay(20);
             }
             break;
+    }
+    while (true) {
+        delay(999);
     }
 }
 void controllerTest() {
@@ -139,17 +142,17 @@ void controllerTest() {
 }
 #include "auto.h"
 void operatorControl() {
-    delay(2000);
+    // delay(2000);
     if (autonMode == nAutons + nSkills) {
         // auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, true);
     }
     char rollDir = 0;
     while (0) {
         printEnc();
-        delay(10);
+        delay(20);
     }
-    test(0);
-    // auton1()
+    test(1);
+    // auton1();
     unsigned long tMglOff = 0;
     double mglHoldAngle = 0;
     bool mglPidRunning = false;
@@ -205,9 +208,15 @@ void operatorControl() {
             } else if (joystickGetDigital(1, 6, JOY_DOWN)) {
                 // outtake
                 rollDir = -1;
-                setRollers(-55);
+                setRollers(-90);
             } else {
-                setRollers(25 * rollDir);
+                if (rollDir == 1) {
+                    setRollers(25);
+                } else if (rollDir == -1) {
+                    setRollers(-50);
+                } else {
+                    setRollers(0);
+                }
             }
         }
         //----- drive -----//
@@ -243,6 +252,6 @@ void operatorControl() {
         DR_brake.prevSensVal = eDRGet();
         dt = millis() - prevT;
         prevT = millis();
-        delay(10);
+        delay(20);
     }
 }

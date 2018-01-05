@@ -30,7 +30,7 @@ void initialize() {
     delay(2000);
     while (!isEnabled()) {
         autoSelect();
-        delay(10);
+        delay(20);
     }
     lcdSetText(LCD, 1, "RUNNING");
 }

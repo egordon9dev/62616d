@@ -2,19 +2,19 @@
 #define PID_H
 #include <stdbool.h>
 typedef struct PidVars {
-    double unwind, DONE_ZONE, maxIntegral, target, sensVal, prevSensVal, prevErr, errTot, kp, ki, kd;
+    double unwind, DONE_ZONE, maxIntegral, iActiveZone, target, sensVal, prevSensVal, prevErr, errTot, kp, ki, kd;
     unsigned long prevTime, doneTime;
 } PidVars;
-typedef struct LPF {
+typedef struct Slew {
     double a, out;
-} LPF;
-extern LPF fb_lpf, drfb_lpf, mgl_lpf, DL_lpf, DR_lpf, DL_lpf_auto, DR_lpf_auto;
+} Slew;
+extern Slew fb_slew, drfb_slew, mgl_slew, DL_slew, DR_slew, DL_slew_auto, DR_slew_auto;
 extern PidVars pidDef, drfb_pid, drfb_pid_auto, fb_pid, mgl_pid, DL_pid, DR_pid, turn_pid;
 #define LONG_MAX 2147483647
 #define DBL_MAX 999999999.999999
 void resetDone(PidVars *pidVars);
 
-double updateLPF(LPF *lpf, double in);
+double updateSlew(Slew *slew, double in);
 
 //----- proportional + integral + derivative control feedback -----//
 double updatePID(PidVars *pidVars);

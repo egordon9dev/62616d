@@ -4,7 +4,7 @@
 
 //////////////////////////////          MOTORS
 const int MAX_POWER = 127;
-const bool fakeAuton = true;
+bool progSkills = false;
 void limMotorVal(int* n) {
     if (*n > MAX_POWER) *n = MAX_POWER;
     if (*n < -MAX_POWER) *n = -MAX_POWER;
@@ -16,23 +16,23 @@ int getLimMotorVal(int n) {
 }
 void setDL(int n) {  //	set right drive motors
     limMotorVal(&n);
-    if (isAutonomous() || fakeAuton) {
-        n = updateLPF(&DL_lpf_auto, n);
+    if (progSkills) {
+        n = updateSlew(&DL_slew_auto, n);
     } else {
-        n = updateLPF(&DL_lpf, n);
+        n = updateSlew(&DL_slew, n);
     }
-    // printf("\tDL: %d", n);
+    printf("DL: %d\t", n);
     motorSet(M3, n);
     motorSet(M4_5, n);
 }
 void setDR(int n) {  //	set left drive motors
     limMotorVal(&n);
-    if (isAutonomous() || fakeAuton) {
-        n = updateLPF(&DR_lpf_auto, n);
+    if (progSkills) {
+        n = updateSlew(&DR_slew_auto, n);
     } else {
-        n = updateLPF(&DR_lpf, n);
+        n = updateSlew(&DR_slew, n);
     }
-    // printf("\tDR: %d", n);
+    printf("DR: %d\t", n);
     motorSet(M0, -n);
     motorSet(M1_2, -n);
 }
@@ -47,7 +47,7 @@ void setDRFB(int n) {  //	set main 4 bar lift
     if (drfbGet() > DRFB_MAX_CUT && n > 0) {
         n = 0;
     }
-    n = updateLPF(&drfb_lpf, n);
+    n = updateSlew(&drfb_slew, n);
     motorSet(M8_9, n);
 }
 
@@ -58,8 +58,9 @@ void setFB(int n) {
         if (n > max) n = max;
         if (n < -max) n = -max;
     }
-    if (fbGet() < FB_MIN_CUT - drfbGet() && n < -max) n = -max;
-    n = updateLPF(&fb_lpf, n);
+    if (fbGet() < FB_MIN_CUT - drfbGet() && n < 0) n = 0;
+    if (fbGet() > FB_MAX_CUT + drfbGet() / 6 && n > 0) n = 0;
+    n = updateSlew(&fb_slew, n);
     motorSet(M10, n);
 }
 void setRollers(int n) {  //	set rollers
@@ -73,7 +74,8 @@ void setMGL(int n) {  //	set mobile goal lift
         if (n > max) n = max;
         if (n < -max) n = -max;
     }
-    n = updateLPF(&mgl_lpf, n);
+    lcdPrint(LCD, 1, "mgl: %d\n", n);
+    n = updateSlew(&mgl_slew, n);
     motorSet(M6_7, n);
 }
 void resetMotors() {
@@ -131,7 +133,7 @@ void resetDRFB() {
 
 void printEnc() { printf("dr4b: %d\tfb: %d\tmgl: %d\tDL: %d\tDR: %d\tyaw: %d\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet(), yawGet()); }
 void printEnc_pidDrive() { printf("DL: %d/%d\tDR: %d/%d\tTurn: %d/%d\tt: %ld\tdnL: %ld\tdnR: %ld\tdnT: %ld\n", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)turn_pid.sensVal, (int)turn_pid.target, millis(), DL_pid.doneTime, DR_pid.doneTime, turn_pid.doneTime); }
-void printEnc_pidDRFBFB() { printf("drfb: %d/%d\tfb: %d/%d\n", (int)drfb_pid.sensVal, (int)drfb_pid.target, (int)fb_pid.sensVal, (int)fb_pid.target); }
+void printEnc_pidDRFBFB() { printf("drfb: %d/%d\tfb: %d/%d\n", (int)drfb_pid_auto.sensVal, (int)drfb_pid_auto.target, (int)fb_pid.sensVal, (int)fb_pid.target); }
 
 int autonMode = 0;
 void autoSelect() {

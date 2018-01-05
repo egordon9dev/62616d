@@ -4,6 +4,7 @@
 
 void auton1() {
     int i = 0;
+    int yaw = 0;
     printf("STEP %d\n", i);
     i++;
     while (!pidDrive(60, 200)) {
@@ -11,49 +12,58 @@ void auton1() {
         printEnc();
         printEnc_pidDrive();
         delay(20);
+        ;
     }
     resetMGL();
     resetDrive();
     printf("STEP %d\n", i);
     i++;
-    while (!pidMGL(5, 200)) {
+    while (!pidMGL(4, 200)) {
         printEnc();
         delay(20);
+        ;
     }
     resetMGL();
     printf("STEP %d\n", i);
     i++;
-    while (!pidDrive(-60, 200)) {
+    while (!pidDrive(-50, 200)) {
         printEnc_pidDrive();
         delay(20);
+        ;
     }
     resetDrive();
     printf("STEP %d\n", i);
     i++;
-    while (!pidTurn(50, 200)) {
+    while (!pidTurn(yaw + 40, 200)) {
         printEnc_pidDrive();
         delay(20);
+        ;
     }
+    yaw += 40;
     resetDrive();
     printf("STEP %d\n", i);
     i++;
     while (!pidDrive(-17, 200)) {
         printEnc_pidDrive();
         delay(20);
+        ;
     }
     resetDrive();
     printf("STEP %d\n", i);
     i++;
-    while (!pidTurn(140, 200)) {
+    while (!pidTurn(yaw + 90, 200)) {
         printEnc_pidDrive();
         delay(20);
+        ;
     }
+    yaw += 90;
     printf("STEP %d\n", i);
     resetDrive();
     i++;
     while (!pidDrive(20, 200)) {
         printEnc_pidDrive();
         delay(20);
+        ;
     }
     printf("STEP %d\n", i);
     resetDrive();
@@ -61,6 +71,7 @@ void auton1() {
     while (!pidMGL(100, 200)) {
         printEnc();
         delay(20);
+        ;
     }
     resetMGL();
     printf("STEP %d\n", i);
@@ -68,6 +79,7 @@ void auton1() {
     while (!pidDrive(-30, 200)) {
         printEnc();
         delay(20);
+        ;
     }
     resetDrive();
     printf("STEP %d\n", i);
