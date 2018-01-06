@@ -13,14 +13,14 @@
      prevError, errTot, prevTime
      -------------------------
 */
-#define A 25.0
-Slew fb_slew = {.a = A, .out = 0.0};
-Slew drfb_slew = {.a = A, .out = 0.0};
-Slew mgl_slew = {.a = A, .out = 0.0};
-Slew DL_slew = {.a = A, .out = 0.0};
-Slew DR_slew = {.a = A, .out = 0.0};
-Slew DL_slew_auto = {.a = 1.0, .out = 0.0};
-Slew DR_slew_auto = {.a = 1.0, .out = 0.0};
+#define A 10.0  // motor value change per ms
+Slew fb_slew = {.a = A, .out = 0.0, .prevTime = 0};
+Slew drfb_slew = {.a = A, .out = 0.0, .prevTime = 0};
+Slew mgl_slew = {.a = A, .out = 0.0, .prevTime = 0};
+Slew DL_slew = {.a = A, .out = 0.0, .prevTime = 0};
+Slew DR_slew = {.a = A, .out = 0.0, .prevTime = 0};
+Slew DL_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};
+Slew DR_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};
 PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX, .iActiveZone = 0.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0};
 PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 25, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5, .ki = 0.01, .kd = 400, .prevTime = 0, .unwind = 1};
 PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 25, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5, .ki = 0.01, .kd = 400, .prevTime = 0, .unwind = 1};
@@ -42,14 +42,18 @@ PidVars turn_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 1, .maxIntegral = 35
 void resetDone(PidVars *pidVars) { pidVars->doneTime = LONG_MAX; }
 
 double updateSlew(Slew *slew, double in) {
-    double d = in - slew->out;
-    if (fabs(d) < slew->a) {
+    unsigned long dt = millis() - slew->prevTime;
+    if (dt > 1000) dt = 0;
+    slew->prevTime = millis();
+    double maxInc = slew->a * dt;
+    double vel = (double)(in - slew->out) / (double)dt;
+    if (fabs(vel) < slew->a) {
         slew->out = in;
     } else {
-        if (d > 0) {
-            slew->out += slew->a;
+        if (vel > 0) {
+            slew->out += maxInc;
         } else {
-            slew->out -= slew->a;
+            slew->out -= maxInc;
         }
     }
     return slew->out;
@@ -110,11 +114,11 @@ bool pidFB(double a, unsigned long wait) {  // set chain-bar angle with PID
     return false;
 }
 bool pidDRFB(double a, unsigned long wait, bool auton) {  // set arm angle with PID
-    PidVars pid = auton ? drfb_pid_auto : drfb_pid;
-    if (pid.doneTime + wait < millis()) return true;
-    pid.target = a;
-    pid.sensVal = drfbGet();
-    setDRFB(updatePID(&pid));
+    PidVars *pid = auton ? &drfb_pid_auto : &drfb_pid;
+    if (pid->doneTime + wait < millis()) return true;
+    pid->target = a;
+    pid->sensVal = drfbGet();
+    setDRFB(updatePID(pid));
     return false;
 }
 bool pidMGL(double a, unsigned long wait) {  // set chain-bar angle with PID
@@ -142,8 +146,7 @@ int getFB(int cone) { return stackAngles[cone][FB]; }
 // return lift to pick up cones
 int retStep = 0;
 void startReturnLift() { retStep = 0; }
-bool contReturnLift(bool auton) {
-    return true;
+bool contReturnLift(bool auton, unsigned long wait) {
     printf("retStep: %d\t", retStep);
     switch (retStep) {
         case 0:
@@ -159,7 +162,7 @@ bool contReturnLift(bool auton) {
             }
             break;
         case 2:
-            if (pidFB(returnAngle[FB], 9999999)) {
+            if (pidFB(returnAngle[FB], wait)) {
                 retStep++;
                 resetFB();
             }

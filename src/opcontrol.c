@@ -39,17 +39,19 @@ void updateLift() {
             moving = false;
         }
         if (joystickGetDigital(1, 8, JOY_UP)) {
-            fbHoldAngle = 133;
+            fbHoldAngle = 120 + drfbGet() / 4;
+            returning = false;
         } else if (joystickGetDigital(1, 8, JOY_RIGHT)) {
             fbHoldAngle = 40;
-        } else if (joystickGetDigital(1, 8, JOY_DOWN)) {
-            // startReturnLift();
-            // returning = true;
+            returning = false;
+        } else if (joystickGetDigital(1, 8, JOY_DOWN) && !returning) {
+            startReturnLift();
+            returning = true;
         }
     }
     if (!moving) {
         if (returning) {
-            // contReturnLift(false);
+            contReturnLift(false, 9999999);
         } else if (millis() - tFbOff > 300) {
             if (!fbPidRunning) {
                 fbHoldAngle = fbGet();
@@ -143,12 +145,6 @@ void controllerTest() {
 }
 #include "auto.h"
 void operatorControl() {
-    startReturnLift();
-    while (0) {
-        contReturnLift(false);
-        printEnc_pidDRFBFB();
-        delay(20);
-    }
     // delay(2000);
     if (autonMode == nAutons + nSkills) {
         // auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, true);
@@ -175,24 +171,24 @@ void operatorControl() {
         updateLift();
         //----- mobile-goal lift -----//
         if (joystickGetDigital(DM == 1 ? 2 : 1, 8, JOY_RIGHT) || (DM != 0 && joystickGetDigital(DM == 1 ? 2 : 1, 6, JOY_UP))) {
-            mglHoldAngle = 0;
+            mglHoldAngle = 4;
             mglPidRunning = true;
             tMglOff = 0;
-        } else if (DM != 0 && joystickGetDigital(DM == 1 ? 2 : 1, 5, JOY_DOWN)) {
-            mglHoldAngle = 93;
+        } else if (joystickGetDigital(DM == 1 ? 2 : 1, 8, JOY_LEFT) || (DM != 0 && joystickGetDigital(DM == 1 ? 2 : 1, 5, JOY_DOWN))) {
+            mglHoldAngle = 75;
             mglPidRunning = true;
             tMglOff = 0;
         } else if (joystickGetDigital(DM == 1 ? 2 : 1, 8, JOY_UP) || (DM != 0 && joystickGetDigital(DM == 1 ? 2 : 1, 5, JOY_UP))) {
-            mglHoldAngle = mglGet();
             tMglOff = millis();
-            mglPidRunning = false;
             setMGL(-127);
-        } else if (joystickGetDigital(DM == 1 ? 2 : 1, 8, JOY_DOWN) || (DM != 0 && joystickGetDigital(DM == 1 ? 2 : 1, 6, JOY_DOWN))) {
-            mglHoldAngle = mglGet();
+        } else if (joystickGetDigital(DM == 1 ? 2 : 1, 8, JOY_DOWN)) {
             tMglOff = millis();
-            mglPidRunning = false;
             setMGL(127);
-        } else if (millis() - tMglOff > 250) {
+        } else if (DM != 0 && joystickGetDigital(DM == 1 ? 2 : 1, 6, JOY_DOWN)) {
+            mglHoldAngle = 120;
+            mglPidRunning = true;
+            tMglOff = 0;
+        } else if (millis() - tMglOff > 250 || tMglOff == 0) {
             if (!mglPidRunning) {
                 mglPidRunning = true;
                 mglHoldAngle = mglGet();
@@ -211,16 +207,14 @@ void operatorControl() {
             } else if (joystickGetDigital(1, 6, JOY_UP)) {
                 // intake
                 rollDir = 1;
-                setRollers(55);
+                setRollers(80);
             } else if (joystickGetDigital(1, 6, JOY_DOWN)) {
                 // outtake
                 rollDir = -1;
-                setRollers(-90);
+                setRollers(-127);
             } else {
-                if (rollDir == 1) {
-                    setRollers(25);
-                } else if (rollDir == -1) {
-                    setRollers(-50);
+                if (rollDir != 0) {
+                    setRollers(45);
                 } else {
                     setRollers(0);
                 }

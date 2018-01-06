@@ -7,6 +7,7 @@ typedef struct PidVars {
 } PidVars;
 typedef struct Slew {
     double a, out;
+    unsigned long prevTime;
 } Slew;
 extern Slew fb_slew, drfb_slew, mgl_slew, DL_slew, DR_slew, DL_slew_auto, DR_slew_auto;
 extern PidVars pidDef, drfb_pid, drfb_pid_auto, fb_pid, mgl_pid, DL_pid, DR_pid, turn_pid;
@@ -37,7 +38,7 @@ bool pidMGL(double a, unsigned long wait);
 int getDRFB(int cone);
 int getFB(int cone);
 // return lift to pick up cones (returns true if lift is returned)
-bool contReturnLift(bool auton);
+bool contReturnLift(bool auton, unsigned long wait);
 void startReturnLift();
 
 // dist: inches
