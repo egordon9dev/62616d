@@ -16,22 +16,14 @@ int getLimMotorVal(int n) {
 }
 void setDL(int n) {  //	set right drive motors
     limMotorVal(&n);
-    if (progSkills) {
-        n = updateSlew(&DL_slew_auto, n);
-    } else {
-        n = updateSlew(&DL_slew, n);
-    }
+    n = updateSlew(&DL_slew, n);
     printf("DL: %d\t", n);
     motorSet(M3, n);
     motorSet(M4_5, n);
 }
 void setDR(int n) {  //	set left drive motors
     limMotorVal(&n);
-    if (progSkills) {
-        n = updateSlew(&DR_slew_auto, n);
-    } else {
-        n = updateSlew(&DR_slew, n);
-    }
+    n = updateSlew(&DR_slew, n);
     printf("DR: %d\t", n);
     motorSet(M0, -n);
     motorSet(M1_2, -n);
@@ -39,13 +31,12 @@ void setDR(int n) {  //	set left drive motors
 void setDRFB(int n) {  //	set main 4 bar lift
     limMotorVal(&n);
     int max = 50;
-    if ((drfbGet() > DRFB_MAX && n > 0) || (drfbGet() < DRFB_MIN && n < 0)) {
-        if (drfbGet() < DRFB_MIN / 3) max /= 3;
+    int drfbA = drfbGet();
+    if (drfbA > DRFB_MAX_CUT && n > 0) n = 0;
+    if ((drfbA < DRFB_MIN && n < 0) || (drfbA > DRFB_MAX && n > 0)) {
+        if (drfbA < DRFB_MIN / 3 || drfbA > DRFB_MAX) max /= 3;
         if (n > max) n = max;
         if (n < -max) n = -max;
-    }
-    if (drfbGet() > DRFB_MAX_CUT && n > 0) {
-        n = 0;
     }
     n = updateSlew(&drfb_slew, n);
     motorSet(M8_9, n);
@@ -53,13 +44,13 @@ void setDRFB(int n) {  //	set main 4 bar lift
 
 void setFB(int n) {
     limMotorVal(&n);
-    int max = 15;
-    if ((fbGet() > FB_MAX && n > 0) || (fbGet() < FB_MIN && n < 0)) {
+    int max = 20;
+    int fbA = fbGet();
+    if ((fbA > FB_MAX && n > 0) || (fbA < FB_MIN && n < 0)) {
         if (n > max) n = max;
         if (n < -max) n = -max;
     }
-    if (fbGet() < FB_MIN_CUT - drfbGet() && n < 0) n = 0;
-    if (fbGet() > FB_MAX_CUT + drfbGet() / 6 && n > 0) n = 0;
+    if (fbA < FB_MIN_CUT && n < 0) n = 0;
     n = updateSlew(&fb_slew, n);
     motorSet(M10, n);
 }
@@ -74,14 +65,11 @@ void setMGL(int n) {  //	set mobile goal lift
         if (n > max) n = max;
         if (n < -max) n = -max;
     }
-    lcdPrint(LCD, 1, "mgl: %d\n", n);
     n = updateSlew(&mgl_slew, n);
     motorSet(M6_7, n);
 }
 void resetMotors() {
-    for (int i = 1; i <= 10; i++) {
-        motorSet(i, 0);
-    }
+    for (int i = 1; i <= 10; i++) { motorSet(i, 0); }
 }
 void setupLCD() {
     lcdInit(LCD);
@@ -122,18 +110,26 @@ void resetMGL() {
     mgl_pid.doneTime = LONG_MAX;
     setMGL(0);
 }
-void resetFB() {
-    fb_pid.doneTime = LONG_MAX;
+void resetFB(bool auton) {
+    if (auton) {
+        fb_pid_auto.doneTime = LONG_MAX;
+    } else {
+        fb_pid.doneTime = LONG_MAX;
+    }
     setFB(0);
 }
-void resetDRFB() {
-    drfb_pid_auto.doneTime = LONG_MAX;
+void resetDRFB(bool auton) {
+    if (auton) {
+        drfb_pid_auto.doneTime = LONG_MAX;
+    } else {
+        drfb_pid.doneTime = LONG_MAX;
+    }
     setDRFB(0);
 }
 
 void printEnc() { printf("dr4b: %d\tfb: %d\tmgl: %d\tDL: %d\tDR: %d\tyaw: %d\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet(), yawGet()); }
 void printEnc_pidDrive() { printf("DL: %d/%d\tDR: %d/%d\tTurn: %d/%d\tt: %ld\tdnL: %ld\tdnR: %ld\tdnT: %ld\n", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)turn_pid.sensVal, (int)turn_pid.target, millis(), DL_pid.doneTime, DR_pid.doneTime, turn_pid.doneTime); }
-void printEnc_pidDRFBFB() { printf("drfb: %d/%d\tfb: %d/%d\n", (int)drfb_pid_auto.sensVal, (int)drfb_pid_auto.target, (int)fb_pid.sensVal, (int)fb_pid.target); }
+void printEnc_pidDRFBFB() { printf("drfb: %d/%d\tfb: %d/%d\n", (int)drfb_pid_auto.sensVal, (int)drfb_pid_auto.target, (int)fb_pid_auto.sensVal, (int)fb_pid_auto.target); }
 
 int autonMode = 0;
 void autoSelect() {
@@ -143,33 +139,19 @@ void autoSelect() {
         lcdSetText(LCD, 1, "BATTERY STUFF");
     } else {
         if (btn & LCD_BTN_LEFT && !(prevBtn & LCD_BTN_LEFT)) {
-            if (autonMode > 0) {
-                autonMode--;
-            }
+            if (autonMode > 0) { autonMode--; }
         } else if (btn & LCD_BTN_RIGHT && !(prevBtn & LCD_BTN_RIGHT)) {
-            if (autonMode < nAutons + nSkills) {
-                autonMode++;
-            }
+            if (autonMode < nAutons + nSkills) { autonMode++; }
         }
         lcdClear(LCD);
         if (autonMode < nAutons) {
             lcdPrint(LCD, 1, "<   Auton  %d   >", autonMode);
             switch (autonMode) {
-                case 0:
-                    lcdSetText(LCD, 2, "MG + C 20pt LEFT");
-                    break;
-                case 1:
-                    lcdSetText(LCD, 2, "MG + C 20pt RIGHT");
-                    break;
-                case 2:
-                    lcdSetText(LCD, 2, "MG + C 10pt LEFT");
-                    break;
-                case 3:
-                    lcdSetText(LCD, 2, "MG + C 10pt RIGHT");
-                    break;
-                case 4:
-                    lcdSetText(LCD, 2, "MG + C 5pt ANY");
-                    break;
+                case 0: lcdSetText(LCD, 2, "MG + C 20pt LEFT"); break;
+                case 1: lcdSetText(LCD, 2, "MG + C 20pt RIGHT"); break;
+                case 2: lcdSetText(LCD, 2, "MG + C 10pt LEFT"); break;
+                case 3: lcdSetText(LCD, 2, "MG + C 10pt RIGHT"); break;
+                case 4: lcdSetText(LCD, 2, "MG + C 5pt ANY"); break;
             }
         } else if (autonMode <= nAutons + nSkills) {
             switch (autonMode) {

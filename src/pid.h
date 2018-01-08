@@ -10,7 +10,7 @@ typedef struct Slew {
     unsigned long prevTime;
 } Slew;
 extern Slew fb_slew, drfb_slew, mgl_slew, DL_slew, DR_slew, DL_slew_auto, DR_slew_auto;
-extern PidVars pidDef, drfb_pid, drfb_pid_auto, fb_pid, mgl_pid, DL_pid, DR_pid, turn_pid;
+extern PidVars pidDef, drfb_pid, drfb_pid_auto, fb_pid, fb_pid_auto, mgl_pid, DL_pid, DR_pid, turn_pid;
 #define LONG_MAX 2147483647
 #define DBL_MAX 999999999.999999
 void resetDone(PidVars *pidVars);
@@ -27,7 +27,7 @@ double updatePID(PidVars *pidVars);
 bool killPID(int d, int s, PidVars *p);
 
 // set chain-bar angle with PID
-bool pidFB(double a, unsigned long wait);
+bool pidFB(double a, unsigned long wait, bool auton);
 
 // set arm angle with PID
 bool pidDRFB(double a, unsigned long wait, bool auton);
@@ -39,7 +39,7 @@ int getDRFB(int cone);
 int getFB(int cone);
 // return lift to pick up cones (returns true if lift is returned)
 bool contReturnLift(bool auton, unsigned long wait);
-void startReturnLift();
+void startReturnLift(bool auton);
 
 // dist: inches
 bool pidDrive(double dist, unsigned long wait);

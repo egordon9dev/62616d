@@ -13,31 +13,30 @@
      prevError, errTot, prevTime
      -------------------------
 */
-#define A 10.0  // motor value change per ms
+#define A 0.7  // motor value change per ms
 Slew fb_slew = {.a = A, .out = 0.0, .prevTime = 0};
 Slew drfb_slew = {.a = A, .out = 0.0, .prevTime = 0};
 Slew mgl_slew = {.a = A, .out = 0.0, .prevTime = 0};
 Slew DL_slew = {.a = A, .out = 0.0, .prevTime = 0};
-Slew DR_slew = {.a = A, .out = 0.0, .prevTime = 0};
-Slew DL_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};
-Slew DR_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};
+Slew DR_slew = {.a = A, .out = 0.0, .prevTime = 0}; /*
+ Slew DL_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};
+ Slew DR_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};*/
 PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX, .iActiveZone = 0.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0};
-PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 25, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5, .ki = 0.01, .kd = 400, .prevTime = 0, .unwind = 1};
-PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 25, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5, .ki = 0.01, .kd = 400, .prevTime = 0, .unwind = 1};
-PidVars fb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 35, .iActiveZone = 30.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2, .ki = 0.01, .kd = 300.0, .prevTime = 0, .unwind = 1};  // .9, .025, 420
+// weaker PID for opcontrol
+PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 25, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.0, .ki = 0.005, .kd = 250, .prevTime = 0, .unwind = 1};
+PidVars fb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 35, .iActiveZone = 30.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 1.1, .ki = 0.005, .kd = 180.0, .prevTime = 0, .unwind = 1};  // .9, .025, 420
 PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 15, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.0, .kd = 300.0, .prevTime = 0, .unwind = 0};
-#define dkp 0.55  // .32, .002, 185
-#define dki 0.0003
-#define dkd 230.0
-PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = 120.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dkp, .ki = dki, .kd = dkd, .prevTime = 0, .unwind = 0};
-PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = 120.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dkp, .ki = dki, .kd = dkd, .prevTime = 0, .unwind = 0};
-PidVars turn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 1, .maxIntegral = 35, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.01, .kd = 600.0, .prevTime = 0, .unwind = 0};
-#define dkp_auto 0.55  // .32, .002, 185
-#define dki_auto 0.0003
-#define dkd_auto 230.0
-PidVars DL_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = 120.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dkp_auto, .ki = dki_auto, .kd = dkd_auto, .prevTime = 0, .unwind = 0};
-PidVars DR_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = 120.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = dkp_auto, .ki = dki_auto, .kd = dkd_auto, .prevTime = 0, .unwind = 0};
-PidVars turn_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 1, .maxIntegral = 35, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.01, .kd = 600.0, .prevTime = 0, .unwind = 0};
+// agressive PID mostly for autonomous
+PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 25, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5, .ki = 0.01, .kd = 400, .prevTime = 0, .unwind = 1};
+PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 35, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2.4, .ki = 0.0125, .kd = 500.0, .prevTime = 0, .unwind = 1};
+// Drive
+#define DIA 40
+#define DKP 0.48  // .32, .002, 185
+#define DKI 0.0015
+#define DKD 50.0
+PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
+PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
+PidVars turn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 1, .maxIntegral = 60, .iActiveZone = 9.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 4.5, .ki = 0.013, .kd = 370.0, .prevTime = 0, .unwind = 0};
 
 void resetDone(PidVars *pidVars) { pidVars->doneTime = LONG_MAX; }
 
@@ -78,12 +77,14 @@ double updatePID(PidVars *pidVars) {
             printf("UNWIND\n");
         }
     }
+    if (fabs(pidVars->unwind) < 0.001 && fabs(err) < 0.001) {
+        pidVars->errTot = 0.0;
+        printf("UNWIND\n");
+    }
     double i = pidVars->errTot * pidVars->ki;
     // DERIVATIVE
     double d = 0.0;
-    if (dt != 0) {
-        d = ((pidVars->prevSensVal - pidVars->sensVal) * pidVars->kd) / dt;
-    }
+    if (dt != 0) { d = ((pidVars->prevSensVal - pidVars->sensVal) * pidVars->kd) / dt; }
     // done zone
     if (fabs(err) <= pidVars->DONE_ZONE && pidVars->doneTime > millis() && (int)(d * 10) == 0) {
         pidVars->doneTime = millis();
@@ -101,16 +102,15 @@ double updatePID(PidVars *pidVars) {
 }
 bool killPID(int d, int s, PidVars *p) {
     double err = p->target - p->sensVal;
-    if (fabs(err) < d && fabs(err - p->prevErr) < s) {
-        return true;
-    }
+    if (fabs(err) < d && fabs(err - p->prevErr) < s) { return true; }
     return false;
 }
-bool pidFB(double a, unsigned long wait) {  // set chain-bar angle with PID
-    if (fb_pid.doneTime + wait < millis()) return true;
-    fb_pid.target = a;
-    fb_pid.sensVal = fbGet();
-    setFB(updatePID(&fb_pid));
+bool pidFB(double a, unsigned long wait, bool auton) {  // set chain-bar angle with PID
+    PidVars *pid = auton ? &fb_pid_auto : &fb_pid;
+    if (pid->doneTime + wait < millis()) return true;
+    pid->target = a;
+    pid->sensVal = fbGet();
+    setFB(updatePID(pid));
     return false;
 }
 bool pidDRFB(double a, unsigned long wait, bool auton) {  // set arm angle with PID
@@ -139,36 +139,40 @@ int stackAngles[3][2] = {
     {75, 120},
     {75, 130},
 };
-int returnAngle[] = {0, 70};
+int returnAngle[] = {15, 40};
 
 int getDRFB(int cone) { return stackAngles[cone][DRFB]; }
 int getFB(int cone) { return stackAngles[cone][FB]; }
 // return lift to pick up cones
 int retStep = 0;
-void startReturnLift() { retStep = 0; }
+void startReturnLift(bool auton) {
+    retStep = 0;
+    resetFB(auton);
+    resetDRFB(auton);
+}
 bool contReturnLift(bool auton, unsigned long wait) {
     printf("retStep: %d\t", retStep);
     switch (retStep) {
         case 0:
-            if (pidFB(40, 100)) {
+            if (pidFB(40, 100, auton)) {
                 retStep++;
-                resetFB();
+                resetFB(auton);
             }
             break;
         case 1:
             if (pidDRFB(returnAngle[DRFB], 100, auton)) {
                 retStep++;
-                resetDRFB();
+                resetDRFB(auton);
             }
             break;
         case 2:
-            if (pidFB(returnAngle[FB], wait)) {
+            if (pidFB(returnAngle[FB], wait, auton) && pidDRFB(returnAngle[DRFB], wait, auton)) {
                 retStep++;
-                resetFB();
+                resetFB(auton);
+                resetDRFB(auton);
             }
             break;
-        default:
-            return true;
+        default: return true;
     }
     return false;
 }
