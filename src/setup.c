@@ -46,10 +46,8 @@ void setFB(int n) {
     limMotorVal(&n);
     int max = 20;
     int fbA = fbGet();
-    if ((fbA > FB_MAX && n > 0) || (fbA < FB_MIN && n < 0)) {
-        if (n > max) n = max;
-        if (n < -max) n = -max;
-    }
+    if (fbA > FB_MAX && n > max) n = max;
+    if(fbA < FB_MIN && n < -max) n = -max;
     if (fbA < FB_MIN_CUT && n < 0) n = 0;
     n = updateSlew(&fb_slew, n);
     motorSet(M10, n);

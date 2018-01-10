@@ -5,7 +5,7 @@
 //----- updates Arm and Chain-Bar -----//
 unsigned long tFbOff = 0, tDrfbOff = 0;
 double fbHoldAngle = 0, drfbHoldAngle = 0;
-bool fbPidRunning = false, drfbPidRunning = false;
+bool fbPidRunning = false, drfbPidRunning = false, fbUp = false;
 /*
 stuff to reduce weight:
 -replace MGL 5x5 with 2x5
@@ -35,11 +35,13 @@ void updateLift() {
             tFbOff = millis();
             fbPidRunning = false;
             returning = false;
+            fbUp = false;
         } else if (joystickGetDigital(1, 7, JOY_DOWN)) {
             setFB(-127);
             tFbOff = millis();
             fbPidRunning = false;
             returning = false;
+            fbUp = false;
         } else {
             moving = false;
         }
@@ -50,21 +52,23 @@ void updateLift() {
             tFbOff = millis();
             fbPidRunning = false;
             returning = false;
+            fbUp = false;
         } else {
             moving = false;
         }
     }
     if (!moving) {
         if (((DM == 1 || DM == 2) && joystickGetDigital(1, 8, JOY_UP)) || ((DM == 0 || DM == 3) && joystickGetDigital(1, 5, JOY_UP))) {
-            fbHoldAngle = 138 + drfbGet() * 0.0777;  // 0:138 (0), 4:140, 8:143, 11:146 (103)
             tFbOff = 0;
             fbPidRunning = true;
             returning = false;
+            fbUp = true;
         } else if (((DM == 1 || DM == 2) && joystickGetDigital(1, 8, JOY_RIGHT)) || ((DM == 0 || DM == 3) && joystickGetDigital(1, 5, JOY_DOWN))) {
             fbHoldAngle = 40;
             tFbOff = 0;
             fbPidRunning = true;
             returning = false;
+            fbUp = false;
         } else if (((DM == 1 || DM == 2) && joystickGetDigital(1, 8, JOY_DOWN)) || ((DM == 0 || DM == 3) && joystickGetDigital(1, 7, JOY_LEFT)) || returning) {
             if (!returning) {
                 startReturnLift(true);
@@ -76,9 +80,15 @@ void updateLift() {
                 tFbOff = 0;
                 tDrfbOff = 0;
             }
+            fbUp = false;
         }
         if (!returning) {
             if (millis() - tFbOff > 300) {
+                if(fbUp) {
+                    int drfbA = drfbGet();
+                    if(drfbA < 0) drfbA = 0;
+                    fbHoldAngle = 128 + drfbA * 0.0777;  // 0:138 (0), 4:140, 8:143, 11:146 (103)
+                }
                 if (!fbPidRunning) {
                     fbHoldAngle = fbGet();
                     fbPidRunning = true;
@@ -138,7 +148,7 @@ void test(int n) {
         case 2:
             while (true) {
                 printEnc_pidDRFBFB();
-                fb_pid_auto.target = 130;
+                fb_pid_auto.target = 138;
                 fb_pid_auto.sensVal = fbGet();
                 int p = updatePID(&fb_pid_auto);
                 setFB(p);
@@ -182,7 +192,7 @@ void operatorControl() {
         printEnc();
         delay(20);
     }
-    // test(2);
+    //test(2);
     // auton1();
     unsigned long tMglOff = 0, tRollersOff = 0;
     double mglHoldAngle = 0;
@@ -195,6 +205,7 @@ void operatorControl() {
     int DL_brake_out = 0, DR_brake_out = 0;
     while (true) {
         // printEnc();
+        printEnc_pidDRFBFB();
         lcdPrint(LCD, 1, "%d", yawGet());
         updateLift();
         //----- mobile-goal lift -----//
