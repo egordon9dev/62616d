@@ -38,7 +38,8 @@
 #define FB_MIN 0                                           // -13
 #define FB_MIN_CUT (drfbGet() <= 6 ? 26 - drfbGet() : 20)  // <------ keep these parentheses!
 #define DRFB_MAX_CUT 999
-#define DRFB_MAX 98  // 121
+#define DRFB_MAX1 95
+#define DRFB_MAX2 102  // 121, 105
 #define DRFB_MIN 30
 #define MGL_MAX 105  // 120
 #define MGL_MIN 10   // 1

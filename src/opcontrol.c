@@ -7,6 +7,15 @@ unsigned long tFbOff = 0, tDrfbOff = 0;
 double fbHoldAngle = 0, drfbHoldAngle = 0;
 bool fbPidRunning = false, drfbPidRunning = false;
 /*
+stuff to reduce weight:
+-replace MGL 5x5 with 2x5
+-half MGL 2 2x25
+-replace front MGL 2x15 with standoff
+
+-maybe half the 2 2x15 and 2 2x10 on the fb tower
+*/
+
+/*
         fb,drfb     drive,mgl
 Joy :   1           2
 0   :   Erik        ----
@@ -14,13 +23,12 @@ Joy :   1           2
 2   :   Rahul       Erik
 3   :   Erik        Buelah
 */
-const uint8_t DM = 1;
+const uint8_t DM = 0;
 unsigned long opT0;
 void updateLift() {
     static bool returning = false;
     //------ update four bar -----//
     bool moving = true;
-    bool autoPid = false;
     if (DM == 0 || DM == 3) {
         if (joystickGetDigital(1, 7, JOY_UP)) {
             setFB(127);
@@ -48,17 +56,15 @@ void updateLift() {
     }
     if (!moving) {
         if (((DM == 1 || DM == 2) && joystickGetDigital(1, 8, JOY_UP)) || ((DM == 0 || DM == 3) && joystickGetDigital(1, 5, JOY_UP))) {
-            fbHoldAngle = 115 + drfbGet() / 4.5;
+            fbHoldAngle = 138 + drfbGet() * 0.0777;  // 0:138 (0), 4:140, 8:143, 11:146 (103)
             tFbOff = 0;
             fbPidRunning = true;
             returning = false;
-            autoPid = true;
         } else if (((DM == 1 || DM == 2) && joystickGetDigital(1, 8, JOY_RIGHT)) || ((DM == 0 || DM == 3) && joystickGetDigital(1, 5, JOY_DOWN))) {
             fbHoldAngle = 40;
             tFbOff = 0;
             fbPidRunning = true;
             returning = false;
-            autoPid = true;
         } else if (((DM == 1 || DM == 2) && joystickGetDigital(1, 8, JOY_DOWN)) || ((DM == 0 || DM == 3) && joystickGetDigital(1, 7, JOY_LEFT)) || returning) {
             if (!returning) {
                 startReturnLift(true);
@@ -77,7 +83,7 @@ void updateLift() {
                     fbHoldAngle = fbGet();
                     fbPidRunning = true;
                 }
-                PidVars *pid = autoPid ? &fb_pid_auto : &fb_pid;
+                PidVars *pid = &fb_pid_auto;
                 pid->sensVal = fbGet();
                 if (fbHoldAngle < FB_MIN_CUT) fbHoldAngle = FB_MIN_CUT;
                 pid->target = fbHoldAngle;
@@ -103,7 +109,6 @@ void updateLift() {
             }
             drfb_pid.sensVal = drfbGet();
             if (drfbHoldAngle > DRFB_MAX_CUT) drfbHoldAngle = DRFB_MAX_CUT;
-            if (drfbHoldAngle > DRFB_MAX) drfbHoldAngle = DRFB_MAX;
             drfb_pid.target = drfbHoldAngle;
             setDRFB(updatePID(&drfb_pid));
         } else {
@@ -235,10 +240,10 @@ void operatorControl() {
             // outtake
             rollDir = -1;
             tRollersOff = millis();
-            setRollers(-127);
+            setRollers(-60);
         } else {
-            if (millis() - tRollersOff < 1200 && rollDir == -1) {
-                setRollers(-65);
+            if (millis() - tRollersOff < 500 && rollDir == -1) {
+                setRollers(-50);
             } else if (rollDir != 0) {
                 setRollers(25);
             } else {

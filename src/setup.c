@@ -33,8 +33,8 @@ void setDRFB(int n) {  //	set main 4 bar lift
     int max = 50;
     int drfbA = drfbGet();
     if (drfbA > DRFB_MAX_CUT && n > 0) n = 0;
-    if ((drfbA < DRFB_MIN && n < 0) || (drfbA > DRFB_MAX && n > 0)) {
-        if (drfbA < DRFB_MIN / 3 || drfbA > DRFB_MAX) max /= 3;
+    if ((drfbA < DRFB_MIN && n < 0) || (drfbA > DRFB_MAX1 && n > 0)) {
+        if (drfbA < DRFB_MIN / 3 || drfbA > DRFB_MAX2) max /= 3;
         if (n > max) n = max;
         if (n < -max) n = -max;
     }
