@@ -19,11 +19,12 @@ stuff to reduce weight:
         fb,drfb     drive,mgl
 Joy :   1           2
 0   :   Erik        ----
-1   :   Rahul       Buelah
+1   :   Rahul       Beulah
 2   :   Rahul       Erik
-3   :   Erik        Buelah
+3   :   Erik        Beulah or Rahul
 */
-const uint8_t DM = 0;
+#define DM 3
+const bool DM3_RAHUL = (DM == 3 && true);
 unsigned long opT0;
 void updateLift() {
     static bool returning = false;
@@ -266,9 +267,9 @@ void operatorControl() {
         bool moving = true;
         DL_brake_out = ((DL_brake.prevSensVal - eDLGet()) * DL_brake.kd) / dt;
         DR_brake_out = ((DR_brake.prevSensVal - eDRGet()) * DR_brake.kd) / dt;
-        if (DM == 0 || DM == 2) {
+        if (DM == 0 || DM == 2 || DM3_RAHUL) {
             int j3 = joystickGetAnalog(DM == 0 ? 1 : 2, 3);
-            int j4 = joystickGetAnalog(DM == 0 ? 1 : 2, 4);
+            int j4 = joystickGetAnalog(DM == 0 ? 1 : 2, DM3_RAHUL ? 1 : 4);
             if (abs(j3) < td) j3 = 0;
             if (abs(j4) < td) j4 = 0;
             if (j3 == 0 && j4 == 0) moving = false;
