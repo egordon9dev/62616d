@@ -59,9 +59,13 @@ void setRollers(int n) {  //	set rollers
 void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
     int max = 15;
-    if ((mglGet() > MGL_MAX && n > 0) || (mglGet() < MGL_MIN && n < 0)) {
-        if (n > max) n = max;
-        if (n < -max) n = -max;
+    if (mglGet() > MGL_MAX) {
+        if(n > max) n = max;
+        if(n >= 0 && n < max) n = max;
+    }
+    if (mglGet() < MGL_MIN) {
+         if(n < -max) n = -max;
+         if(n <= 0 && n > -max) n = -max;
     }
     n = updateSlew(&mgl_slew, n);
     motorSet(M6_7, n);

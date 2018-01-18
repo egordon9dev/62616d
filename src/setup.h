@@ -41,8 +41,8 @@
 #define DRFB_MAX1 95
 #define DRFB_MAX2 102  // 121, 105
 #define DRFB_MIN 30
-#define MGL_MAX 105  // 120
-#define MGL_MIN 10   // 1
+#define MGL_MAX 115  // 120
+#define MGL_MIN 4   // 1
 
 // motors
 void limMotorVal(int *n);

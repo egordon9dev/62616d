@@ -23,8 +23,8 @@ Joy :   1           2
 2   :   Rahul       Erik
 3   :   Erik        Beulah or Rahul
 */
-#define DM 3
-const bool DM3_RAHUL = (DM == 3 && true);
+#define DM 1
+const bool DM3_RAHUL = (DM == 3 && false);
 unsigned long opT0;
 void updateLift() {
     static bool returning = false;
@@ -205,8 +205,8 @@ void operatorControl() {
     unsigned long dt = 0, prevT = 0;
     int DL_brake_out = 0, DR_brake_out = 0;
     while (true) {
-        // printEnc();
-        printEnc_pidDRFBFB();
+        printEnc();
+        //printEnc_pidDRFBFB();
         lcdPrint(LCD, 1, "%d", yawGet());
         updateLift();
         //----- mobile-goal lift -----//
@@ -225,7 +225,7 @@ void operatorControl() {
             tMglOff = millis();
             setMGL(127);
         } else if (((DM == 1 || DM == 3) && joystickGetDigital(2, 6, JOY_DOWN)) || ((DM == 0 || DM == 2) && joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_DOWN))) {
-            mglHoldAngle = 120;
+            mglHoldAngle = 121;
             mglPidRunning = true;
             tMglOff = 0;
         } else if (millis() - tMglOff > 250 || tMglOff == 0) {
