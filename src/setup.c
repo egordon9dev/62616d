@@ -47,7 +47,7 @@ void setFB(int n) {
     int max = 20;
     int fbA = fbGet();
     if (fbA > FB_MAX && n > max) n = max;
-    if(fbA < FB_MIN && n < -max) n = -max;
+    if (fbA < FB_MIN && n < -max) n = -max;
     if (fbA < FB_MIN_CUT && n < 0) n = 0;
     n = updateSlew(&fb_slew, n);
     motorSet(M10, n);
@@ -60,12 +60,12 @@ void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
     int max = 15;
     if (mglGet() > MGL_MAX) {
-        if(n > max) n = max;
-        if(n >= 0 && n < max) n = max;
+        if (n > max) n = max;
+        if (n >= 0 && n < max) n = max;
     }
     if (mglGet() < MGL_MIN) {
-         if(n < -max) n = -max;
-         if(n <= 0 && n > -max) n = -max;
+        if (n < -max) n = -max;
+        if (n <= 0 && n > -max) n = -max;
     }
     n = updateSlew(&mgl_slew, n);
     motorSet(M6_7, n);
@@ -116,7 +116,6 @@ void resetFB(bool auton) {
     if (auton) {
         fb_pid_auto.doneTime = LONG_MAX;
     } else {
-        fb_pid.doneTime = LONG_MAX;
     }
     setFB(0);
 }

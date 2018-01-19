@@ -9,6 +9,7 @@ bool fbPidRunning = false, drfbPidRunning = false, fbUp = false;
 /*
 todo:
 -skills / auton
+-wheels on wheelie bar
 
 stuff to reduce weight:
 -half MGL 2 2x25
@@ -17,62 +18,50 @@ stuff to reduce weight:
 -maybe half the 2 2x15 and 2 2x10 on the fb tower
 */
 
-/*
-        fb,drfb     drive,mgl
-Joy :   1           2
-0   :   Erik        ----
-1   :   Rahul       Beulah
-2   :   Rahul       Erik                <------ NOPE
-3   :   Erik        Beulah or Rahul
-*/
-#define DM 3
-const bool DM3_RAHUL = (DM == 3 && true);
 unsigned long opT0;
 void updateLift() {
     static bool returning = false;
     //------ update four bar -----//
     bool moving = true;
-    if (DM == 0 || DM == 3) {
-        if (joystickGetDigital(1, 7, JOY_UP)) {
-            setFB(127);
-            tFbOff = millis();
-            fbPidRunning = false;
-            returning = false;
-            fbUp = false;
-        } else if (joystickGetDigital(1, 7, JOY_DOWN)) {
-            setFB(-127);
-            tFbOff = millis();
-            fbPidRunning = false;
-            returning = false;
-            fbUp = false;
-        } else {
-            moving = false;
-        }
+    if (joystickGetDigital(1, 7, JOY_UP)) {
+        setFB(127);
+        tFbOff = millis();
+        fbPidRunning = false;
+        returning = false;
+        fbUp = false;
+    } else if (joystickGetDigital(1, 7, JOY_DOWN)) {
+        setFB(-127);
+        tFbOff = millis();
+        fbPidRunning = false;
+        returning = false;
+        fbUp = false;
     } else {
-        int j2 = joystickGetAnalog(1, 2);
-        if (abs(j2) > 15) {
-            setFB(j2);
-            tFbOff = millis();
-            fbPidRunning = false;
-            returning = false;
-            fbUp = false;
-        } else {
-            moving = false;
-        }
+        moving = false;
     }
+    /*
+    int j2 = joystickGetAnalog(1, 2);
+    if (abs(j2) > 15) {
+        setFB(j2);
+        tFbOff = millis();
+        fbPidRunning = false;
+        returning = false;
+        fbUp = false;
+    } else {
+        moving = false;
+    }*/
     if (!moving) {
-        if (((DM == 1 || DM == 2) && joystickGetDigital(1, 8, JOY_UP)) || ((DM == 0 || DM == 3) && joystickGetDigital(1, 5, JOY_UP))) {
+        if (joystickGetDigital(1, 5, JOY_UP)) {
             tFbOff = 0;
             fbPidRunning = true;
             returning = false;
             fbUp = true;
-        } else if (((DM == 1 || DM == 2) && joystickGetDigital(1, 8, JOY_RIGHT)) || ((DM == 0 || DM == 3) && joystickGetDigital(1, 5, JOY_DOWN))) {
+        } else if (joystickGetDigital(1, 5, JOY_DOWN)) {
             fbHoldAngle = 40;
             tFbOff = 0;
             fbPidRunning = true;
             returning = false;
             fbUp = false;
-        } else if (((DM == 1 || DM == 2) && joystickGetDigital(1, 8, JOY_DOWN)) || ((DM == 0 || DM == 3) && joystickGetDigital(1, 7, JOY_LEFT)) || returning) {
+        } else if (joystickGetDigital(1, 7, JOY_LEFT) || returning) {
             if (!returning) {
                 startReturnLift(true);
                 returning = true;
@@ -80,27 +69,22 @@ void updateLift() {
                 contReturnLift(true, 9999999);
                 fbHoldAngle = fbGet();
                 drfbHoldAngle = drfbGet();
-                tFbOff = 0;
-                tDrfbOff = 0;
+                tFbOff = millis();
+                tDrfbOff = millis();
             }
             fbUp = false;
         }
         if (!returning) {
             if (millis() - tFbOff > 300) {
-                if (fbUp) {
-                    int drfbA = drfbGet();
-                    if (drfbA < 0) drfbA = 0;
-                    fbHoldAngle = 128 + drfbA * 0.12;
-                }
+                if (fbUp) fbHoldAngle = 128 + drfbGet() * 0.12;
                 if (!fbPidRunning) {
                     fbHoldAngle = fbGet();
                     fbPidRunning = true;
                 }
-                PidVars *pid = &fb_pid_auto;
-                pid->sensVal = fbGet();
+                fb_pid_auto.sensVal = fbGet();
                 if (fbHoldAngle < FB_MIN_CUT) fbHoldAngle = FB_MIN_CUT;
-                pid->target = fbHoldAngle;
-                setFB(updatePID(pid));
+                fb_pid_auto.target = fbHoldAngle;
+                setFB(updatePID(&fb_pid_auto));
             } else {
                 setFB(0);
                 fbPidRunning = false;
@@ -108,7 +92,7 @@ void updateLift() {
         }
     }
     const int t = 15;
-    int js = DM == 1 || DM == 2 ? joystickGetAnalog(1, 3) : joystickGetAnalog(1, 2);
+    int js = joystickGetAnalog(1, 2);
     if (abs(js) > t) {
         tDrfbOff = millis();
         drfbPidRunning = false;
@@ -208,26 +192,26 @@ void operatorControl() {
     while (true) {
         printEnc();
         // printEnc_pidDRFBFB();
-        lcdPrint(LCD, 1, "%d", yawGet());
+        lcdPrint(LCD, 1, "%d", joystickGetDigital(2, 6, JOY_UP) ? 1 : 0);
         updateLift();
         //----- mobile-goal lift -----//
-        if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_RIGHT) || ((DM == 1 || DM == 3) && joystickGetDigital(2, 6, JOY_UP))) {
+        if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_RIGHT) || joystickGetDigital(2, 6, JOY_UP)) {
             mglPidRunning = true;
             mglHoldAngle = 4;
             resetMGL();
             tMglOff = 0;
-        } else if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_LEFT) || ((DM == 1 || DM == 3) && joystickGetDigital(2, 5, JOY_DOWN) || ((DM == 3 && DM3_RAHUL))) {
+        } else if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_LEFT) || joystickGetDigital(2, 5, JOY_DOWN) || joystickGetDigital(2, 5, JOY_UP)) {
             mglPidRunning = true;
             mglHoldAngle = 75;
             resetMGL();
             tMglOff = 0;
-        } else if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_UP) || ((DM == 1 || DM == 3) && joystickGetDigital(2, 5, JOY_UP))) {
+        } else if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_UP)) {
             tMglOff = millis();
             setMGL(-127);
-        } else if ((DM == 1 || DM == 3) && joystickGetDigital(2, 8, JOY_DOWN)) {
+        } else if (joystickGetDigital(2, 8, JOY_DOWN)) {
             tMglOff = millis();
             setMGL(127);
-        } else if (((DM == 1 || DM == 3) && joystickGetDigital(2, 6, JOY_DOWN)) || ((DM == 0 || DM == 2) && joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_DOWN))) {
+        } else if (joystickGetDigital(2, 6, JOY_DOWN) || (DM == 0 && joystickGetDigital(1, 8, JOY_DOWN))) {
             mglPidRunning = true;
             mglHoldAngle = 121;
             resetMGL();
@@ -250,7 +234,7 @@ void operatorControl() {
             if (pidMGL(mglHoldAngle, 0)) { mglPidRunning = false; }
         }
         //----- rollers -----//
-        if (((DM == 1 || DM == 2) && (joystickGetDigital(1, 5, JOY_UP) || joystickGetDigital(1, 5, JOY_DOWN))) || ((DM == 0 || DM == 3) && joystickGetDigital(1, 7, JOY_RIGHT))) {
+        if (joystickGetDigital(1, 7, JOY_RIGHT)) {
             // stop rollers
             rollDir = 0;
             setRollers(0);
@@ -278,21 +262,21 @@ void operatorControl() {
         bool moving = true;
         DL_brake_out = ((DL_brake.prevSensVal - eDLGet()) * DL_brake.kd) / dt;
         DR_brake_out = ((DR_brake.prevSensVal - eDRGet()) * DR_brake.kd) / dt;
-        if (DM == 0 || DM == 2 || DM3_RAHUL) {
-            int j3 = joystickGetAnalog(DM == 0 ? 1 : 2, 3);
-            int j4 = joystickGetAnalog(DM == 0 ? 1 : 2, DM3_RAHUL ? 1 : 4);
-            if (abs(j3) < td) j3 = 0;
-            if (abs(j4) < td) j4 = 0;
-            if (j3 == 0 && j4 == 0) moving = false;
-            setDL(j3 + j4);
-            setDR(j3 - j4);
+        if (DM != 1) {
+            int drv = joystickGetAnalog(DM == 0 ? 1 : 2, 3);
+            int trn = DM == 0 ? joystickGetAnalog(1, 4) : joystickGetAnalog(2, 1);
+            if (abs(drv) < td) drv = 0;
+            if (abs(trn) < td) trn = 0;
+            if (drv == 0 && trn == 0) moving = false;
+            setDL(drv + trn);
+            setDR(drv - trn);
         } else {
-            int j2 = joystickGetAnalog(2, 2), j3 = joystickGetAnalog(2, 3);
-            if (abs(j2) < td) j2 = 0;
-            if (abs(j3) < td) j3 = 0;
-            if (j2 == 0 && j3 == 0) moving = false;
-            setDL(j3);
-            setDR(j2);
+            int dl = joystickGetAnalog(2, 3), dr = joystickGetAnalog(2, 2);
+            if (abs(dl) < td) dl = 0;
+            if (abs(dr) < td) dr = 0;
+            if (dl == 0 && dr == 0) moving = false;
+            setDL(dl);
+            setDR(dr);
         }
         if (!moving) {
             setDL(DL_brake_out);

@@ -42,7 +42,7 @@
 #define DRFB_MAX2 102  // 121, 105
 #define DRFB_MIN 30
 #define MGL_MAX 115  // 120
-#define MGL_MIN 4   // 1
+#define MGL_MIN 4    // 1
 
 // motors
 void limMotorVal(int *n);
@@ -84,4 +84,64 @@ extern int autonMode;
 extern bool progSkills;
 void autoSelect();
 
+#define DM 2
+/*
+            stack               drive
+-----   DM 0: "Erik,----"   -----
+            joy1                joy2
+j4:         turn                ----
+j3:         drive               ----
+j1:         ----                ----
+j2:         drfb                ----
+btn7L:      return              ----
+btn7U:      fbManUp             ----
+btn7R:      stopRollers         ----
+btn7D:      fbManDown           ----
+btn8L:      mglAutoMid          ----
+btn8U:      mglManualUp         ----
+btn8R:      mglAutoUp           ----
+btn8D:      mglAutoDown       ----
+btn5U:      fbAutoUp            ----
+btn5D:      fbAutoDown          ----
+btn6U:      rollerIn            ----
+btn6D:      rollerOut           ----
+
+-----   DM 1: "Erik, Beulah"   -----
+            joy1                joy2
+j4:         ----                ----
+j3:         ----                driveLeft
+j1:         ----                ----
+j2:         drfb                driveRight
+btn7L:      return              ----
+btn7U:      fbManUp             ----
+btn7R:      stopRollers         ----
+btn7D:      fbManDown           ----
+btn8L:      ----                mglAutoMid
+btn8U:      ----                mglManualUp
+btn8R:      ----                mglAutoUp
+btn8D:      ----                mglManualDown
+btn5U:      fbAutoUp            mglAutoMid
+btn5D:      fbAutoDown          mglAutoMid
+btn6U:      rollerIn            mglAutoUp
+btn6D:      rollerOut           mglAutoDown
+
+-----   DM 2: "Erik, Rahul"   -----
+            joy1                joy2
+j4:         ----                ----
+j3:         ----                drive
+j1:         ----                turn
+j2:         drfb                ----
+btn7L:      return              ----
+btn7U:      fbManUp             ----
+btn7R:      stopRollers         ----
+btn7D:      fbManDown           ----
+btn8L:      ----                mglAutoMid
+btn8U:      ----                mglManualUp
+btn8R:      ----                mglAutoUp
+btn8D:      ----                mglManualDown
+btn5U:      fbAutoUp            mglAutoMid
+btn5D:      fbAutoDown          mglAutoMid
+btn6U:      rollerIn            mglAutoUp
+btn6D:      rollerOut           mglAutoDown
+*/
 #endif  // SETUP_H

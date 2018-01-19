@@ -10,7 +10,7 @@ typedef struct Slew {
     unsigned long prevTime;
 } Slew;
 extern Slew fb_slew, drfb_slew, mgl_slew, DL_slew, DR_slew, DL_slew_auto, DR_slew_auto;
-extern PidVars pidDef, drfb_pid, drfb_pid_auto, fb_pid, fb_pid_auto, mgl_pid, DL_pid, DR_pid, turn_pid;
+extern PidVars pidDef, drfb_pid, drfb_pid_auto, fb_pid_auto, mgl_pid, DL_pid, DR_pid, turn_pid;
 #define LONG_MAX 2147483647
 #define DBL_MAX 999999999.999999
 void resetDone(PidVars *pidVars);
