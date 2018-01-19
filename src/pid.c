@@ -107,7 +107,10 @@ bool killPID(int d, int s, PidVars *p) {
 }
 bool pidFB(double a, unsigned long wait, bool auton) {  // set chain-bar angle with PID
     PidVars *pid = auton ? &fb_pid_auto : &fb_pid;
-    if (pid->doneTime + wait < millis()) return true;
+    if (pid->doneTime + wait < millis()) {
+        setFB(0);
+        return true;
+    }
     pid->target = a;
     pid->sensVal = fbGet();
     setFB(updatePID(pid));
@@ -115,20 +118,23 @@ bool pidFB(double a, unsigned long wait, bool auton) {  // set chain-bar angle w
 }
 bool pidDRFB(double a, unsigned long wait, bool auton) {  // set arm angle with PID
     PidVars *pid = auton ? &drfb_pid_auto : &drfb_pid;
-    if (pid->doneTime + wait < millis()) return true;
+    if (pid->doneTime + wait < millis()) {
+        setDRFB(0);
+        return true;
+    }
     pid->target = a;
     pid->sensVal = drfbGet();
     setDRFB(updatePID(pid));
     return false;
 }
 bool pidMGL(double a, unsigned long wait) {  // set chain-bar angle with PID
+    if (mgl_pid.doneTime + wait < millis()) {
+        setMGL(0);
+        return true;
+    }
     mgl_pid.target = a;
     mgl_pid.sensVal = mglGet();
     setMGL(updatePID(&mgl_pid));
-    if (mgl_pid.doneTime + wait < millis()) {
-        mgl_pid.doneTime = LONG_MAX;
-        return true;
-    }
     return false;
 }
 // angle settings for autonomous cone stacking
