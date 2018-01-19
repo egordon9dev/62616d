@@ -23,8 +23,8 @@ Joy :   1           2
 2   :   Rahul       Erik
 3   :   Erik        Beulah or Rahul
 */
-#define DM 1
-const bool DM3_RAHUL = (DM == 3 && false);
+#define DM 3
+const bool DM3_RAHUL = (DM == 3 && true);
 unsigned long opT0;
 void updateLift() {
     static bool returning = false;
@@ -85,9 +85,9 @@ void updateLift() {
         }
         if (!returning) {
             if (millis() - tFbOff > 300) {
-                if(fbUp) {
+                if (fbUp) {
                     int drfbA = drfbGet();
-                    if(drfbA < 0) drfbA = 0;
+                    if (drfbA < 0) drfbA = 0;
                     fbHoldAngle = 128 + drfbA * 0.0777;  // 0:138 (0), 4:140, 8:143, 11:146 (103)
                 }
                 if (!fbPidRunning) {
@@ -193,7 +193,7 @@ void operatorControl() {
         printEnc();
         delay(20);
     }
-    //test(2);
+    // test(2);
     // auton1();
     unsigned long tMglOff = 0, tRollersOff = 0;
     double mglHoldAngle = 0;
@@ -206,7 +206,7 @@ void operatorControl() {
     int DL_brake_out = 0, DR_brake_out = 0;
     while (true) {
         printEnc();
-        //printEnc_pidDRFBFB();
+        // printEnc_pidDRFBFB();
         lcdPrint(LCD, 1, "%d", yawGet());
         updateLift();
         //----- mobile-goal lift -----//
