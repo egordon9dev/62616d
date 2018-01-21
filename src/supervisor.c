@@ -172,14 +172,14 @@ void svInit() {
     SV_IN->joystick[1].button56 = (uint8_t)0x00;
     SV_IN->joystick[1].button78 = (uint8_t)0x00;
     // Default team name shows up during firmware flashing
-    svTeamName[0] = 'T';
-    svTeamName[1] = 'H';
-    svTeamName[2] = 'A';
-    svTeamName[3] = ' ';
-    svTeamName[4] = 'E';
-    svTeamName[5] = 'G';
-    svTeamName[6] = 'O';
-    svTeamName[7] = 'R';
+    svTeamName[0] = 'P';
+    svTeamName[1] = 'R';
+    svTeamName[2] = 'O';
+    svTeamName[3] = 'S';
+    svTeamName[4] = ' ';
+    svTeamName[5] = ' ';
+    svTeamName[6] = ' ';
+    svTeamName[7] = ' ';
     // Now we are ready to enable RXNE interrupt
     SPI1->CR2 = SPI_CR2_RXNEIE;
 }

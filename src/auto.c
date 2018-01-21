@@ -1,92 +1,187 @@
 #include "main.h"
 #include "pid.h"
 #include "setup.h"
-
-void auton1() {
-    int i = 0;
+// 15, 20
+void auton1(bool leftSide, bool stack2) {
+    printf("running auton1...\n");
     int yaw = 0;
-    printf("STEP %d\n", i);
-    i++;
-    while (!pidDrive(60, 200)) {
-        pidMGL(120, 200);
-        printEnc();
-        printEnc_pidDrive();
-        delay(20);
-        ;
-    }
-    resetMGL();
-    resetDrive();
-    printf("STEP %d\n", i);
-    i++;
-    while (!pidMGL(4, 200)) {
-        printEnc();
-        delay(20);
-        ;
-    }
-    resetMGL();
-    printf("STEP %d\n", i);
-    i++;
-    while (!pidDrive(-50, 200)) {
-        printEnc_pidDrive();
-        delay(20);
-        ;
-    }
-    resetDrive();
-    printf("STEP %d\n", i);
-    i++;
-    while (!pidTurn(yaw + 40, 200)) {
-        printEnc_pidDrive();
-        delay(20);
-        ;
-    }
-    yaw += 40;
-    resetDrive();
-    printf("STEP %d\n", i);
-    i++;
-    while (!pidDrive(-17, 200)) {
-        printEnc_pidDrive();
-        delay(20);
-        ;
-    }
-    resetDrive();
-    printf("STEP %d\n", i);
-    i++;
-    while (!pidTurn(yaw + 90, 200)) {
-        printEnc_pidDrive();
-        delay(20);
-        ;
-    }
-    yaw += 90;
-    printf("STEP %d\n", i);
-    resetDrive();
-    i++;
-    while (!pidDrive(20, 200)) {
-        printEnc_pidDrive();
-        delay(20);
-        ;
-    }
-    printf("STEP %d\n", i);
-    resetDrive();
-    i++;
-    while (!pidMGL(100, 200)) {
-        printEnc();
-        delay(20);
-        ;
-    }
-    resetMGL();
-    printf("STEP %d\n", i);
-    i++;
-    while (!pidDrive(-30, 200)) {
-        printEnc();
-        delay(20);
-        ;
-    }
-    resetDrive();
-    printf("STEP %d\n", i);
-    i++;
+    unsigned long t0 = millis();
+    int i = 0;
+    double prevSens[3] = {0, 0, 0};
     while (true) {
-        delay(999);
+        int j = 0;
+        if (i == j++) {  // deploy
+            if (millis() - t0 < 100) {
+                setRollers(50);
+            } else {
+                setRollers(20);
+            }
+            if (fbGet() > 15) {
+                setMGL(127);
+                pidDRFB(20, 999999, true);
+            }
+            pidFB(FB_UP_POS, 999999, true);
+            if (mglGet() > 85) i++;
+        } else if (i == j++) {  // grab MG
+            pidMGL(MGL_DOWN_POS, 999999);
+            pidFB(FB_UP_POS, 999999, true);
+            pidDRFB(20, 999999, true);
+            if (pidDrive(54, 200)) {
+                mgl_pid.doneTime = LONG_MAX;
+                if (stack2) resetDriveEnc();
+                setDL(0);
+                setDR(0);
+                i++;
+            }
+        } else if (i == j++) {  // lift MG
+            if (stack2 && mglGet() < 80) pidDrive(8, 999999);
+            pidFB(FB_UP_POS, 999999, true);
+            pidDRFB(15, 999999, true);
+            if (pidMGL(MGL_UP_POS, 0)) {
+                drfb_pid_auto.doneTime = LONG_MAX;
+                i++;
+            }
+        } else if (i == j++) {  // stack cone 1
+            pidFB(FB_UP_POS, 999999, true);
+            if (stack2)
+                pidDrive(8, 999999); /*
+     if (drfbGet() < 5) setRollers(-50);
+     if (pidDRFB(0, 0, true)) i++;*/
+            setRollers(-127);
+            i++;
+            fb_pid_auto.doneTime = LONG_MAX;
+        } else if (i == j++) {  // hover lift over cone 2
+            if (stack2) {
+                pidDrive(8, 999999);
+                pidDRFB(15, 999999, true);
+                if (drfbGet() > 12) {
+                    if (pidFB(FB_MID_POS, 0, true)) {
+                        drfb_pid_auto.doneTime = LONG_MAX;
+                        i++;
+                    }
+                } else {
+                    pidFB(FB_UP_POS, 999999, true);
+                    fb_pid_auto.doneTime = LONG_MAX;
+                }
+            } else {
+                i++;
+            }
+        } else if (i == j++) {  // grab cone 2
+            if (stack2) {
+                pidDrive(8, 999999);
+                setRollers(70);
+                if (pidDRFB(0, 200, true)) {
+                    resetDriveEnc();
+                    DL_pid.doneTime = LONG_MAX;
+                    DR_pid.doneTime = LONG_MAX;
+                    t0 = millis();
+                    i++;
+                }
+            } else {
+                i++;
+            }
+        } else if (i == j++) {  // lift cone 2
+            if (stack2) {
+                pidDrive(stack2 ? -55 : -47, 200);
+                pidDRFB(22, 999999, true);
+                if (millis() - t0 > 300) setRollers(20);
+                if (drfbGet() > 18) {
+                    if (pidFB(FB_UP_POS, 0, true)) {
+                        drfb_pid_auto.doneTime = LONG_MAX;
+                        setRollers(20);
+                        i++;
+                    }
+                } else {
+                    pidFB(FB_MID_POS, 999999, true);
+                    fb_pid_auto.doneTime = LONG_MAX;
+                }
+            } else {
+                i++;
+            }
+        } else if (i == j++) {  // stack cone 2
+            if (stack2) {
+                pidDrive(stack2 ? -55 : -47, 200);
+                if (drfbGet() < 5) setRollers(-50);
+                pidFB(FB_UP_POS, 999999, true);
+                if (pidDRFB(0, 0, true)) {
+                    drfb_pid_auto.doneTime = LONG_MAX;
+                    i++;
+                }
+            } else {
+                i++;
+            }
+        } else if (i == j++) {
+            pidFB(FB_UP_POS, 999999, true);
+            pidDRFB(20, 999999, true);
+            if (pidDrive(stack2 ? -55 : -47, 200)) {
+                resetDriveEnc();
+                turn_pid.doneTime = LONG_MAX;
+                i++;
+                yaw += leftSide ? 37 : -37;
+            }
+        } else if (i == j++) {
+            setFB(0);
+            setRollers(0);
+            pidDRFB(20, 999999, true);
+            if (pidTurn(yaw, 200)) {
+                resetDriveEnc();
+                DL_pid.doneTime = LONG_MAX;
+                DR_pid.doneTime = LONG_MAX;
+                i++;
+            }
+        } else if (i == j++) {
+            pidDRFB(20, 999999, true);
+            if (pidDrive(-22, 200)) {
+                resetDriveEnc();
+                turn_pid.doneTime = LONG_MAX;
+                i++;
+                yaw += leftSide ? 90 : -90;
+            }
+        } else if (i == j++) {
+            pidDRFB(20, 999999, true);
+            if (pidTurn(yaw, 200)) {
+                mgl_pid.doneTime = LONG_MAX;
+                i++;
+            }
+        } else if (i == j++) {
+            pidDRFB(20, 999999, true);
+            if (pidMGL(MGL_MID_POS, 0)) {
+                i++;
+                resetDriveEnc();
+            }
+        } else if (i == j++) {
+            pidDrive(33, 999999);
+            prevSens[0] = prevSens[1];
+            prevSens[1] = prevSens[2];
+            prevSens[2] = eDLGet() + eDRGet();
+            pidDRFB(20, 999999, true);
+            if (eDLGet() + eDRGet() - (prevSens[0] + prevSens[1] + prevSens[2]) / 3.0 <= 6 && eDLGet() + eDRGet() > 40) {
+                mgl_pid.doneTime = LONG_MAX;
+                i++;
+            }
+        } else if (i == j++) {
+            pidDRFB(0, 999999, true);
+            if (pidMGL(MGL_MID_POS + 40, 0)) {
+                mgl_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
+                DL_pid.doneTime = LONG_MAX;
+                DR_pid.doneTime = LONG_MAX;
+                t0 = millis();
+                i++;
+            }
+        } else if (i == j++) {
+            setDRFB(0);
+            if (millis() - t0 > 300) {
+                pidMGL(MGL_MID_POS + 25, 0);
+            } else {
+                setMGL(0);
+            }
+            if (pidDrive(-24, 200)) i++;
+        }
+        printEnc_all();
+        delay(20);
     }
+    resetMotors();
 }
 
 /*
@@ -108,24 +203,5 @@ void auton1() {
  */
 void autonomous() {
     resetDriveEnc();
-    switch (autonMode) { /*
-         case 0:
-             auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, false);
-             break;
-         case 1:
-             auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, true, false);
-             break;
-         case 2:
-             auton3(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false);
-             break;
-         case 3:
-             auton3(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, true);
-             break;
-         case 4:
-             auton4(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid);
-             break;
-         case 5:
-             skills0(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid);
-             break;*/
-    }
+    auton1(true, true);
 }

@@ -9,6 +9,13 @@ bool fbPidRunning = false, drfbPidRunning = false, fbUp = false;
 /*
 todo:
 -skills / auton
+-auton selection
+
+
+
+
+-2 motor(HS) fb
+-passive PC intake
 -wheels on wheelie bar
 
 stuff to reduce weight:
@@ -56,7 +63,7 @@ void updateLift() {
             returning = false;
             fbUp = true;
         } else if (joystickGetDigital(1, 5, JOY_DOWN)) {
-            fbHoldAngle = 40;
+            fbHoldAngle = FB_MID_POS;
             tFbOff = 0;
             fbPidRunning = true;
             returning = false;
@@ -76,7 +83,7 @@ void updateLift() {
         }
         if (!returning) {
             if (millis() - tFbOff > 300) {
-                if (fbUp) fbHoldAngle = 128 + drfbGet() * 0.12;
+                if (fbUp) fbHoldAngle = FB_UP_POS;
                 if (!fbPidRunning) {
                     fbHoldAngle = fbGet();
                     fbPidRunning = true;
@@ -126,7 +133,7 @@ void test(int n) {
             break;
         case 1:
             resetDrive();
-            while (!pidTurn(5, 20000)) {
+            while (!pidTurn(45, 20000)) {
                 printEnc_pidDrive();
                 delay(20);
             }
@@ -154,6 +161,17 @@ void test(int n) {
                 delay(20);
             }
             break;
+        case 4:
+            while (true) {
+                printEnc();
+                mgl_pid.target = MGL_DOWN_POS;
+                mgl_pid.sensVal = mglGet();
+                int p = updatePID(&mgl_pid);
+                setMGL(p);
+                printf("power: %d\t", p);
+                delay(20);
+            }
+            break;
     }
     while (true) { delay(999); }
 }
@@ -169,17 +187,21 @@ void controllerTest() {
 }
 #include "auto.h"
 void operatorControl() {
+    // test(1);
+    for (int i = 10; i > 0; i--) {
+        delay(200);
+        printf("%d\n", i);
+    }
+    while (0) {
+        printEnc();
+        delay(20);
+    }
+    auton1(true, true);
     opT0 = millis();
     /*if (autonMode == nAutons + nSkills) {
         auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, true);
     }*/
     char rollDir = 0;
-    while (0) {
-        printEnc();
-        delay(20);
-    }
-    // test(2);
-    // auton1();
     unsigned long tMglOff = 0, tRollersOff = 0;
     double mglHoldAngle = 0;
     bool mglPidRunning = false;
@@ -197,12 +219,12 @@ void operatorControl() {
         //----- mobile-goal lift -----//
         if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_RIGHT) || joystickGetDigital(2, 6, JOY_UP)) {
             mglPidRunning = true;
-            mglHoldAngle = 4;
+            mglHoldAngle = MGL_UP_POS;
             resetMGL();
             tMglOff = 0;
         } else if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_LEFT) || joystickGetDigital(2, 5, JOY_DOWN) || joystickGetDigital(2, 5, JOY_UP)) {
             mglPidRunning = true;
-            mglHoldAngle = 75;
+            mglHoldAngle = MGL_MID_POS;
             resetMGL();
             tMglOff = 0;
         } else if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_UP)) {
@@ -213,25 +235,21 @@ void operatorControl() {
             setMGL(127);
         } else if (joystickGetDigital(2, 6, JOY_DOWN) || (DM == 0 && joystickGetDigital(1, 8, JOY_DOWN))) {
             mglPidRunning = true;
-            mglHoldAngle = 121;
+            mglHoldAngle = MGL_DOWN_POS;
             resetMGL();
             tMglOff = 0;
         } else if (millis() - tMglOff > 250 || tMglOff == 0) {
             if (!mglPidRunning) {
-                if (mglGet() < 105) {
-                    mglPidRunning = true;
-                    mglHoldAngle = mglGet();
-                    resetMGL();
-                } else {
-                    setMGL(0);
-                }
+                mglPidRunning = true;
+                mglHoldAngle = mglGet();
+                resetMGL();
             }
         } else {
             mglPidRunning = false;
             setMGL(0);
         }
         if (mglPidRunning) {
-            if (pidMGL(mglHoldAngle, 0)) { mglPidRunning = false; }
+            if (pidMGL(mglHoldAngle, 999999)) mglPidRunning = false;
         }
         //----- rollers -----//
         if (joystickGetDigital(1, 7, JOY_RIGHT)) {

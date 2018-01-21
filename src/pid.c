@@ -24,7 +24,7 @@ Slew DR_slew = {.a = A, .out = 0.0, .prevTime = 0}; /*
 PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX, .iActiveZone = 0.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0};
 // weaker PID for opcontrol
 PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 25, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.0, .ki = 0.005, .kd = 250, .prevTime = 0, .unwind = 1};
-PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 15, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.0, .kd = 200.0, .prevTime = 0, .unwind = 0};
+PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 15, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 4.0, .ki = 0.0, .kd = 200.0, .prevTime = 0, .unwind = 0};
 // agressive PID mostly for autonomous
 PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 25, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5, .ki = 0.01, .kd = 400, .prevTime = 0, .unwind = 1};
 PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 35, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 1.8, .ki = 0.01, .kd = 175.0, .prevTime = 0, .unwind = 5};
@@ -35,7 +35,7 @@ PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 35, 
 #define DKD 50.0
 PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
 PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
-PidVars turn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 1, .maxIntegral = 60, .iActiveZone = 9.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 4.5, .ki = 0.013, .kd = 370.0, .prevTime = 0, .unwind = 0};
+PidVars turn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 1, .maxIntegral = 50, .iActiveZone = 4.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 4.85, .ki = 0.022, .kd = 650.0, .prevTime = 0, .unwind = 0};
 
 void resetDone(PidVars *pidVars) { pidVars->doneTime = LONG_MAX; }
 
@@ -64,12 +64,17 @@ double updatePID(PidVars *pidVars) {
     // PROPORTIONAL
     double err = pidVars->target - pidVars->sensVal;
     double p = err * pidVars->kp;
+    // DERIVATIVE
+    double d = 0.0;
+    if (dt != 0) { d = ((pidVars->prevSensVal - pidVars->sensVal) * pidVars->kd) / dt; }
     // INTEGRAL
     pidVars->errTot += err * dt;
     if (fabs(err) > pidVars->iActiveZone) pidVars->errTot = 0;
-    double maxErrTot = pidVars->maxIntegral / pidVars->ki;
-    if (pidVars->errTot > maxErrTot) pidVars->errTot = maxErrTot;
-    if (pidVars->errTot < -maxErrTot) pidVars->errTot = -maxErrTot;
+    if (fabs(d) > 10) {
+        double maxErrTot = pidVars->maxIntegral / pidVars->ki;
+        if (pidVars->errTot > maxErrTot) pidVars->errTot = maxErrTot;
+        if (pidVars->errTot < -maxErrTot) pidVars->errTot = -maxErrTot;
+    }
     if (((err > 0.0 && pidVars->errTot < 0.0) || (err < 0.0 && pidVars->errTot > 0.0)) && abs(err) > 0.001) {
         if (fabs(err) >= pidVars->unwind) {
             pidVars->errTot = 0.0;
@@ -81,9 +86,6 @@ double updatePID(PidVars *pidVars) {
         printf("UNWIND\n");
     }
     double i = pidVars->errTot * pidVars->ki;
-    // DERIVATIVE
-    double d = 0.0;
-    if (dt != 0) { d = ((pidVars->prevSensVal - pidVars->sensVal) * pidVars->kd) / dt; }
     // done zone
     if (fabs(err) <= pidVars->DONE_ZONE && pidVars->doneTime > millis() && (int)(d * 10) == 0) {
         pidVars->doneTime = millis();
@@ -95,7 +97,7 @@ double updatePID(PidVars *pidVars) {
     }*/
     pidVars->prevErr = err;
     pidVars->prevSensVal = pidVars->sensVal;
-    printf("p: %lf, i: %lf, d: %lf\t", p, i, d);
+    // printf("p: %lf, i: %lf, d: %lf\t", p, i, d);
     // OUTPUT
     return p + i + d;
 }
@@ -138,7 +140,7 @@ bool pidMGL(double a, unsigned long wait) {  // set chain-bar angle with PID
 // angle settings for autonomous cone stacking
 const int DRFB = 0, FB = 1;
 int stackAngles[3][2] = {
-    //	  ARM | CB
+    //	  ARM | FB
     {75, 110},
     {75, 120},
     {75, 130},
@@ -182,6 +184,11 @@ bool contReturnLift(bool auton, unsigned long wait) {
 }
 // dist is in inches
 bool pidDrive(double dist, unsigned long wait) {
+    if (DL_pid.doneTime + wait < millis() && DR_pid.doneTime + wait < millis()) {
+        setDL(0);
+        setDR(0);
+        return true;
+    }
     DL_pid.sensVal = eDLGet();
     DR_pid.sensVal = eDRGet();
     // 89 inches = 2457 ticks : 2457.0/89.0 = 27.6067
@@ -189,22 +196,18 @@ bool pidDrive(double dist, unsigned long wait) {
     DR_pid.target = dist * 27.6067;
     setDL(updatePID(&DL_pid));
     setDR(updatePID(&DR_pid));
-    if (DL_pid.doneTime + wait < millis() && DR_pid.doneTime + wait < millis()) {
-        DL_pid.doneTime = LONG_MAX;
-        DR_pid.doneTime = LONG_MAX;
-        return true;
-    }
     return false;
 }
 bool pidTurn(double angle, unsigned long wait) {
+    if (turn_pid.doneTime + wait < millis()) {
+        setDL(0);
+        setDR(0);
+        return true;
+    }
     turn_pid.sensVal = yawGet();
     turn_pid.target = angle;
     int n = updatePID(&turn_pid);
     setDL(-n);
     setDR(n);
-    if (turn_pid.doneTime + wait < millis()) {
-        turn_pid.doneTime = LONG_MAX;
-        return true;
-    }
     return false;
 }

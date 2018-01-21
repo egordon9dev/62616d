@@ -17,14 +17,12 @@ int getLimMotorVal(int n) {
 void setDL(int n) {  //	set right drive motors
     limMotorVal(&n);
     n = updateSlew(&DL_slew, n);
-    printf("DL: %d\t", n);
     motorSet(M3, n);
     motorSet(M4_5, n);
 }
 void setDR(int n) {  //	set left drive motors
     limMotorVal(&n);
     n = updateSlew(&DR_slew, n);
-    printf("DR: %d\t", n);
     motorSet(M0, -n);
     motorSet(M1_2, -n);
 }
@@ -60,12 +58,10 @@ void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
     int max = 15;
     if (mglGet() > MGL_MAX) {
-        if (n > max) n = max;
-        if (n >= 0 && n < max) n = max;
+        if (n >= 0) n = max;
     }
     if (mglGet() < MGL_MIN) {
-        if (n < -max) n = -max;
-        if (n <= 0 && n > -max) n = -max;
+        if (n <= 0) n = -max;
     }
     n = updateSlew(&mgl_slew, n);
     motorSet(M6_7, n);
@@ -131,7 +127,11 @@ void resetDRFB(bool auton) {
 void printEnc() { printf("dr4b: %d\tfb: %d\tmgl: %d\tDL: %d\tDR: %d\tyaw: %d\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet(), yawGet()); }
 void printEnc_pidDrive() { printf("DL: %d/%d\tDR: %d/%d\tTurn: %d/%d\tt: %ld\tdnL: %ld\tdnR: %ld\tdnT: %ld\n", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)turn_pid.sensVal, (int)turn_pid.target, millis(), DL_pid.doneTime, DR_pid.doneTime, turn_pid.doneTime); }
 void printEnc_pidDRFBFB() { printf("drfb: %d/%d\tfb: %d/%d\n", (int)drfb_pid_auto.sensVal, (int)drfb_pid_auto.target, (int)fb_pid_auto.sensVal, (int)fb_pid_auto.target); }
-
+void printEnc_all() {
+    printf("DL: %d/%d\tDR: %d/%d\tTurn: %d/%d\tt: %ld\t", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)turn_pid.sensVal, (int)turn_pid.target, millis());
+    printf("drfb: %d/%d\tfb: %d/%d\t", (int)drfb_pid_auto.sensVal, (int)drfb_pid_auto.target, (int)fb_pid_auto.sensVal, (int)fb_pid_auto.target);
+    printf("mgl: %d/%d\n", (int)mgl_pid.sensVal, (int)mgl_pid.target);
+}
 int autonMode = 0;
 void autoSelect() {
     static int prevBtn = 0;

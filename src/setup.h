@@ -37,12 +37,17 @@
 #define FB_MAX 140                                         // 153
 #define FB_MIN 0                                           // -13
 #define FB_MIN_CUT (drfbGet() <= 6 ? 26 - drfbGet() : 20)  // <------ keep these parentheses!
+#define FB_MID_POS 40
+#define FB_UP_POS (128 + drfbGet() * 0.12)
 #define DRFB_MAX_CUT 999
 #define DRFB_MAX1 95
-#define DRFB_MAX2 102  // 121, 105
+#define DRFB_MAX2 102  // 124, 105
 #define DRFB_MIN 30
 #define MGL_MAX 115  // 120
 #define MGL_MIN 4    // 1
+#define MGL_DOWN_POS 124
+#define MGL_MID_POS 75
+#define MGL_UP_POS 8
 
 // motors
 void limMotorVal(int *n);
@@ -75,6 +80,7 @@ void resetDRFB(bool auton);
 void printEnc();
 void printEnc_pidDrive();
 void printEnc_pidDRFBFB();
+void printEnc_all();
 void setupLCD();
 
 // auton

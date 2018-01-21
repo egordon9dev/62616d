@@ -2,6 +2,6 @@
 #define AUTO_H
 #include "pid.h"
 
-void auton1();
+void auton1(bool leftSide, bool stack2);
 
 #endif  // AUTO_H
