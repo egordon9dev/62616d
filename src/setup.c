@@ -56,12 +56,12 @@ void setRollers(int n) {  //	set rollers
 }
 void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
-    int max = 15;
+    int maxD = 15, maxU = 20;
     if (mglGet() > MGL_MAX) {
-        if (n >= 0) n = max;
+        if (n >= 0) n = maxD;
     }
     if (mglGet() < MGL_MIN) {
-        if (n <= 0) n = -max;
+        if (n <= 0) n = -maxU;
     }
     n = updateSlew(&mgl_slew, n);
     motorSet(M6_7, n);
@@ -89,7 +89,7 @@ int drfbGet() {  //-s
     return (-analogRead(DRFB_POT) + 2750) * POT_SENSITIVITY;
 }
 int fbGet() { return (analogRead(FB_POT) - 1320) * POT_SENSITIVITY; }
-int mglGet() { return (analogRead(MGL_POT) - 1500) * POT_SENSITIVITY; }
+int mglGet() { return (4095 - analogRead(MGL_POT)) * POT_SENSITIVITY; }
 int eDLGet() { return encoderGet(eDL); }
 int eDRGet() { return encoderGet(eDR); }
 void resetDriveEnc() {

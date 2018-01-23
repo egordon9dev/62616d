@@ -13,7 +13,7 @@
      prevError, errTot, prevTime
      -------------------------
 */
-#define A 0.7  // motor value change per ms
+#define A 1  // motor value change per ms           0.7
 Slew fb_slew = {.a = A, .out = 0.0, .prevTime = 0};
 Slew drfb_slew = {.a = A, .out = 0.0, .prevTime = 0};
 Slew mgl_slew = {.a = A, .out = 0.0, .prevTime = 0};
@@ -30,12 +30,12 @@ PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 25
 PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 35, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 1.8, .ki = 0.01, .kd = 175.0, .prevTime = 0, .unwind = 5};
 // Drive
 #define DIA 40
-#define DKP 0.48  // .32, .002, 185
+#define DKP 0.5  // 0.48
 #define DKI 0.0015
 #define DKD 50.0
 PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
 PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
-PidVars turn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 1, .maxIntegral = 50, .iActiveZone = 4.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 4.85, .ki = 0.022, .kd = 650.0, .prevTime = 0, .unwind = 0};
+PidVars turn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 40, .iActiveZone = 4.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 7.2 /*6.7*/, .ki = 0.013, .kd = 580.0, .prevTime = 0, .unwind = 0};
 
 void resetDone(PidVars *pidVars) { pidVars->doneTime = LONG_MAX; }
 
@@ -75,8 +75,8 @@ double updatePID(PidVars *pidVars) {
         if (pidVars->errTot > maxErrTot) pidVars->errTot = maxErrTot;
         if (pidVars->errTot < -maxErrTot) pidVars->errTot = -maxErrTot;
     }
-    if (((err > 0.0 && pidVars->errTot < 0.0) || (err < 0.0 && pidVars->errTot > 0.0)) && abs(err) > 0.001) {
-        if (fabs(err) >= pidVars->unwind) {
+    if ((err > 0.0 && pidVars->errTot < 0.0) || (err < 0.0 && pidVars->errTot > 0.0) || abs(err) < 0.001) {
+        if (fabs(err) - pidVars->unwind > -0.001) {
             pidVars->errTot = 0.0;
             printf("UNWIND\n");
         }

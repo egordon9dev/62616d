@@ -14,7 +14,7 @@
 //------- Analog -------
 
 #define POW_EXP 1
-#define MGL_POT 2
+#define MGL_POT 6
 #define DRFB_POT 3
 #define FB_POT 4
 #define GYRO 5
@@ -43,11 +43,11 @@
 #define DRFB_MAX1 95
 #define DRFB_MAX2 102  // 124, 105
 #define DRFB_MIN 30
-#define MGL_MAX 115  // 120
+#define MGL_MAX 114  // 120
 #define MGL_MIN 4    // 1
-#define MGL_DOWN_POS 124
-#define MGL_MID_POS 75
-#define MGL_UP_POS 8
+#define MGL_DOWN_POS 121
+#define MGL_MID_POS 88
+#define MGL_UP_POS 1
 
 // motors
 void limMotorVal(int *n);

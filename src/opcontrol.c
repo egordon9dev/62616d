@@ -133,7 +133,7 @@ void test(int n) {
             break;
         case 1:
             resetDrive();
-            while (!pidTurn(45, 20000)) {
+            while (!pidTurn(-90, 20000)) {
                 printEnc_pidDrive();
                 delay(20);
             }
@@ -207,8 +207,8 @@ void operatorControl() {
     bool mglPidRunning = false;
 
     PidVars DL_brake = pidDef, DR_brake = pidDef;
-    DL_brake.kd = 20;
-    DR_brake.kd = 20;
+    DL_brake.kd = 30;
+    DR_brake.kd = 30;
     unsigned long dt = 0, prevT = 0;
     int DL_brake_out = 0, DR_brake_out = 0;
     while (true) {
@@ -219,11 +219,13 @@ void operatorControl() {
         //----- mobile-goal lift -----//
         if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_RIGHT) || joystickGetDigital(2, 6, JOY_UP)) {
             mglPidRunning = true;
+            mgl_pid.doneTime = LONG_MAX;
             mglHoldAngle = MGL_UP_POS;
             resetMGL();
             tMglOff = 0;
         } else if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_LEFT) || joystickGetDigital(2, 5, JOY_DOWN) || joystickGetDigital(2, 5, JOY_UP)) {
             mglPidRunning = true;
+            mgl_pid.doneTime = LONG_MAX;
             mglHoldAngle = MGL_MID_POS;
             resetMGL();
             tMglOff = 0;
@@ -235,21 +237,22 @@ void operatorControl() {
             setMGL(127);
         } else if (joystickGetDigital(2, 6, JOY_DOWN) || (DM == 0 && joystickGetDigital(1, 8, JOY_DOWN))) {
             mglPidRunning = true;
+            mgl_pid.doneTime = LONG_MAX;
             mglHoldAngle = MGL_DOWN_POS;
             resetMGL();
             tMglOff = 0;
         } else if (millis() - tMglOff > 250 || tMglOff == 0) {
-            if (!mglPidRunning) {
+            if (!mglPidRunning && mglGet() <= MGL_MAX && mglGet() >= MGL_MIN) {
                 mglPidRunning = true;
+                mgl_pid.doneTime = LONG_MAX;
                 mglHoldAngle = mglGet();
-                resetMGL();
             }
         } else {
             mglPidRunning = false;
             setMGL(0);
         }
         if (mglPidRunning) {
-            if (pidMGL(mglHoldAngle, 999999)) mglPidRunning = false;
+            if (pidMGL(mglHoldAngle, 200)) mglPidRunning = false;
         }
         //----- rollers -----//
         if (joystickGetDigital(1, 7, JOY_RIGHT)) {
@@ -276,7 +279,7 @@ void operatorControl() {
             }
         }
         //----- drive -----//
-        const int td = 10;
+        const int td = 15;
         bool moving = true;
         DL_brake_out = ((DL_brake.prevSensVal - eDLGet()) * DL_brake.kd) / dt;
         DR_brake_out = ((DR_brake.prevSensVal - eDRGet()) * DR_brake.kd) / dt;
