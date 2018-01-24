@@ -68,18 +68,6 @@ void updateLift() {
             fbPidRunning = true;
             returning = false;
             fbUp = false;
-        } else if (joystickGetDigital(1, 7, JOY_LEFT) || returning) {
-            if (!returning) {
-                startReturnLift(true);
-                returning = true;
-            } else {
-                contReturnLift(true, 9999999);
-                fbHoldAngle = fbGet();
-                drfbHoldAngle = drfbGet();
-                tFbOff = millis();
-                tDrfbOff = millis();
-            }
-            fbUp = false;
         }
         if (!returning) {
             if (millis() - tFbOff > 300) {
@@ -124,25 +112,21 @@ void updateLift() {
 void test(int n) {
     switch (n) {
         case 0:
-            resetDrive();
             while (!pidDrive(-10, 20000)) {
                 printEnc_pidDrive();
                 delay(20);
             }
-            resetDrive();
             break;
         case 1:
-            resetDrive();
             while (!pidTurn(-90, 20000)) {
                 printEnc_pidDrive();
                 delay(20);
             }
-            resetDrive();
             break;
         case 2:
             while (true) {
                 printEnc_pidDRFBFB();
-                fb_pid_auto.target = 138;
+                fb_pid_auto.target = 40;
                 fb_pid_auto.sensVal = fbGet();
                 int p = updatePID(&fb_pid_auto);
                 setFB(p);
@@ -187,7 +171,7 @@ void controllerTest() {
 }
 #include "auto.h"
 void operatorControl() {
-    // test(1);
+    // test(2);
     for (int i = 10; i > 0; i--) {
         delay(200);
         printf("%d\n", i);
@@ -196,7 +180,8 @@ void operatorControl() {
         printEnc();
         delay(20);
     }
-    auton1(true, true);
+    // auton1(true, true);
+    skills();
     opT0 = millis();
     /*if (autonMode == nAutons + nSkills) {
         auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, true);
@@ -221,13 +206,11 @@ void operatorControl() {
             mglPidRunning = true;
             mgl_pid.doneTime = LONG_MAX;
             mglHoldAngle = MGL_UP_POS;
-            resetMGL();
             tMglOff = 0;
         } else if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_LEFT) || joystickGetDigital(2, 5, JOY_DOWN) || joystickGetDigital(2, 5, JOY_UP)) {
             mglPidRunning = true;
             mgl_pid.doneTime = LONG_MAX;
             mglHoldAngle = MGL_MID_POS;
-            resetMGL();
             tMglOff = 0;
         } else if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_UP)) {
             tMglOff = millis();
@@ -239,7 +222,6 @@ void operatorControl() {
             mglPidRunning = true;
             mgl_pid.doneTime = LONG_MAX;
             mglHoldAngle = MGL_DOWN_POS;
-            resetMGL();
             tMglOff = 0;
         } else if (millis() - tMglOff > 250 || tMglOff == 0) {
             if (!mglPidRunning && mglGet() <= MGL_MAX && mglGet() >= MGL_MIN) {

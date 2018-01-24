@@ -44,11 +44,14 @@ void auton1(bool leftSide, bool stack2) {
                 if (mglGet() < 80) pidDrive(8, 999999);
                 pidFB(FB_UP_POS + 8, 999999, true);
                 pidDRFB(15, 999999, true);
-                if (pidMGL(MGL_UP_POS, 0)) { i++; }
+                if (pidMGL(MGL_UP_POS, 0)) {
+                    i++;
+                    setMGL(0);
+                }
             } else {
                 pidFB(FB_MID_POS, 999999, true);
                 pidDRFB(35, 999999, true);
-                if (millis() - t0 > 100) pidMGL(MGL_UP_POS, 999999);
+                if (millis() - t0 > 100 && pidMGL(MGL_UP_POS, 0)) setMGL(0);
                 setRollers(-80);
                 if (mglGet() < 100) {
                     setRollers(0);
@@ -61,6 +64,7 @@ void auton1(bool leftSide, bool stack2) {
                 }
             }
         } else if (i == j++) {  // stack cone 1
+            if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
             if (stack2) {
                 pidDrive(8, 999999);
                 pidFB(FB_UP_POS + 8, 999999, true);
@@ -74,6 +78,7 @@ void auton1(bool leftSide, bool stack2) {
                 i++;
             }
         } else if (i == j++) {  // hover lift over cone 2
+            if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
             if (stack2) {
                 pidDrive(8, 999999);
                 pidDRFB(15, 999999, true);
@@ -87,6 +92,7 @@ void auton1(bool leftSide, bool stack2) {
                 i++;
             }
         } else if (i == j++) {  // grab cone 2
+            if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
             if (stack2) {
                 pidDrive(8, 999999);
                 setRollers(70);
@@ -103,6 +109,7 @@ void auton1(bool leftSide, bool stack2) {
                 i++;
             }
         } else if (i == j++) {  // lift cone 2
+            if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
             if (stack2) {
                 pidDrive(-55, 200);
                 pidDRFB(22, 999999, true);
@@ -121,6 +128,7 @@ void auton1(bool leftSide, bool stack2) {
                 i++;
             }
         } else if (i == j++) {  // stack cone 2
+            if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
             if (stack2) {
                 pidDrive(-55, 200);
                 if (drfbGet() < 5) setRollers(-50);
@@ -135,7 +143,7 @@ void auton1(bool leftSide, bool stack2) {
         } else if (i == j++) {
             pidFB(FB_UP_POS, 999999, true);
             pidDRFB(20, 999999, true);
-            pidMGL(MGL_UP_POS, 999999);
+            if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
             if (pidDrive(stack2 ? -55 : -47, 200)) {
                 resetDriveEnc();
                 turn_pid.doneTime = LONG_MAX;
@@ -154,7 +162,7 @@ void auton1(bool leftSide, bool stack2) {
             }
         } else if (i == j++) {
             pidDRFB(20, 999999, true);
-            if (pidDrive(-22, 200)) {
+            if (pidDrive(-25, 200)) {
                 resetDriveEnc();
                 turn_pid.doneTime = LONG_MAX;
                 i++;
@@ -178,7 +186,7 @@ void auton1(bool leftSide, bool stack2) {
             } else {
                 pidMGL(MGL_MID_POS, 999999);
             }
-            if (eDLGet() + eDRGet() - (prevSens[0] + prevSens[1] + prevSens[2]) / 3.0 <= 6 && eDLGet() + eDRGet() > 40) {
+            if (eDLGet() + eDRGet() - (prevSens[0] + prevSens[1] + prevSens[2]) / 3.0 <= 6 && eDLGet() + eDRGet() > 56) {
                 i++;
                 resetDriveEnc();
                 t0 = millis();
@@ -219,35 +227,86 @@ void auton1(bool leftSide, bool stack2) {
 void skills() {
     int i = 0;
     unsigned long funcT0 = millis(), t0 = millis();
-    while (millis() - funcT0 < 15000) {
+    double prevSens[3] = {0, 0, 0};
+    auton1(true, false);
+    int yaw = yawGet();
+    turn_pid.doneTime = LONG_MAX;
+    mgl_pid.doneTime = LONG_MAX;
+    yaw += 55;
+    double drfbA = 0, fbA = FB_UP_POS;
+    while (millis() - funcT0 < 60000) {
+        if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
         int j = 0;
-        if (i == j++) {  // deploy
-            if (millis() - t0 < 100) {
-                setRollers(50);
-            } else {
-                setRollers(20);
+        pidDRFB(drfbA, 999999, true);
+        pidFB(fbA, 999999, true);
+        if (i == j++) {
+            if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
+            if (pidTurn(yaw, 200)) {
+                i++;
+                resetDriveEnc();
+                DL_pid.doneTime = LONG_MAX;
+                DR_pid.doneTime = LONG_MAX;
             }
-            if (fbGet() > 15) {
-                setMGL(127);
-                pidDRFB(20, 999999, true);
+        } else if (i == j++) {
+            if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
+            if (pidDrive(-18, 200)) {
+                i++;
+                turn_pid.doneTime = LONG_MAX;
+                yaw -= 100;
             }
-            pidFB(FB_UP_POS, 999999, true);
-        } else if (i == j++) {  // d 28
-        } else if (i == j++) {  // t
         } else if (i == j++) {
+            if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
+            if (pidTurn(yaw, 200)) {
+                i++;
+                resetDriveEnc();
+            }
         } else if (i == j++) {
+            if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
+            pidDrive(25, 999999);
+            prevSens[0] = prevSens[1];
+            prevSens[1] = prevSens[2];
+            prevSens[2] = eDLGet() + eDRGet();
+            if (eDLGet() + eDRGet() - (prevSens[0] + prevSens[1] + prevSens[2]) / 3.0 <= 6 && eDLGet() + eDRGet() > 40) {
+                i++;
+                t0 = millis();
+            }
         } else if (i == j++) {
+            setDL(30);
+            setDR(30);
+            if (millis() - t0 > 600) {
+                yaw = yawGet();
+                DL_pid.doneTime = LONG_MAX;
+                DR_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
+                i++;
+            }
         } else if (i == j++) {
+            if (pidDrive(-8, 200)) {
+                i++;
+                turn_pid.doneTime = LONG_MAX;
+                mgl_pid.doneTime = LONG_MAX;
+                yaw -= 150;
+            }
         } else if (i == j++) {
+            if (pidMGL(MGL_DOWN_POS, 0)) setMGL(0);
+            if (pidTurn(yaw, 200)) {
+                i++;
+                DL_pid.doneTime = LONG_MAX;
+                DR_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
+            }
+        } else if (i == j++) {
+            if (pidMGL(MGL_DOWN_POS, 0)) setMGL(0);
+            if (pidDrive(38, 200)) i++;
         } else if (i == j++) {
         } else if (i == j++) {
             break;
         }
         printEnc_all();
         delay(20);
+        resetMotors();
+        printf("\n\nTIME: %lf\n", (millis() - funcT0) / 1000.0);
     }
-    resetMotors();
-    printf("\n\nTIME: %lf\n", (millis() - funcT0) / 1000.0);
 }
 /*
  * Runs the user autonomous code. This function will be started in its own task

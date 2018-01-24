@@ -38,7 +38,7 @@
 #define FB_MIN 0                                           // -13
 #define FB_MIN_CUT (drfbGet() <= 6 ? 26 - drfbGet() : 20)  // <------ keep these parentheses!
 #define FB_MID_POS 40
-#define FB_UP_POS (128 + drfbGet() * 0.12)
+#define FB_UP_POS (128 + drfbGet() * drfbGet() * 0.002)
 #define DRFB_MAX_CUT 999
 #define DRFB_MAX1 95
 #define DRFB_MAX2 102  // 124, 105
@@ -72,10 +72,12 @@ int eDRGet();
 void resetDriveEnc();
 
 // resets drive in preparation for using PID with drive
+/*
+meehh...
 void resetDrive();
 void resetMGL();
 void resetFB(bool auton);
-void resetDRFB(bool auton);
+void resetDRFB(bool auton);*/
 
 void printEnc();
 void printEnc_pidDrive();

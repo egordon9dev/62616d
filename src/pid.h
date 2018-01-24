@@ -37,9 +37,6 @@ bool pidMGL(double a, unsigned long wait);
 // set chain bar and arm with PID to stack given cone
 int getDRFB(int cone);
 int getFB(int cone);
-// return lift to pick up cones (returns true if lift is returned)
-bool contReturnLift(bool auton, unsigned long wait);
-void startReturnLift(bool auton);
 
 // dist: inches
 bool pidDrive(double dist, unsigned long wait);

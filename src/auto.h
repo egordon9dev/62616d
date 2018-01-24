@@ -3,5 +3,5 @@
 #include "pid.h"
 
 void auton1(bool leftSide, bool stack2);
-
+void skills();
 #endif  // AUTO_H

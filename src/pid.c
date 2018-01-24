@@ -27,7 +27,7 @@ PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 25, .iA
 PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 15, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 4.0, .ki = 0.0, .kd = 200.0, .prevTime = 0, .unwind = 0};
 // agressive PID mostly for autonomous
 PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 25, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5, .ki = 0.01, .kd = 400, .prevTime = 0, .unwind = 1};
-PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 35, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 1.8, .ki = 0.01, .kd = 175.0, .prevTime = 0, .unwind = 5};
+PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 35, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2.8, .ki = 0.01, .kd = 250.0, .prevTime = 0, .unwind = 5};  // 1.8, 0.01, 175.0
 // Drive
 #define DIA 40
 #define DKP 0.5  // 0.48
@@ -149,39 +149,6 @@ int returnAngle[] = {15, 40};
 
 int getDRFB(int cone) { return stackAngles[cone][DRFB]; }
 int getFB(int cone) { return stackAngles[cone][FB]; }
-// return lift to pick up cones
-int retStep = 0;
-void startReturnLift(bool auton) {
-    retStep = 0;
-    resetFB(auton);
-    resetDRFB(auton);
-}
-bool contReturnLift(bool auton, unsigned long wait) {
-    printf("retStep: %d\t", retStep);
-    switch (retStep) {
-        case 0:
-            if (pidFB(40, 100, auton)) {
-                retStep++;
-                resetFB(auton);
-            }
-            break;
-        case 1:
-            if (pidDRFB(returnAngle[DRFB], 100, auton)) {
-                retStep++;
-                resetDRFB(auton);
-            }
-            break;
-        case 2:
-            if (pidFB(returnAngle[FB], wait, auton) && pidDRFB(returnAngle[DRFB], wait, auton)) {
-                retStep++;
-                resetFB(auton);
-                resetDRFB(auton);
-            }
-            break;
-        default: return true;
-    }
-    return false;
-}
 // dist is in inches
 bool pidDrive(double dist, unsigned long wait) {
     if (DL_pid.doneTime + wait < millis() && DR_pid.doneTime + wait < millis()) {
