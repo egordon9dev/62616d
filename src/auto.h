@@ -3,5 +3,6 @@
 #include "pid.h"
 
 void auton1(bool leftSide, bool stack2);
-void skills();
+void skillsAuto();
+void skillsUser();
 #endif  // AUTO_H

@@ -30,7 +30,7 @@ PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 25
 PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 35, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2.8, .ki = 0.01, .kd = 250.0, .prevTime = 0, .unwind = 5};  // 1.8, 0.01, 175.0
 // Drive
 #define DIA 40
-#define DKP 0.5  // 0.48
+#define DKP 0.48
 #define DKI 0.0015
 #define DKD 50.0
 PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};

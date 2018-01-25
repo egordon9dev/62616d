@@ -49,6 +49,9 @@
 #define MGL_MID_POS 88
 #define MGL_UP_POS 1
 
+#define DRIVE_TURN_MAX 80
+#define DRIVE_DRIVE_MAX 127
+
 // motors
 void limMotorVal(int *n);
 int getLimMotorVal(int n);

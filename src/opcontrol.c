@@ -112,7 +112,7 @@ void updateLift() {
 void test(int n) {
     switch (n) {
         case 0:
-            while (!pidDrive(-10, 20000)) {
+            while (!pidDrive(40, 20000)) {
                 printEnc_pidDrive();
                 delay(20);
             }
@@ -171,17 +171,18 @@ void controllerTest() {
 }
 #include "auto.h"
 void operatorControl() {
-    // test(2);
-    for (int i = 10; i > 0; i--) {
-        delay(200);
-        printf("%d\n", i);
-    }
     while (0) {
         printEnc();
         delay(20);
     }
+    for (int i = 10; i > 0; i--) {
+        delay(200);
+        printf("%d\n", i);
+    }
+    // skillsUser();
+    skillsAuto();
     // auton1(true, true);
-    skills();
+    // skills();
     opT0 = millis();
     /*if (autonMode == nAutons + nSkills) {
         auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, true);
@@ -210,7 +211,7 @@ void operatorControl() {
         } else if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_LEFT) || joystickGetDigital(2, 5, JOY_DOWN) || joystickGetDigital(2, 5, JOY_UP)) {
             mglPidRunning = true;
             mgl_pid.doneTime = LONG_MAX;
-            mglHoldAngle = MGL_MID_POS;
+            mglHoldAngle = MGL_MID_POS - 10;
             tMglOff = 0;
         } else if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_UP)) {
             tMglOff = millis();
@@ -268,6 +269,10 @@ void operatorControl() {
         if (DM != 1) {
             int drv = joystickGetAnalog(DM == 0 ? 1 : 2, 3);
             int trn = DM == 0 ? joystickGetAnalog(1, 4) : joystickGetAnalog(2, 1);
+            if (trn > DRIVE_TURN_MAX) trn = DRIVE_TURN_MAX;
+            if (trn < -DRIVE_TURN_MAX) trn = -DRIVE_TURN_MAX;
+            if (drv > DRIVE_DRIVE_MAX) drv = DRIVE_DRIVE_MAX;
+            if (drv < -DRIVE_DRIVE_MAX) drv = -DRIVE_DRIVE_MAX;
             if (abs(drv) < td) drv = 0;
             if (abs(trn) < td) trn = 0;
             if (drv == 0 && trn == 0) moving = false;
@@ -282,6 +287,11 @@ void operatorControl() {
             setDR(dr);
         }
         if (!moving) {
+            int brakeMax = 100;
+            if (DL_brake_out > brakeMax) DL_brake_out = brakeMax;
+            if (DL_brake_out < -brakeMax) DL_brake_out = -brakeMax;
+            if (DR_brake_out > brakeMax) DR_brake_out = brakeMax;
+            if (DR_brake_out < -brakeMax) DR_brake_out = -brakeMax;
             setDL(DL_brake_out);
             setDR(DR_brake_out);
         }
