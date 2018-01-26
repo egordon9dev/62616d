@@ -10,6 +10,7 @@ bool fbPidRunning = false, drfbPidRunning = false, fbUp = false;
 todo:
 -skills / auton
 -auton selection
+-limit lift with derivatives n stufffs
 
 
 
@@ -88,6 +89,8 @@ void updateLift() {
     }
     const int t = 15;
     int js = joystickGetAnalog(1, 2);
+    if (js > DRFB_MAX) js = DRFB_MAX;
+    if (js < -DRFB_MAX) js = -DRFB_MAX;
     if (abs(js) > t) {
         tDrfbOff = millis();
         drfbPidRunning = false;
@@ -179,8 +182,8 @@ void operatorControl() {
         delay(200);
         printf("%d\n", i);
     }
+    if (!isJoystickConnected(1) && !isJoystickConnected(2)) skillsAuto();
     // skillsUser();
-    skillsAuto();
     // auton1(true, true);
     // skills();
     opT0 = millis();

@@ -4,7 +4,6 @@
 
 //////////////////////////////          MOTORS
 const int MAX_POWER = 127;
-bool progSkills = false;
 void limMotorVal(int* n) {
     if (*n > MAX_POWER) *n = MAX_POWER;
     if (*n < -MAX_POWER) *n = -MAX_POWER;
@@ -132,7 +131,7 @@ void printEnc_all() {
     printf("drfb: %d/%d\tfb: %d/%d\t", (int)drfb_pid_auto.sensVal, (int)drfb_pid_auto.target, (int)fb_pid_auto.sensVal, (int)fb_pid_auto.target);
     printf("mgl: %d/%d\n", (int)mgl_pid.sensVal, (int)mgl_pid.target);
 }
-int autonMode = 0;
+int autonMode = 0, autonModeLen = 6;
 void autoSelect() {
     static int prevBtn = 0;
     int btn = lcdReadButtons(LCD);
@@ -142,32 +141,29 @@ void autoSelect() {
         if (btn & LCD_BTN_LEFT && !(prevBtn & LCD_BTN_LEFT)) {
             if (autonMode > 0) { autonMode--; }
         } else if (btn & LCD_BTN_RIGHT && !(prevBtn & LCD_BTN_RIGHT)) {
-            if (autonMode < nAutons + nSkills) { autonMode++; }
+            if (autonMode < autonModeLen) { autonMode++; }
         }
         lcdClear(LCD);
-        if (autonMode < nAutons) {
-            lcdPrint(LCD, 1, "<   Auton  %d   >", autonMode);
-            switch (autonMode) {
-                case 0: lcdSetText(LCD, 2, "MG + C 20pt LEFT"); break;
-                case 1: lcdSetText(LCD, 2, "MG + C 20pt RIGHT"); break;
-                case 2: lcdSetText(LCD, 2, "MG + C 10pt LEFT"); break;
-                case 3: lcdSetText(LCD, 2, "MG + C 10pt RIGHT"); break;
-                case 4: lcdSetText(LCD, 2, "MG + C 5pt ANY"); break;
-            }
-        } else if (autonMode <= nAutons + nSkills) {
-            switch (autonMode) {
-                case 5:
-                    lcdSetText(LCD, 1, "Prog Skills");
-                    lcdSetText(LCD, 2, "MGs 5.5in L side");
-                    break;
-                case 6:
-                    lcdSetText(LCD, 1, "Driver Skills");
-                    lcdSetText(LCD, 2, "MG+C LEFT,OP= 8D");
-                    break;
-            }
-        } else {
-            lcdSetText(LCD, 1, "--- INVALID ---");
-            lcdSetText(LCD, 2, "--- INVALID ---");
+        lcdPrint(LCD, 1, "<   Auton  %d   >", autonMode);
+        int i = 0;
+        if (autonMode == i++) {
+            lcdPrint(LCD, 1, "auto:  %d", autonMode);
+            lcdSetText(LCD, 2, "MG+1C:20 LEFT");
+        } else if (autonMode == i++) {
+            lcdPrint(LCD, 1, "auto:  %d", autonMode);
+            lcdSetText(LCD, 2, "MG+1C:20 RIGHT");
+        } else if (autonMode == i++) {
+            lcdPrint(LCD, 1, "auto:  %d", autonMode);
+            lcdSetText(LCD, 2, "MG+2C:20 LEFT");
+        } else if (autonMode == i++) {
+            lcdPrint(LCD, 1, "auto:  %d", autonMode);
+            lcdSetText(LCD, 2, "MG+2C:20 RIGHT");
+        } else if (autonMode == i++) {
+            lcdPrint(LCD, 1, "auto skills: %d", autonMode);
+            lcdSetText(LCD, 2, "LEFT");
+        } else if (autonMode == i++) {
+            lcdPrint(LCD, 1, "driver skills: %d", autonMode);
+            lcdSetText(LCD, 2, "MG+C LEFT,OP= 8D");
         }
     }
     prevBtn = btn;

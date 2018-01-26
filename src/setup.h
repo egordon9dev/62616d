@@ -51,6 +51,9 @@
 
 #define DRIVE_TURN_MAX 80
 #define DRIVE_DRIVE_MAX 127
+#define DRFB_MAX 100
+
+#define DRIVE_TICKS_PER_IN 27.6067
 
 // motors
 void limMotorVal(int *n);
@@ -88,11 +91,7 @@ void printEnc_pidDRFBFB();
 void printEnc_all();
 void setupLCD();
 
-// auton
-#define nAutons 5
-#define nSkills 1
 extern int autonMode;
-extern bool progSkills;
 void autoSelect();
 
 #define DM 2

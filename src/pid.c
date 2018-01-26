@@ -35,7 +35,7 @@ PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 35, 
 #define DKD 50.0
 PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
 PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
-PidVars turn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 40, .iActiveZone = 4.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 7.2 /*6.7*/, .ki = 0.013, .kd = 580.0, .prevTime = 0, .unwind = 0};
+PidVars turn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 40, .iActiveZone = 4.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 7.2 /*6.7*/, .ki = 0.013, .kd = 560.0, .prevTime = 0, .unwind = 0};
 
 void resetDone(PidVars *pidVars) { pidVars->doneTime = LONG_MAX; }
 
@@ -159,8 +159,8 @@ bool pidDrive(double dist, unsigned long wait) {
     DL_pid.sensVal = eDLGet();
     DR_pid.sensVal = eDRGet();
     // 89 inches = 2457 ticks : 2457.0/89.0 = 27.6067
-    DL_pid.target = dist * 27.6067;
-    DR_pid.target = dist * 27.6067;
+    DL_pid.target = dist * DRIVE_TICKS_PER_IN;
+    DR_pid.target = dist * DRIVE_TICKS_PER_IN;
     setDL(updatePID(&DL_pid));
     setDR(updatePID(&DR_pid));
     return false;
