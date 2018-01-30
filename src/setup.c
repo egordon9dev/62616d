@@ -131,7 +131,7 @@ void printEnc_all() {
     printf("drfb: %d/%d\tfb: %d/%d\t", (int)drfb_pid_auto.sensVal, (int)drfb_pid_auto.target, (int)fb_pid_auto.sensVal, (int)fb_pid_auto.target);
     printf("mgl: %d/%d\n", (int)mgl_pid.sensVal, (int)mgl_pid.target);
 }
-int autonMode = 0, autonModeLen = 6;
+int autonMode = 0, autonModeLen = 7;
 void autoSelect() {
     static int prevBtn = 0;
     int btn = lcdReadButtons(LCD);
@@ -141,12 +141,15 @@ void autoSelect() {
         if (btn & LCD_BTN_LEFT && !(prevBtn & LCD_BTN_LEFT)) {
             if (autonMode > 0) { autonMode--; }
         } else if (btn & LCD_BTN_RIGHT && !(prevBtn & LCD_BTN_RIGHT)) {
-            if (autonMode < autonModeLen) { autonMode++; }
+            if (autonMode < autonModeLen - 1) { autonMode++; }
         }
         lcdClear(LCD);
         lcdPrint(LCD, 1, "<   Auton  %d   >", autonMode);
         int i = 0;
         if (autonMode == i++) {
+            lcdPrint(LCD, 1, "auto:  %d", autonMode);
+            lcdSetText(LCD, 2, "--- NONE ---");
+        } else if (autonMode == i++) {
             lcdPrint(LCD, 1, "auto:  %d", autonMode);
             lcdSetText(LCD, 2, "MG+1C:20 LEFT");
         } else if (autonMode == i++) {
@@ -164,6 +167,9 @@ void autoSelect() {
         } else if (autonMode == i++) {
             lcdPrint(LCD, 1, "driver skills: %d", autonMode);
             lcdSetText(LCD, 2, "MG+C LEFT,OP= 8D");
+        } else {
+            lcdSetText(LCD, 1, "INVALID");
+            lcdSetText(LCD, 2, "INVALID");
         }
     }
     prevBtn = btn;

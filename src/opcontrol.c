@@ -174,6 +174,8 @@ void controllerTest() {
 }
 #include "auto.h"
 void operatorControl() {
+    if (autonMode == autonModeLen - 1) skillsDriver();
+    /*
     while (0) {
         printEnc();
         delay(20);
@@ -183,9 +185,11 @@ void operatorControl() {
         printf("%d\n", i);
     }
     if (!isJoystickConnected(1) && !isJoystickConnected(2)) skillsAuto();
-    // skillsUser();
-    // auton1(true, true);
-    // skills();
+    auton1(true, true);
+    return
+        // skillsDriver();
+        // skills();
+        */
     opT0 = millis();
     /*if (autonMode == nAutons + nSkills) {
         auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, true);
@@ -206,7 +210,7 @@ void operatorControl() {
         lcdPrint(LCD, 1, "%d", joystickGetDigital(2, 6, JOY_UP) ? 1 : 0);
         updateLift();
         //----- mobile-goal lift -----//
-        if (joystickGetDigital(DM == 0 ? 1 : 2, 8, JOY_RIGHT) || joystickGetDigital(2, 6, JOY_UP)) {
+        if (joystickGetDigital(1, 8, JOY_RIGHT) || joystickGetDigital(2, 6, JOY_UP)) {
             mglPidRunning = true;
             mgl_pid.doneTime = LONG_MAX;
             mglHoldAngle = MGL_UP_POS;

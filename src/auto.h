@@ -4,5 +4,5 @@
 
 void auton1(bool leftSide, bool stack2);
 void skillsAuto();
-void skillsUser();
+void skillsDriver();
 #endif  // AUTO_H

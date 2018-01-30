@@ -91,7 +91,7 @@ void printEnc_pidDRFBFB();
 void printEnc_all();
 void setupLCD();
 
-extern int autonMode;
+extern int autonMode, autonModeLen;
 void autoSelect();
 
 #define DM 2

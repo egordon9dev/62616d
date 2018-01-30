@@ -35,8 +35,9 @@ PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 35, 
 #define DKD 50.0
 PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
 PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
-PidVars turn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 40, .iActiveZone = 4.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 7.2 /*6.7*/, .ki = 0.013, .kd = 560.0, .prevTime = 0, .unwind = 0};
-
+PidVars dCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 40.0, .ki = 0.001, .kd = 100.0, .prevTime = 0, .unwind = 0};
+PidVars turn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 40, .iActiveZone = 4.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 7.4 /*6.7*/, .ki = 0.013, .kd = 560.0, .prevTime = 0, .unwind = 0};
+// 7.2,.013,560
 void resetDone(PidVars *pidVars) { pidVars->doneTime = LONG_MAX; }
 
 double updateSlew(Slew *slew, double in) {
@@ -161,8 +162,18 @@ bool pidDrive(double dist, unsigned long wait) {
     // 89 inches = 2457 ticks : 2457.0/89.0 = 27.6067
     DL_pid.target = dist * DRIVE_TICKS_PER_IN;
     DR_pid.target = dist * DRIVE_TICKS_PER_IN;
-    setDL(updatePID(&DL_pid));
-    setDR(updatePID(&DR_pid));
+
+    if (eDRGet() == 0) {
+        dCurve_pid.sensVal = 1.0;
+    } else {
+        dCurve_pid.sensVal = (double)eDLGet() / (double)eDRGet();
+    }
+    dCurve_pid.target = 1.0;
+    double curve = 1.0 + updatePID(&dCurve_pid);
+    if (curve > 1.5) curve = 1.5;
+    if (curve < 0.5) curve = 0.5;
+    setDL(updatePID(&DL_pid) * curve);  // *
+    setDR(updatePID(&DR_pid) / curve);  // /
     return false;
 }
 bool pidTurn(double angle, unsigned long wait) {
