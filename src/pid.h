@@ -9,11 +9,10 @@ typedef struct Slew {
     double a, out;
     unsigned long prevTime;
 } Slew;
-extern Slew fb_slew, drfb_slew, mgl_slew, DL_slew, DR_slew, DL_slew_auto, DR_slew_auto;
-extern PidVars pidDef, drfb_pid, drfb_pid_auto, fb_pid_auto, mgl_pid, DL_pid, DR_pid, turn_pid, dCurve_pid;
+extern Slew fb_slew, drfb_slew, mgl_slew, DL_slew, DR_slew, roller_slew;
+extern PidVars pidDef, drfb_pid, drfb_pid_auto, fb_pid_auto, mgl_pid, DL_pid, DR_pid, DLturn_pid, DRturn_pid, driveCurve_pid, turnCurve_pid;
 #define LONG_MAX 2147483647
 #define DBL_MAX 999999999.999999
-void resetDone(PidVars *pidVars);
 
 double updateSlew(Slew *slew, double in);
 
@@ -26,17 +25,13 @@ double updatePID(PidVars *pidVars);
 */
 bool killPID(int d, int s, PidVars *p);
 
-// set chain-bar angle with PID
+// set fb angle with PID
 bool pidFB(double a, unsigned long wait, bool auton);
 
 // set arm angle with PID
 bool pidDRFB(double a, unsigned long wait, bool auton);
 
 bool pidMGL(double a, unsigned long wait);
-
-// set chain bar and arm with PID to stack given cone
-int getDRFB(int cone);
-int getFB(int cone);
 
 // dist: inches
 bool pidDrive(double dist, unsigned long wait);

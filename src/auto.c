@@ -158,7 +158,8 @@ void auton1(bool leftSide, bool stack2) {
             if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
             if (pidDrive(stack2 ? -63 : -57, 100)) {
                 resetDriveEnc();
-                turn_pid.doneTime = LONG_MAX;
+                DLturn_pid.doneTime = LONG_MAX;
+                DRturn_pid.doneTime = LONG_MAX;
                 i++;
                 yaw += leftSide ? 41 : -48;
             }
@@ -176,7 +177,8 @@ void auton1(bool leftSide, bool stack2) {
             pidDRFB(20, 999999, true);
             if (pidDrive(-16, 100)) {
                 resetDriveEnc();
-                turn_pid.doneTime = LONG_MAX;
+                DLturn_pid.doneTime = LONG_MAX;
+                DRturn_pid.doneTime = LONG_MAX;
                 i++;
                 yaw += leftSide ? 88 : -94;
             }
@@ -252,16 +254,15 @@ void auton1(bool leftSide, bool stack2) {
     printf("\n\nTIME: %lf\n", (millis() - funcT0) / 1000.0);
 }
 
-void skillsAuto() {
+void autonSkills() {
     int i = 0;
     unsigned long funcT0 = millis(), t0 = millis();
     double prevSens[3] = {0, 0, 0};
     double prevVel[3] = {0, 0, 0};
     auton1(true, false);
-    int yaw = yawGet();
-    turn_pid.doneTime = LONG_MAX;
+    DLturn_pid.doneTime = LONG_MAX;
+    DRturn_pid.doneTime = LONG_MAX;
     mgl_pid.doneTime = LONG_MAX;
-    yaw += 55;
     double drfbA = 0, fbA = FB_UP_POS;
     while (millis() - funcT0 < 60000) {
         int j = 0;
@@ -269,7 +270,7 @@ void skillsAuto() {
         pidFB(fbA, 999999, true);
         if (i == j++) {
             if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
-            if (pidTurn(yaw, 200)) {
+            if (pidTurn(55, 200)) {
                 i++;
                 resetDriveEnc();
                 DL_pid.doneTime = LONG_MAX;
@@ -279,12 +280,13 @@ void skillsAuto() {
             if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
             if (pidDrive(-27, 200)) {
                 i++;
-                turn_pid.doneTime = LONG_MAX;
-                yaw -= 95;
+                resetDriveEnc();
+                DLturn_pid.doneTime = LONG_MAX;
+                DRturn_pid.doneTime = LONG_MAX;
             }
         } else if (i == j++) {
             if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
-            if (pidTurn(yaw, 200)) {
+            if (pidTurn(-95, 200)) {
                 i++;
                 resetDriveEnc();
             }
@@ -302,7 +304,6 @@ void skillsAuto() {
             setDL(20);
             setDR(20);
             if (millis() - t0 > 200) {
-                yaw = yawGet();
                 DL_pid.doneTime = LONG_MAX;
                 DR_pid.doneTime = LONG_MAX;
                 resetDriveEnc();
@@ -311,13 +312,14 @@ void skillsAuto() {
         } else if (i == j++) {
             if (pidDrive(-8, 200)) {
                 i++;
-                turn_pid.doneTime = LONG_MAX;
+                DLturn_pid.doneTime = LONG_MAX;
+                DRturn_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
                 mgl_pid.doneTime = LONG_MAX;
-                yaw -= 155;
             }
         } else if (i == j++) {
             if (pidMGL(MGL_DOWN_POS, 0)) setMGL(0);
-            if (pidTurn(yaw, 200)) {
+            if (pidTurn(-155, 200)) {
                 i++;
                 DL_pid.doneTime = LONG_MAX;
                 DR_pid.doneTime = LONG_MAX;
@@ -333,12 +335,13 @@ void skillsAuto() {
             if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
             if (mglGet() < 50) {
                 i++;
-                turn_pid.doneTime = LONG_MAX;
-                yaw -= 165;
+                resetDriveEnc();
+                DLturn_pid.doneTime = LONG_MAX;
+                DRturn_pid.doneTime = LONG_MAX;
             }
         } else if (i == j++) {
             if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
-            if (pidTurn(yaw, 200)) {
+            if (pidTurn(-165, 200)) {
                 i++;
                 resetDriveEnc();
             }
@@ -363,12 +366,13 @@ void skillsAuto() {
                 setDR(-127);
             } else if (pidDrive(39, 200)) {
                 i++;
-                turn_pid.doneTime = LONG_MAX;
-                yaw += 88;
+                DLturn_pid.doneTime = LONG_MAX;
+                DRturn_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
             }
         } else if (i == j++) {
             pidMGL(MGL_MID_POS, 999999);
-            if (pidTurn(yaw, 200)) {
+            if (pidTurn(88, 200)) {
                 i++;
                 resetDriveEnc();
                 DL_pid.doneTime = LONG_MAX;
@@ -378,12 +382,13 @@ void skillsAuto() {
             pidMGL(MGL_MID_POS, 999999);
             if (pidDrive(37, 200)) {
                 i++;
-                turn_pid.doneTime = LONG_MAX;
-                yaw += 92;
+                DLturn_pid.doneTime = LONG_MAX;
+                DRturn_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
             }
         } else if (i == j++) {
             pidMGL(MGL_MID_POS - 30, 999999);
-            if (pidTurn(yaw, 200)) {
+            if (pidTurn(92, 200)) {
                 i++;
                 resetDriveEnc();
                 DL_pid.doneTime = LONG_MAX;
@@ -400,12 +405,13 @@ void skillsAuto() {
             if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
             if (mglGet() < 50) {
                 i++;
-                turn_pid.doneTime = LONG_MAX;
-                yaw += 170;
+                DLturn_pid.doneTime = LONG_MAX;
+                DRturn_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
             }
         } else if (i == j++) {
             if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
-            if (pidTurn(yaw, 200)) {
+            if (pidTurn(170, 200)) {
                 i++;
                 resetDriveEnc();
             }
@@ -426,12 +432,13 @@ void skillsAuto() {
                 setDR(-127);
             } else if (pidDrive(32, 200)) {
                 i++;
-                turn_pid.doneTime = LONG_MAX;
-                yaw += 180;
+                DLturn_pid.doneTime = LONG_MAX;
+                DRturn_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
             }
         } else if (i == j++) {
             pidMGL(MGL_UP_POS, 999999);
-            if (pidTurn(yaw, 200)) {
+            if (pidTurn(180, 200)) {
                 i++;
                 resetDriveEnc();
                 DL_pid.doneTime = LONG_MAX;
@@ -442,11 +449,12 @@ void skillsAuto() {
             if (pidMGL(MGL_DOWN_POS, 0)) setMGL(0);
             if (pidDrive(32, 200)) {
                 i++;
-                turn_pid.doneTime = LONG_MAX;
-                yaw += 20;
+                DLturn_pid.doneTime = LONG_MAX;
+                DRturn_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
             }
         } else if (i == j++) {
-            if (pidTurn(yaw, 200)) {
+            if (pidTurn(20, 200)) {
                 i++;
                 resetDriveEnc();
                 DL_pid.doneTime = LONG_MAX;
@@ -463,10 +471,12 @@ void skillsAuto() {
             if (pidMGL(MGL_UP_POS, 0)) setMGL(0);
             if (mglGet() < 60 && pidDrive(50, 200)) {
                 i++;
-                yaw += 90;
+                DLturn_pid.doneTime = LONG_MAX;
+                DRturn_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
             }
         } else if (i == j++) {
-            if (pidTurn(yaw, 200)) {
+            if (pidTurn(90, 200)) {
                 i++;
                 resetDriveEnc();
                 DL_pid.doneTime = LONG_MAX;
@@ -475,11 +485,12 @@ void skillsAuto() {
         } else if (i == j++) {
             if (pidDrive(24, 200)) {
                 i++;
-                turn_pid.doneTime = LONG_MAX;
-                yaw -= 90;
+                DLturn_pid.doneTime = LONG_MAX;
+                DRturn_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
             }
         } else if (i == j++) {
-            if (pidTurn(yaw, 200)) {
+            if (pidTurn(90, 200)) {
                 i++;
                 resetDriveEnc();
                 DL_pid.doneTime = LONG_MAX;
@@ -536,15 +547,7 @@ void skillsAuto() {
  * exit. If it does so, the robot will await a switch to another mode or
  * disable/enable cycle.
  */
-void skillsUserAutonTask() { auton1(false, false); }
-void skillsDriver() {
-    TaskHandle at = taskCreate(skillsUserAutonTask, TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_LOWEST + 1);
-    while (!joystickGetDigital(2, 7, JOY_DOWN) && !joystickGetDigital(2, 8, JOY_DOWN)) { delay(10); }
-    taskDelete(at);
-    resetMotors();
-    lcdSetText(LCD, 1, "DONE YAY");
-    lcdSetText(LCD, 2, "DONE YAY");
-}
+
 void autonomous() {
     resetDriveEnc();
     int i = 0;
@@ -559,7 +562,7 @@ void autonomous() {
     } else if (autonMode == i++) {
         auton1(false, true);
     } else if (autonMode == i++) {
-        skillsAuto();
+        autonSkills();
     }
     while (true) { delay(20); }
 }

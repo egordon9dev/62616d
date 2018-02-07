@@ -18,7 +18,8 @@ Slew fb_slew = {.a = A, .out = 0.0, .prevTime = 0};
 Slew drfb_slew = {.a = A, .out = 0.0, .prevTime = 0};
 Slew mgl_slew = {.a = A, .out = 0.0, .prevTime = 0};
 Slew DL_slew = {.a = A, .out = 0.0, .prevTime = 0};
-Slew DR_slew = {.a = A, .out = 0.0, .prevTime = 0}; /*
+Slew DR_slew = {.a = A, .out = 0.0, .prevTime = 0};
+Slew roller_slew = {.a = A, .out = 0.0, .prevTime = 0}; /*
  Slew DL_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};
  Slew DR_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};*/
 PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX, .iActiveZone = 0.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0};
@@ -30,15 +31,20 @@ PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 25
 PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 35, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2.8, .ki = 0.01, .kd = 250.0, .prevTime = 0, .unwind = 5};  // 1.8, 0.01, 175.0
 // Drive
 #define DIA 40
-#define DKP 0.48
-#define DKI 0.0015
-#define DKD 50.0
+#define DKP 0.44
+#define DKI 0.0007
+#define DKD 60.0
 PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
 PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 50, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
-PidVars dCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 40.0, .ki = 0.001, .kd = 100.0, .prevTime = 0, .unwind = 0};
-PidVars turn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 40, .iActiveZone = 4.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 7.4 /*6.7*/, .ki = 0.013, .kd = 560.0, .prevTime = 0, .unwind = 0};
+PidVars driveCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 30, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 1.35, .ki = 0.002, .kd = 110.0, .prevTime = 0, .unwind = 0};
+#define TIA 40
+#define TKP 1.35
+#define TKI 0.002
+#define TKD 110.0
+PidVars DLturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 40, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = TKP, .ki = TKI, .kd = TKD, .prevTime = 0, .unwind = 0};
+PidVars DRturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 40, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = TKP, .ki = TKI, .kd = TKD, .prevTime = 0, .unwind = 0};
+PidVars turnCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 40, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.4, .ki = 0.0018, .kd = 40.0, .prevTime = 0, .unwind = 0};
 // 7.2,.013,560
-void resetDone(PidVars *pidVars) { pidVars->doneTime = LONG_MAX; }
 
 double updateSlew(Slew *slew, double in) {
     unsigned long dt = millis() - slew->prevTime;
@@ -48,12 +54,14 @@ double updateSlew(Slew *slew, double in) {
     double vel = (double)(in - slew->out) / (double)dt;
     if (fabs(vel) < slew->a) {
         slew->out = in;
+    } else if (in >= 0 && slew->out < 0) {
+        slew->out = 0;
+    } else if (in <= 0 && slew->out > 0) {
+        slew->out = 0;
+    } else if (vel > 0) {
+        slew->out += maxInc;
     } else {
-        if (vel > 0) {
-            slew->out += maxInc;
-        } else {
-            slew->out -= maxInc;
-        }
+        slew->out -= maxInc;
     }
     return slew->out;
 }
@@ -107,7 +115,7 @@ bool killPID(int d, int s, PidVars *p) {
     if (fabs(err) < d && fabs(err - p->prevErr) < s) { return true; }
     return false;
 }
-bool pidFB(double a, unsigned long wait, bool auton) {  // set chain-bar angle with PID
+bool pidFB(double a, unsigned long wait, bool auton) {  // set fb angle with PID
     if (fb_pid_auto.doneTime + wait < millis()) {
         setFB(0);
         return true;
@@ -117,7 +125,7 @@ bool pidFB(double a, unsigned long wait, bool auton) {  // set chain-bar angle w
     setFB(updatePID(&fb_pid_auto));
     return false;
 }
-bool pidDRFB(double a, unsigned long wait, bool auton) {  // set arm angle with PID
+bool pidDRFB(double a, unsigned long wait, bool auton) {  // set drfb angle with PID
     PidVars *pid = auton ? &drfb_pid_auto : &drfb_pid;
     if (pid->doneTime + wait < millis()) {
         setDRFB(0);
@@ -128,7 +136,7 @@ bool pidDRFB(double a, unsigned long wait, bool auton) {  // set arm angle with 
     setDRFB(updatePID(pid));
     return false;
 }
-bool pidMGL(double a, unsigned long wait) {  // set chain-bar angle with PID
+bool pidMGL(double a, unsigned long wait) {  // set mgl angle with PID
     if (mgl_pid.doneTime + wait < millis()) {
         setMGL(0);
         return true;
@@ -138,18 +146,7 @@ bool pidMGL(double a, unsigned long wait) {  // set chain-bar angle with PID
     setMGL(updatePID(&mgl_pid));
     return false;
 }
-// angle settings for autonomous cone stacking
-const int DRFB = 0, FB = 1;
-int stackAngles[3][2] = {
-    //	  ARM | FB
-    {75, 110},
-    {75, 120},
-    {75, 130},
-};
-int returnAngle[] = {15, 40};
 
-int getDRFB(int cone) { return stackAngles[cone][DRFB]; }
-int getFB(int cone) { return stackAngles[cone][FB]; }
 // dist is in inches
 bool pidDrive(double dist, unsigned long wait) {
     if (DL_pid.doneTime + wait < millis() && DR_pid.doneTime + wait < millis()) {
@@ -163,29 +160,28 @@ bool pidDrive(double dist, unsigned long wait) {
     DL_pid.target = dist * DRIVE_TICKS_PER_IN;
     DR_pid.target = dist * DRIVE_TICKS_PER_IN;
 
-    if (eDRGet() == 0) {
-        dCurve_pid.sensVal = 1.0;
-    } else {
-        dCurve_pid.sensVal = (double)eDLGet() / (double)eDRGet();
-    }
-    dCurve_pid.target = 1.0;
-    double curve = 1.0 + updatePID(&dCurve_pid);
-    if (curve > 1.5) curve = 1.5;
-    if (curve < 0.5) curve = 0.5;
-    setDL(updatePID(&DL_pid) * curve);  // *
-    setDR(updatePID(&DR_pid) / curve);  // /
+    driveCurve_pid.sensVal = eDRGet() - eDLGet();
+    driveCurve_pid.target = 0.0;
+    double curve = updatePID(&driveCurve_pid);
+    setDL(updatePID(&DL_pid) - curve);  // *
+    setDR(updatePID(&DR_pid) + curve);  // /
     return false;
 }
 bool pidTurn(double angle, unsigned long wait) {
-    if (turn_pid.doneTime + wait < millis()) {
+    if (DLturn_pid.doneTime + wait < millis() && DRturn_pid.doneTime + wait < millis()) {
         setDL(0);
         setDR(0);
         return true;
     }
-    turn_pid.sensVal = yawGet();
-    turn_pid.target = angle;
-    int n = updatePID(&turn_pid);
-    setDL(-n);
-    setDR(n);
+    turnCurve_pid.sensVal = eDRGet() + eDLGet();
+    turnCurve_pid.target = 0.0;
+    double curve = updatePID(&turnCurve_pid);
+
+    DLturn_pid.sensVal = eDLGet();
+    DLturn_pid.target = -angle * DRIVE_TICKS_PER_DEG;
+    DRturn_pid.sensVal = eDRGet();
+    DRturn_pid.target = angle * DRIVE_TICKS_PER_DEG;
+    setDL(updatePID(&DLturn_pid) + curve);
+    setDR(updatePID(&DRturn_pid) + curve);
     return false;
 }

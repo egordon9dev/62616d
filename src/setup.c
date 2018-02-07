@@ -29,7 +29,7 @@ void setDRFB(int n) {  //	set main 4 bar lift
     limMotorVal(&n);
     int max = 50;
     int drfbA = drfbGet();
-    if (drfbA > DRFB_MAX_CUT && n > 0) n = 0;
+    if (drfbA > DRFB_MAX_HOLD_ANGLE && n > 0) n = 0;
     if ((drfbA < DRFB_MIN && n < 0) || (drfbA > DRFB_MAX1 && n > 0)) {
         if (drfbA < DRFB_MIN / 3 || drfbA > DRFB_MAX2) max /= 3;
         if (n > max) n = max;
@@ -45,12 +45,13 @@ void setFB(int n) {
     int fbA = fbGet();
     if (fbA > FB_MAX && n > max) n = max;
     if (fbA < FB_MIN && n < -max) n = -max;
-    if (fbA < FB_MIN_CUT && n < 0) n = 0;
+    if (fbA < FB_MIN_HOLD_ANGLE && n < 0) n = 0;
     n = updateSlew(&fb_slew, n);
     motorSet(M10, n);
 }
 void setRollers(int n) {  //	set rollers
     limMotorVal(&n);
+    n = updateSlew(&roller_slew, n);
     motorSet(M11, n);
 }
 void setMGL(int n) {  //	set mobile goal lift
@@ -73,70 +74,41 @@ void setupLCD() {
     lcdClear(LCD);
     lcdSetBacklight(LCD, true);
 }
-Gyro gyro;
 Encoder eDL, eDR;
+void resetDriveEnc() {
+    encoderReset(eDL);
+    encoderReset(eDR);
+}
 void setupSens() {
-    gyro = gyroInit(GYRO, 200);
     eDL = encoderInit(DRIVE_L_ENC_TOP, DRIVE_L_ENC_BOT, false);
     eDR = encoderInit(DRIVE_R_ENC_TOP, DRIVE_R_ENC_BOT, false);
     encoderReset(eDL);
     encoderReset(eDR);
 }
-int yawGet() { return -gyroGet(gyro); }
 #define POT_SENSITIVITY 0.06105006105
-int drfbGet() {  //-s
-    return (-analogRead(DRFB_POT) + 2750) * POT_SENSITIVITY;
-}
-int fbGet() { return (analogRead(FB_POT) - 1320) * POT_SENSITIVITY; }
+int drfbGet() { return (-analogRead(DRFB_POT) + 2750) * POT_SENSITIVITY; }
+int fbGet() { return (1840 - analogRead(FB_POT)) * POT_SENSITIVITY + 40; }
 int mglGet() { return (4095 - analogRead(MGL_POT)) * POT_SENSITIVITY; }
 int eDLGet() { return encoderGet(eDL); }
 int eDRGet() { return encoderGet(eDR); }
-void resetDriveEnc() {
-    encoderReset(eDL);
-    encoderReset(eDR);
-}
-void resetDrive() {
-    resetDriveEnc();
-    DL_pid.doneTime = LONG_MAX;
-    DR_pid.doneTime = LONG_MAX;
-    turn_pid.doneTime = LONG_MAX;
-    setDL(0);
-    setDR(0);
-}
-void resetMGL() {
-    mgl_pid.doneTime = LONG_MAX;
-    setMGL(0);
-}
-void resetFB(bool auton) {
-    if (auton) {
-        fb_pid_auto.doneTime = LONG_MAX;
-    } else {
-    }
-    setFB(0);
-}
-void resetDRFB(bool auton) {
-    if (auton) {
-        drfb_pid_auto.doneTime = LONG_MAX;
-    } else {
-        drfb_pid.doneTime = LONG_MAX;
-    }
-    setDRFB(0);
-}
 
-void printEnc() { printf("dr4b: %d\tfb: %d\tmgl: %d\tDL: %d\tDR: %d\tyaw: %d\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet(), yawGet()); }
-void printEnc_pidDrive() { printf("DL: %d/%d\tDR: %d/%d\tTurn: %d/%d\tt: %ld\tdnL: %ld\tdnR: %ld\tdnT: %ld\n", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)turn_pid.sensVal, (int)turn_pid.target, millis(), DL_pid.doneTime, DR_pid.doneTime, turn_pid.doneTime); }
+void printEnc() { printf("dr4b: %d\tfb: %d\tmgl: %d\tDL: %d\tDR: %d\t\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet()); }
+void printEnc_pidDrive() {
+    printf("DL: %d/%d\tDR: %d/%d\tDLt: %d/%d\tDRt: %d/%d\tt: %ld\t", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)DLturn_pid.sensVal, (int)DLturn_pid.target, (int)DRturn_pid.sensVal, (int)DRturn_pid.target, millis());
+    printf("driveCurve: %d/%d\tturnCurve: %d/%d\n", (int)driveCurve_pid.sensVal, (int)driveCurve_pid.target, (int)turnCurve_pid.sensVal, (int)turnCurve_pid.target);
+}
 void printEnc_pidDRFBFB() { printf("drfb: %d/%d\tfb: %d/%d\n", (int)drfb_pid_auto.sensVal, (int)drfb_pid_auto.target, (int)fb_pid_auto.sensVal, (int)fb_pid_auto.target); }
 void printEnc_all() {
-    printf("DL: %d/%d\tDR: %d/%d\tTurn: %d/%d\tt: %ld\t", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)turn_pid.sensVal, (int)turn_pid.target, millis());
+    printf("DL: %d/%d\tDR: %d/%d\tDLt: %d/%d\tDRt: %d/%d\tt: %ld\t", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)DLturn_pid.sensVal, (int)DLturn_pid.target, (int)DRturn_pid.sensVal, (int)DRturn_pid.target, millis());
     printf("drfb: %d/%d\tfb: %d/%d\t", (int)drfb_pid_auto.sensVal, (int)drfb_pid_auto.target, (int)fb_pid_auto.sensVal, (int)fb_pid_auto.target);
     printf("mgl: %d/%d\n", (int)mgl_pid.sensVal, (int)mgl_pid.target);
 }
-int autonMode = 0, autonModeLen = 7;
+int autonMode = 0, autonModeLen = 6;
 void autoSelect() {
     static int prevBtn = 0;
     int btn = lcdReadButtons(LCD);
     if (btn & LCD_BTN_CENTER) {
-        lcdSetText(LCD, 1, "BATTERY STUFF");
+        lcdSetText(LCD, 1, "THA EGOR SAYS HI");
     } else {
         if (btn & LCD_BTN_LEFT && !(prevBtn & LCD_BTN_LEFT)) {
             if (autonMode > 0) { autonMode--; }
@@ -164,9 +136,6 @@ void autoSelect() {
         } else if (autonMode == i++) {
             lcdPrint(LCD, 1, "auto skills: %d", autonMode);
             lcdSetText(LCD, 2, "LEFT");
-        } else if (autonMode == i++) {
-            lcdPrint(LCD, 1, "driver skills: %d", autonMode);
-            lcdSetText(LCD, 2, "MG+C LEFT,OP= 8D");
         } else {
             lcdSetText(LCD, 1, "INVALID");
             lcdSetText(LCD, 2, "INVALID");
