@@ -78,7 +78,7 @@ void updateLift() {
 void test(int n) {
     switch (n) {
         case 0:
-            while (!pidDrive(60, 20000)) {
+            while (!pidDrive(20, 1000)) {
                 printEnc_pidDrive();
                 delay(20);
             }
@@ -147,6 +147,7 @@ void operatorControl() {
         delay(200);
         printf("%d\n", i);
     }
+    // test(0);
     autonSkills();
     return;
     opT0 = millis();
