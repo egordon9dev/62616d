@@ -54,9 +54,7 @@ void updateLift() {
         }
     }
     const int t = 15;
-    int js = joystickGetAnalog(2, 2);
-    if (js > DRFB_MAX) js = DRFB_MAX;
-    if (js < -DRFB_MAX) js = -DRFB_MAX;
+    int js = joystickGetAnalog(2, 2) * DRFB_MAX / 127.0;
     if (abs(js) > t) {
         tDrfbOff = millis();
         drfbPidRunning = false;
@@ -84,7 +82,7 @@ void test(int n) {
             }
             break;
         case 1:
-            while (!pidTurn(-180, 20000)) {
+            while (!pidTurn(-135, 200)) {
                 printEnc_pidDrive();
                 delay(20);
             }
@@ -147,7 +145,7 @@ void operatorControl() {
         delay(200);
         printf("%d\n", i);
     }
-    // test(0);
+    // test(1);
     autonSkills();
     return;
     opT0 = millis();
@@ -228,12 +226,8 @@ void operatorControl() {
         }
         //----- drive -----//
         const int td = 15;
-        int drv = joystickGetAnalog(1, 3);
-        int trn = joystickGetAnalog(1, 1);
-        if (trn > DRIVE_TURN_MAX) trn = DRIVE_TURN_MAX;
-        if (trn < -DRIVE_TURN_MAX) trn = -DRIVE_TURN_MAX;
-        if (drv > DRIVE_DRIVE_MAX) drv = DRIVE_DRIVE_MAX;
-        if (drv < -DRIVE_DRIVE_MAX) drv = -DRIVE_DRIVE_MAX;
+        int drv = joystickGetAnalog(1, 3) * DRIVE_DRIVE_MAX / 127.0;
+        int trn = joystickGetAnalog(1, 1) * DRIVE_TURN_MAX / 127.0;
         if (abs(drv) < td) drv = 0;
         if (abs(trn) < td) trn = 0;
         setDL(drv + trn);
