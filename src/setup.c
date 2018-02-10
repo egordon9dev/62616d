@@ -56,7 +56,7 @@ void setRollers(int n) {  //	set rollers
 }
 void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
-    int maxD = 15, maxU = 20;
+    int maxD = 20, maxU = 20;
     if (mglGet() > MGL_MAX) {
         if (n >= 0) n = maxD;
     }

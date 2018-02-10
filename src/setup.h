@@ -37,7 +37,7 @@
 #define FB_MIN 0                                                  // -13
 #define FB_MIN_HOLD_ANGLE (drfbGet() <= 6 ? 26 - drfbGet() : 20)  // <------ keep these parentheses!
 #define FB_MID_POS 45
-#define FB_UP_POS (120 + drfbGet() * drfbGet() * 0.0002)
+#define FB_UP_POS (125 + drfbGet() * drfbGet() * 0.0001)
 #define DRFB_MAX_HOLD_ANGLE 999
 #define DRFB_MAX1 95
 #define DRFB_MAX2 102  // 124, 105

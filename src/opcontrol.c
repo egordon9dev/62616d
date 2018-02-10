@@ -76,13 +76,13 @@ void updateLift() {
 void test(int n) {
     switch (n) {
         case 0:
-            while (!pidDrive(20, 1000)) {
+            while (!pidDrive(15, 1000)) {
                 printEnc_pidDrive();
                 delay(20);
             }
             break;
         case 1:
-            while (!pidTurn(-135, 200)) {
+            while (!pidTurn(90, 100)) {
                 printEnc_pidDrive();
                 delay(20);
             }
@@ -112,11 +112,7 @@ void test(int n) {
         case 4:
             while (true) {
                 printEnc();
-                mgl_pid.target = MGL_DOWN_POS;
-                mgl_pid.sensVal = mglGet();
-                int p = updatePID(&mgl_pid);
-                setMGL(p);
-                printf("power: %d\t", p);
+                if (pidMGL(MGL_DOWN_POS, 0)) setMGL(0);
                 delay(20);
             }
             break;
@@ -145,7 +141,7 @@ void operatorControl() {
         delay(200);
         printf("%d\n", i);
     }
-    // test(1);
+    // test(0);
     autonSkills();
     return;
     opT0 = millis();
