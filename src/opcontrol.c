@@ -136,14 +136,14 @@ void operatorControl() {
         lcdPrint(LCD, 1, "L: %d", eDLGet());
         lcdPrint(LCD, 2, "R: %d", eDRGet());
         delay(20);
-    }
-    for (int i = 10; i > 0; i--) {
-        delay(200);
-        printf("%d\n", i);
-    }
+    } /*
+     for (int i = 10; i > 0; i--) {
+         delay(200);
+         printf("%d\n", i);
+     }*/
     // test(0);
-    autonSkills();
-    return;
+    // autonSkills();
+    // return;
     opT0 = millis();
     /*if (autonMode == nAutons + nSkills) {
         auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, true);
@@ -222,8 +222,12 @@ void operatorControl() {
         }
         //----- drive -----//
         const int td = 15;
-        int drv = joystickGetAnalog(1, 3) * DRIVE_DRIVE_MAX / 127.0;
-        int trn = joystickGetAnalog(1, 1) * DRIVE_TURN_MAX / 127.0;
+        int drv = joystickGetAnalog(1, 3);
+        int trn = joystickGetAnalog(1, 1);
+        if (drv > DRIVE_DRIVE_MAX) drv = DRIVE_DRIVE_MAX;
+        if (drv < -DRIVE_DRIVE_MAX) drv = -DRIVE_DRIVE_MAX;
+        if (trn > DRIVE_TURN_MAX) trn = DRIVE_TURN_MAX;
+        if (trn < -DRIVE_TURN_MAX) trn = -DRIVE_TURN_MAX;
         if (abs(drv) < td) drv = 0;
         if (abs(trn) < td) trn = 0;
         setDL(drv + trn);
