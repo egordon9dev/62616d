@@ -7,8 +7,7 @@
  * and solenoids. It can also safely configure a UART port (usartOpen()) but
  * cannot set up an LCD (lcdInit()).
  */
-void initializeIO() {
-}
+void initializeIO() {}
 /*
  * Runs user initialization code. This function will be started in its own task
  * with the default priority and stack size once when the robot is starting up.
@@ -27,7 +26,9 @@ void initialize() {
     setupSens();
     lcdClear(LCD);
     lcdSetText(LCD, 1, "INIT.");
-    delay(2000);
+    analogCalibrate(LT1);
+    analogCalibrate(LT2);
+    analogCalibrate(LT3);
     while (!isEnabled()) {
         autoSelect();
         delay(20);

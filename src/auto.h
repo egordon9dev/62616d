@@ -2,6 +2,6 @@
 #define AUTO_H
 #include "pid.h"
 
-void auton1(bool leftSide, bool stack2, bool loaderSide);
+void auton1(bool leftSide, int stackH, bool loaderSide);
 void autonSkills();
 #endif  // AUTO_H

@@ -25,27 +25,29 @@ Slew roller_slew = {.a = A, .out = 0.0, .prevTime = 0}; /*
 PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX, .iActiveZone = 0.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0};
 // weaker PID for opcontrol
 PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 25, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.0, .ki = 0.005, .kd = 250, .prevTime = 0, .unwind = 1};
+PidVars fb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 35, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2.5, .ki = 0.003, .kd = 170.0, .prevTime = 0, .unwind = 3};
 PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 15, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 4.0, .ki = 0.0, .kd = 200.0, .prevTime = 0, .unwind = 0};
 // agressive PID mostly for autonomous
-PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 25, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5.3, .ki = 0.005, .kd = 280, .prevTime = 0, .unwind = 1};
-PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 35, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 4.0, .ki = 0.01, .kd = 250.0, .prevTime = 0, .unwind = 5};  // 1.8, 0.01, 175.0
+PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 30, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5.0, .ki = 0.006, .kd = 370, .prevTime = 0, .unwind = 3};
+PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 30, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.005, .kd = 500.0, .prevTime = 0, .unwind = 3};  // 1.8, 0.01, 175.0
+
 // Drive
 #define DIA 50
-#define DDZ 15
-#define DKP 0.44    // .44
-#define DKI 0.0007  //.0007, .0015
-#define DKD 40.0
+#define DDZ 12
+#define DKP 0.5    // .44
+#define DKI 0.002  //.0007, .0015
+#define DKD 40.0   // 40
 PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
 PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
-PidVars driveCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3, .ki = 0.003, .kd = 100.0, .prevTime = 0, .unwind = 0};
+PidVars driveCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0};  // 7, 0, 0
 #define TIA 40
-#define TDZ 10
+#define TDZ 7
 #define TKP 1.65   // 1.35, 1.2
 #define TKI 0.002  //.002, .003
 #define TKD 120.0
 PidVars DLturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = TDZ, .maxIntegral = 45, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = TKP, .ki = TKI, .kd = TKD, .prevTime = 0, .unwind = 0};
 PidVars DRturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = TDZ, .maxIntegral = 45, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = TKP, .ki = TKI, .kd = TKD, .prevTime = 0, .unwind = 0};
-PidVars turnCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 20, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.0035, .kd = 160.0, .prevTime = 0, .unwind = 0};
+PidVars turnCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 20, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0};  // 2, .002, 200
 // 7.2,.013,560
 
 double updateSlew(Slew *slew, double in) {
@@ -98,7 +100,7 @@ double updatePID(PidVars *pidVars) {
     }
     double i = pidVars->errTot * pidVars->ki;
     // done zone
-    if (fabs(err) <= pidVars->DONE_ZONE && pidVars->doneTime > millis() && (int)(d * 10) == 0) {
+    if (fabs(err) <= pidVars->DONE_ZONE && pidVars->doneTime > millis()) {
         pidVars->doneTime = millis();
         printf("DONE\n");
     }
@@ -118,13 +120,14 @@ bool killPID(int d, int s, PidVars *p) {
     return false;
 }
 bool pidFB(double a, unsigned long wait, bool auton) {  // set fb angle with PID
-    if (fb_pid_auto.doneTime + wait < millis()) {
+    PidVars *pid = auton ? &fb_pid_auto : &fb_pid;
+    if (pid->doneTime + wait < millis()) {
         setFB(0);
         return true;
     }
-    fb_pid_auto.target = a;
-    fb_pid_auto.sensVal = fbGet();
-    setFB(updatePID(&fb_pid_auto));
+    pid->target = a;
+    pid->sensVal = fbGet();
+    setFB(updatePID(pid));
     return false;
 }
 bool pidDRFB(double a, unsigned long wait, bool auton) {  // set drfb angle with PID
@@ -148,31 +151,131 @@ bool pidMGL(double a, unsigned long wait) {  // set mgl angle with PID
     setMGL(updatePID(&mgl_pid));
     return false;
 }
-
+double ltdKi = 0.5, ltdKp = 12.0, ltdInt = 0.0;
 // dist is in inches
-bool pidDrive(double dist, unsigned long wait) {
+void setDownStack() {
+    int i = 0;
+    mgl_pid.doneTime = LONG_MAX;
+    double drfba0 = drfbGet();
+    while (true) {
+        int j = 0;
+        pidDRFB(drfba0, 0, true);
+        if (i == j++) {
+            pidFB(FB_MID_POS, 999999, true);
+            if (pidMGL(MGL_DOWN_POS, 0)) {
+                i++;
+                fb_pid_auto.doneTime = LONG_MAX;
+            }
+        } else if (i == j++) {
+            setRollers(-80);
+            if (pidFB(FB_UP_POS, 0, true)) {
+                i++;
+                setRollers(0);
+                fb_pid.doneTime = LONG_MAX;
+            }
+        } else if (i == j++) {
+            break;
+        }
+        opctrlDrive();
+        delay(20);
+    }
+}
+bool pidDrive(double dist, unsigned long wait, bool lineTrack) {
     if (DL_pid.doneTime + wait < millis() && DR_pid.doneTime + wait < millis()) {
         setDL(0);
         setDR(0);
         return true;
     }
-    DL_pid.sensVal = eDLGet();
-    DR_pid.sensVal = eDRGet();
+    if (lineTrack) {
+        double eAvg = (eDLGet() + eDRGet()) * 0.5;
+        DL_pid.sensVal = eAvg;
+        DR_pid.sensVal = eAvg;
+    } else {
+        DL_pid.sensVal = eDLGet();
+        DR_pid.sensVal = eDRGet();
+    }
     // 89 inches = 2457 ticks : 2457.0/89.0 = 27.6067
     DL_pid.target = dist * DRIVE_TICKS_PER_IN;
     DR_pid.target = dist * DRIVE_TICKS_PER_IN;
+    int powerL = updatePID(&DL_pid);
+    int powerR = updatePID(&DR_pid);
+    limMotorVal(&powerL);
+    limMotorVal(&powerR);
+    if (lineTrack) {
+        bool b0 = analogReadCalibrated(LT0) < LT_LIGHT;
+        bool b1 = analogReadCalibrated(LT1) < LT_LIGHT;
+        bool b2 = analogReadCalibrated(LT2) < LT_LIGHT;
+        bool b3 = analogReadCalibrated(LT3) < LT_LIGHT;
+        bool b4 = analogReadCalibrated(LT4) < LT_LIGHT;
+        if (b2) {
+            if (b1 && !b3) {
+                if (powerR + powerL > 0) {
+                    ltdInt += 0.5;
+                } else {
+                    ltdInt -= 0.5;
+                }
+                powerL *= 0.5 / ltdKp;
+            } else if (b3 && !b1) {
+                if (powerR + powerL > 0) {
+                    ltdInt -= 0.5;
+                } else {
+                    ltdInt += 0.5;
+                }
+                powerR *= 0.5 / ltdKp;
+            }
+        } else {
+            if (b0) {
+                if (powerR + powerL > 0) {
+                    ltdInt += 2.0;
+                } else {
+                    ltdInt -= 2.0;
+                }
+                powerL = 0;
+            } else if (b1) {
+                if (powerL + powerR > 0) {
+                    ltdInt += 1.0;
+                } else {
+                    ltdInt -= 1.0;
+                }
+                powerL *= 0.25 / ltdKp;
+            } else if (b4) {
+                if (powerL + powerR > 0) {
+                    ltdInt -= 2.0;
+                } else {
+                    ltdInt += 2.0;
+                }
+                powerR = 0;
+            } else if (b3) {
+                if (powerL + powerR > 0) {
+                    ltdInt -= 1.0;
+                } else {
+                    ltdInt += 1.0;
+                }
+                powerR *= 0.25 / ltdKp;
+            }
+        }
 
-    driveCurve_pid.sensVal = eDRGet() - eDLGet();
-    driveCurve_pid.target = 0.0;
-    double curve = updatePID(&driveCurve_pid) * 0.5 * (fabs((DL_pid.target - DL_pid.sensVal) / DL_pid.target) + fabs((DR_pid.target - DR_pid.sensVal) / DR_pid.target));
-    setDL(updatePID(&DL_pid) - curve);  // *
-    setDR(updatePID(&DR_pid) + curve);  // /
+        if (!b0 && !b1 && !b2 && !b3 && !b4) lineTrack = false;
+    }
+    if (!lineTrack) {
+        driveCurve_pid.sensVal = eDRGet() - eDLGet();
+        driveCurve_pid.target = 0.0;
+        double curve = updatePID(&driveCurve_pid) * 0.5 * (fabs((DL_pid.target - DL_pid.sensVal) / DL_pid.target) + fabs((DR_pid.target - DR_pid.sensVal) / DR_pid.target));
+        powerL -= curve;
+        powerR += curve;
+    }
+    limMotorVal(&powerL);
+    limMotorVal(&powerR);
+    setDL(powerL);
+    setDR(powerR);
+    printf("(DL:%d,DR:%d)", powerL, powerR);
     return false;
 }
 bool pidTurn(double angle, unsigned long wait) {
     if (DLturn_pid.doneTime + wait < millis() && DRturn_pid.doneTime + wait < millis()) {
         setDL(0);
         setDR(0);
+        printf("DONE(pidTurn)\n");
         return true;
     }
     turnCurve_pid.sensVal = eDRGet() + eDLGet();
@@ -186,4 +289,56 @@ bool pidTurn(double angle, unsigned long wait) {
     setDL(updatePID(&DLturn_pid) + curve);
     setDR(updatePID(&DRturn_pid) + curve);
     return false;
+}
+
+PidVars DLturn_brake, DRturn_brake;
+unsigned long ltTurnDt = 0, ltTurnPrevT = 0;
+double ltTurnKd = 100.0, ltTurnKi = 0.1;
+int ltTurnInt = 0;
+void ltTurn(bool dir) {
+    bool b0 = analogReadCalibrated(LT0) < LT_LIGHT;
+    bool b1 = analogReadCalibrated(LT1) < LT_LIGHT;
+    bool b2 = analogReadCalibrated(LT2) < LT_LIGHT;
+    bool b3 = analogReadCalibrated(LT3) < LT_LIGHT;
+    bool b4 = analogReadCalibrated(LT4) < LT_LIGHT;
+    DLturn_brake.sensVal = eDLGet();
+    DRturn_brake.sensVal = eDRGet();
+    int powerL = 0, powerR = 0;
+    if (!b2) {
+        if (b1) {
+            powerR = -40;
+            powerL = 40;
+            ltTurnInt -= 1;
+        } else if (b0) {
+            powerR = -80;
+            powerL = 80;
+            ltTurnInt -= 2;
+        } else if (b3) {
+            powerR = 40;
+            powerL = -40;
+            ltTurnInt += 1;
+        } else if (b4) {
+            powerR = 80;
+            powerL = -80;
+            ltTurnInt += 2;
+        } else if (dir) {
+            powerR = 999;
+            powerL = -999;
+        } else {
+            powerR = -999;
+            powerL = 999;
+        }
+    } else {
+        ltTurnInt = 0;
+    }
+
+    powerL += ((DLturn_brake.prevSensVal - DLturn_brake.sensVal) / ltTurnDt) * ltTurnKd - ltTurnInt * ltTurnKi;
+    powerR += ((DRturn_brake.prevSensVal - DRturn_brake.sensVal) / ltTurnDt) * ltTurnKd + ltTurnInt * ltTurnKi;
+    setDL(powerL);
+    setDR(powerR);
+    DLturn_brake.prevSensVal = DLturn_brake.sensVal;
+    DRturn_brake.prevSensVal = DRturn_brake.sensVal;
+    ltTurnDt = millis() - ltTurnPrevT;
+    if (ltTurnDt > 300) ltTurnDt = 20;
+    ltTurnPrevT = millis();
 }

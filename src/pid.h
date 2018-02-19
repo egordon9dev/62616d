@@ -10,7 +10,7 @@ typedef struct Slew {
     unsigned long prevTime;
 } Slew;
 extern Slew fb_slew, drfb_slew, mgl_slew, DL_slew, DR_slew, roller_slew;
-extern PidVars pidDef, drfb_pid, drfb_pid_auto, fb_pid_auto, mgl_pid, DL_pid, DR_pid, DLturn_pid, DRturn_pid, driveCurve_pid, turnCurve_pid;
+extern PidVars drfb_pid, drfb_pid_auto, fb_pid, fb_pid_auto, mgl_pid, DL_pid, DR_pid, DLturn_pid, DRturn_pid, driveCurve_pid, turnCurve_pid, pidDef;
 #define LONG_MAX 2147483647
 #define DBL_MAX 999999999.999999
 
@@ -34,8 +34,12 @@ bool pidDRFB(double a, unsigned long wait, bool auton);
 bool pidMGL(double a, unsigned long wait);
 
 // dist: inches
-bool pidDrive(double dist, unsigned long wait);
+bool pidDrive(double dist, unsigned long wait, bool lineTrack);
 // angle: degrees
 bool pidTurn(double angle, unsigned long wait);
+
+void setDownStack();
+
+void ltTurn(bool dir);
 
 #endif
