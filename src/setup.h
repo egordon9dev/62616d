@@ -65,6 +65,8 @@ extern double fbUpP;
 // motors
 void limMotorVal(int *n);
 int getLimMotorVal(int n);
+int limInt(int n, int min, int max);
+double limDouble(double n, double min, double max);
 void setDL(int n);
 void setDR(int n);
 void setDRFB(int n);

@@ -36,10 +36,10 @@ PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 30, 
 #define DDZ 12
 #define DKP 0.5    // .44
 #define DKI 0.002  //.0007, .0015
-#define DKD 40.0   // 40
+#define DKD 37.0   // 40
 PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
 PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
-PidVars driveCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0};  // 7, 0, 0
+PidVars driveCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 6, .ki = 0.006, .kd = 0.0, .prevTime = 0, .unwind = 0};  // 7, 0, 0
 #define TIA 40
 #define TDZ 7
 #define TKP 1.65   // 1.35, 1.2
@@ -47,7 +47,7 @@ PidVars driveCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 4
 #define TKD 120.0
 PidVars DLturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = TDZ, .maxIntegral = 45, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = TKP, .ki = TKI, .kd = TKD, .prevTime = 0, .unwind = 0};
 PidVars DRturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = TDZ, .maxIntegral = 45, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = TKP, .ki = TKI, .kd = TKD, .prevTime = 0, .unwind = 0};
-PidVars turnCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 20, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0};  // 2, .002, 200
+PidVars turnCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 20, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2.0, .ki = 0.002, .kd = 200.0, .prevTime = 0, .unwind = 0};  // 2, .002, 200
 // 7.2,.013,560
 
 double updateSlew(Slew *slew, double in) {
@@ -260,7 +260,21 @@ bool pidDrive(double dist, unsigned long wait, bool lineTrack) {
     if (!lineTrack) {
         driveCurve_pid.sensVal = eDRGet() - eDLGet();
         driveCurve_pid.target = 0.0;
-        double curve = updatePID(&driveCurve_pid) * 0.5 * (fabs((DL_pid.target - DL_pid.sensVal) / DL_pid.target) + fabs((DR_pid.target - DR_pid.sensVal) / DR_pid.target));
+        int curve = updatePID(&driveCurve_pid) * 0.5 * (fabs((DL_pid.target - DL_pid.sensVal) / DL_pid.target) + fabs((DR_pid.target - DR_pid.sensVal) / DR_pid.target));
+        double curveInfluence = 0.5;
+        if (abs(powerR) > abs(powerL)) {
+            if (powerL > 0) {
+                curve = limInt(curve, -powerL * curveInfluence, powerL * curveInfluence);
+            } else {
+                curve = limInt(curve, powerL * curveInfluence, -powerL * curveInfluence);
+            }
+        } else {
+            if (powerR > 0) {
+                curve = limInt(curve, -powerR * curveInfluence, powerR * curveInfluence);
+            } else {
+                curve = limInt(curve, powerR * curveInfluence, -powerR * curveInfluence);
+            }
+        }
         powerL -= curve;
         powerR += curve;
     }
@@ -268,7 +282,25 @@ bool pidDrive(double dist, unsigned long wait, bool lineTrack) {
     limMotorVal(&powerR);
     setDL(powerL);
     setDR(powerR);
-    printf("(DL:%d,DR:%d)", powerL, powerR);
+    return false;
+}
+bool pidDumbDrive(double dist, unsigned long wait) {
+    if (DL_pid.doneTime + wait < millis() && DR_pid.doneTime + wait < millis()) {
+        setDL(0);
+        setDR(0);
+        return true;
+    }
+    DL_pid.sensVal = eDLGet();
+    DR_pid.sensVal = eDRGet();
+    // 89 inches = 2457 ticks : 2457.0/89.0 = 27.6067
+    DL_pid.target = dist * DRIVE_TICKS_PER_IN;
+    DR_pid.target = dist * DRIVE_TICKS_PER_IN;
+    int powerL = updatePID(&DL_pid);
+    int powerR = updatePID(&DR_pid);
+    limMotorVal(&powerL);
+    limMotorVal(&powerR);
+    setDL(powerL);
+    setDR(powerR);
     return false;
 }
 bool pidTurn(double angle, unsigned long wait) {
@@ -278,16 +310,35 @@ bool pidTurn(double angle, unsigned long wait) {
         printf("DONE(pidTurn)\n");
         return true;
     }
-    turnCurve_pid.sensVal = eDRGet() + eDLGet();
-    turnCurve_pid.target = 0.0;
-    double curve = updatePID(&turnCurve_pid) * 0.5 * (fabs((DLturn_pid.target - DLturn_pid.sensVal) / DLturn_pid.target) + fabs((DRturn_pid.target - DRturn_pid.sensVal) / DRturn_pid.target));
 
     DLturn_pid.sensVal = eDLGet();
     DLturn_pid.target = -angle * DRIVE_TICKS_PER_DEG;
     DRturn_pid.sensVal = eDRGet();
     DRturn_pid.target = angle * DRIVE_TICKS_PER_DEG;
-    setDL(updatePID(&DLturn_pid) + curve);
-    setDR(updatePID(&DRturn_pid) + curve);
+    int powerL = updatePID(&DLturn_pid);
+    int powerR = updatePID(&DRturn_pid);
+    powerL = limInt(powerL, -127, 127);
+    powerR = limInt(powerR, -127, 127);
+
+    turnCurve_pid.sensVal = eDRGet() + eDLGet();
+    turnCurve_pid.target = 0.0;
+    double curve = updatePID(&turnCurve_pid) * 0.5 * (fabs((DLturn_pid.target - DLturn_pid.sensVal) / DLturn_pid.target) + fabs((DRturn_pid.target - DRturn_pid.sensVal) / DRturn_pid.target));
+    double curveInfluence = 0.5;
+    if (abs(powerR) > abs(powerL)) {
+        if (powerL > 0) {
+            curve = limInt(curve, -powerL * curveInfluence, powerL * curveInfluence);
+        } else {
+            curve = limInt(curve, powerL * curveInfluence, -powerL * curveInfluence);
+        }
+    } else {
+        if (powerR > 0) {
+            curve = limInt(curve, -powerR * curveInfluence, powerR * curveInfluence);
+        } else {
+            curve = limInt(curve, powerR * curveInfluence, -powerR * curveInfluence);
+        }
+    }
+    setDL(powerL + curve);
+    setDR(powerR + curve);
     return false;
 }
 

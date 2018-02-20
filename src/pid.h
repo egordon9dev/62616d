@@ -34,6 +34,7 @@ bool pidDRFB(double a, unsigned long wait, bool auton);
 bool pidMGL(double a, unsigned long wait);
 
 // dist: inches
+bool pidDumbDrive(double dist, unsigned long wait);
 bool pidDrive(double dist, unsigned long wait, bool lineTrack);
 // angle: degrees
 bool pidTurn(double angle, unsigned long wait);

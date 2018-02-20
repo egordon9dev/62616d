@@ -20,6 +20,11 @@ int limInt(int n, int min, int max) {
     if (n < min) return min;
     return n;
 }
+double limDouble(double n, double min, double max) {
+    if (n > max) return max;
+    if (n < min) return min;
+    return n;
+}
 void setDL(int n) {  //	set right drive motors
     limMotorVal(&n);
     n = updateSlew(&DL_slew, n);
@@ -143,22 +148,22 @@ void autoSelect() {
             lcdSetText(LCD, 2, "--- NONE ---");
         } else if (autonMode == i++) {
             lcdPrint(LCD, 1, "auto:  %d", autonMode);
-            lcdSetText(LCD, 2, "110");
+            lcdSetText(LCD, 2, "110 20");
         } else if (autonMode == i++) {
             lcdPrint(LCD, 1, "auto:  %d", autonMode);
-            lcdSetText(LCD, 2, "120");
+            lcdSetText(LCD, 2, "120 20");
         } else if (autonMode == i++) {
             lcdPrint(LCD, 1, "auto:  %d", autonMode);
-            lcdSetText(LCD, 2, "130");
+            lcdSetText(LCD, 2, "130 20");
         } else if (autonMode == i++) {
             lcdPrint(LCD, 1, "auto:  %d", autonMode);
-            lcdSetText(LCD, 2, "010");
+            lcdSetText(LCD, 2, "010 20");
         } else if (autonMode == i++) {
             lcdPrint(LCD, 1, "auto skills: %d", autonMode);
-            lcdSetText(LCD, 2, "020");
+            lcdSetText(LCD, 2, "020 20");
         } else if (autonMode == i++) {
             lcdPrint(LCD, 1, "auto skills: %d", autonMode);
-            lcdSetText(LCD, 2, "030");
+            lcdSetText(LCD, 2, "030 20");
         } else {
             lcdSetText(LCD, 1, "INVALID");
             lcdSetText(LCD, 2, "INVALID");

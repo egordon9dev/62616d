@@ -131,7 +131,7 @@ void operatorControl() {
         delay(200);
         printf("%d\n", i);
     }
-    auton1(true, 1, true);
+    auton1(true, 3, false, 10);
     // autonSkills();
     return;
     opT0 = millis();
