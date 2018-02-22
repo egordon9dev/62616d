@@ -2,16 +2,14 @@
 #include "main.h"
 #include "pid.h"
 #include "setup.h"
-//----- updates Arm and Chain-Bar -----//
+//----- updates Arm and four-Bar -----//
 unsigned long tFbOff = 0, tDrfbOff = 0;
 double fbHoldAngle = 0, drfbHoldAngle = 0;
 bool fbPidRunning = false, drfbPidRunning = false;
 /*
 todo:
 
--wheels on wheelie bar
-
--add diff PID for driving and turning drift prevention out = dist_PID + diff_PID
+-one sided c channel front mgl
 
 */
 
@@ -68,17 +66,18 @@ void updateLift() {
         if (drfbHoldAngle > DRFB_MAX_HOLD_ANGLE) drfbHoldAngle = DRFB_MAX_HOLD_ANGLE;
         pidDRFB(drfbHoldAngle, 999999, false);
     }
+    lcdPrint(LCD, 1, "FB: %d/%d", (int)fb_pid_auto.sensVal, (int)fb_pid_auto.target);
 }
 void test(int n) {
     switch (n) {
         case 0:
-            while (!pidDrive(30, 1000, false)) {
+            while (!pidDrive(-8, 1000, false)) {
                 printEnc_pidDrive();
                 delay(20);
             }
             break;
         case 1:
-            while (!pidTurn(160, 100)) {
+            while (!pidTurn(-90, 1000)) {
                 printEnc_pidDrive();
                 delay(20);
             }
@@ -86,14 +85,14 @@ void test(int n) {
         case 2:
             while (true) {
                 printEnc_pidDRFBFB();
-                pidFB(FB_MID_POS, 999999, true);
+                pidFB(FB_UP_POS, 999999, true);
                 delay(20);
             }
             break;
         case 3:
             while (true) {
                 printEnc_pidDRFBFB();
-                pidDRFB(20, 999999, true);
+                pidDRFB(30, 999999, true);
                 delay(20);
             }
             break;
@@ -124,25 +123,24 @@ void operatorControl() {
         delay(20);
     }
     while (0) {
+        setRollers(25);
         printEnc();
         delay(20);
     }
-    for (int i = 10; i > 0; i--) {
+
+    for (int i = 15; i > 0; i--) {
         delay(200);
         printf("%d\n", i);
     }
-    auton1(true, 3, false, 10);
-    // autonSkills();
+    auton2(true, 5, 20);
     return;
     opT0 = millis();
-    /*if (autonMode == nAutons + nSkills) {
-        auton1(&DL_pid, &DR_pid, &DLturn_pid, &DRturn_pid, &drfb_pid, &fb_pid, false, true);
-    }*/
     char rollDir = 0;
     unsigned long tMglOff = 0, tRollersOff = 0;
     double mglHoldAngle = 0;
     bool mglPidRunning = false;
-
+    while (!autoStack(1, 12)) delay(20);
+    return;
     printf("running\n");
     while (true) {
         // printEnc();
@@ -190,24 +188,24 @@ void operatorControl() {
         if (joystickGetDigital(2, 8, JOY_LEFT) || joystickGetDigital(2, 8, JOY_UP) || joystickGetDigital(2, 8, JOY_RIGHT) || joystickGetDigital(2, 8, JOY_DOWN)) {
             // stop rollers
             rollDir = 0;
-            setRollers(0);
+            setRollersSlew(0);
         } else if (joystickGetDigital(2, 6, JOY_UP)) {
             // intake
             rollDir = 1;
             tRollersOff = millis();
-            setRollers(90);
+            setRollersSlew(90);
         } else if (joystickGetDigital(2, 6, JOY_DOWN)) {
             // outtake
             rollDir = -1;
             tRollersOff = millis();
-            setRollers(-80);
+            setRollersSlew(-80);
         } else {
             if (millis() - tRollersOff < 500 && rollDir == -1) {
-                setRollers(-60);
+                setRollersSlew(-60);
             } else if (rollDir != 0) {
-                setRollers(25);
+                setRollersSlew(25);
             } else {
-                setRollers(0);
+                setRollersSlew(0);
             }
         }
         opctrlDrive();

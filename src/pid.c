@@ -14,11 +14,11 @@
      -------------------------
 */
 #define A 1  // motor value change per ms           0.7
-Slew fb_slew = {.a = A, .out = 0.0, .prevTime = 0};
+Slew fb_slew = {.a = 2 * A, .out = 0.0, .prevTime = 0};
 Slew drfb_slew = {.a = A, .out = 0.0, .prevTime = 0};
-Slew mgl_slew = {.a = A, .out = 0.0, .prevTime = 0};
-Slew DL_slew = {.a = A, .out = 0.0, .prevTime = 0};
-Slew DR_slew = {.a = A, .out = 0.0, .prevTime = 0};
+Slew mgl_slew = {.a = 2 * A, .out = 0.0, .prevTime = 0};
+Slew DL_slew = {.a = 2 * A, .out = 0.0, .prevTime = 0};
+Slew DR_slew = {.a = 2 * A, .out = 0.0, .prevTime = 0};
 Slew roller_slew = {.a = A, .out = 0.0, .prevTime = 0}; /*
  Slew DL_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};
  Slew DR_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};*/
@@ -26,28 +26,28 @@ PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX,
 // weaker PID for opcontrol
 PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 25, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.0, .ki = 0.005, .kd = 250, .prevTime = 0, .unwind = 1};
 PidVars fb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 35, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2.5, .ki = 0.003, .kd = 170.0, .prevTime = 0, .unwind = 3};
-PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 15, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 4.0, .ki = 0.0, .kd = 200.0, .prevTime = 0, .unwind = 0};
+PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 15, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5.0, .ki = 0.0, .kd = 70.0, .prevTime = 0, .unwind = 0};
 // agressive PID mostly for autonomous
-PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 30, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5.0, .ki = 0.006, .kd = 370, .prevTime = 0, .unwind = 3};
-PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 30, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.005, .kd = 500.0, .prevTime = 0, .unwind = 3};  // 1.8, 0.01, 175.0
+PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 30, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 7.0, .ki = 0.007, .kd = 600, .prevTime = 0, .unwind = 3};
+PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 30, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5.5, .ki = 0.000, .kd = 500.0, .prevTime = 0, .unwind = 0};  // 1.8, 0.01, 175.0
 
 // Drive
 #define DIA 50
 #define DDZ 12
-#define DKP 0.5    // .44
-#define DKI 0.002  //.0007, .0015
-#define DKD 37.0   // 40
+#define DKP 0.52   // .44
+#define DKI 0.004  //.0007, .0015
+#define DKD 55.0   // 40
 PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
 PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
 PidVars driveCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 6, .ki = 0.006, .kd = 0.0, .prevTime = 0, .unwind = 0};  // 7, 0, 0
 #define TIA 40
 #define TDZ 7
-#define TKP 1.65   // 1.35, 1.2
-#define TKI 0.002  //.002, .003
-#define TKD 120.0
+#define TKP 1.45   // 1.35, 1.2
+#define TKI 0.006  //.002, .003
+#define TKD 160.0
 PidVars DLturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = TDZ, .maxIntegral = 45, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = TKP, .ki = TKI, .kd = TKD, .prevTime = 0, .unwind = 0};
 PidVars DRturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = TDZ, .maxIntegral = 45, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = TKP, .ki = TKI, .kd = TKD, .prevTime = 0, .unwind = 0};
-PidVars turnCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 20, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2.0, .ki = 0.002, .kd = 200.0, .prevTime = 0, .unwind = 0};  // 2, .002, 200
+PidVars turnCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 20, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 1.0, .ki = 0.001, .kd = 00.0, .prevTime = 0, .unwind = 0};  // 2, .002, 200
 // 7.2,.013,560
 
 double updateSlew(Slew *slew, double in) {
@@ -127,7 +127,9 @@ bool pidFB(double a, unsigned long wait, bool auton) {  // set fb angle with PID
     }
     pid->target = a;
     pid->sensVal = fbGet();
-    setFB(updatePID(pid));
+    int pwr = updatePID(pid);
+    if (pid->sensVal > FB_UP_POS) pwr -= 25;
+    setFB(pwr);
     return false;
 }
 bool pidDRFB(double a, unsigned long wait, bool auton) {  // set drfb angle with PID
@@ -157,21 +159,23 @@ void setDownStack() {
     int i = 0;
     mgl_pid.doneTime = LONG_MAX;
     double drfba0 = drfbGet();
+    int t0 = millis();
     while (true) {
         int j = 0;
         pidDRFB(drfba0, 0, true);
         if (i == j++) {
             pidFB(FB_MID_POS, 999999, true);
-            if (pidMGL(MGL_DOWN_POS, 0)) {
+            if (pidMGL(MGL_DOWN_POS, 0) || millis() - t0 > 2000) {
+                t0 = millis();
                 i++;
-                fb_pid_auto.doneTime = LONG_MAX;
             }
         } else if (i == j++) {
-            setRollers(-80);
-            if (pidFB(FB_UP_POS, 0, true)) {
+            setRollers(-50);
+            pidFB(FB_UP_POS, 999999, true);
+            pidMGL(MGL_DOWN_POS, 999999);
+            if (fbGet() > FB_UP_POS - 20 || millis() - t0 > 1000) {
                 i++;
                 setRollers(0);
-                fb_pid.doneTime = LONG_MAX;
             }
         } else if (i == j++) {
             break;
@@ -179,6 +183,8 @@ void setDownStack() {
         opctrlDrive();
         delay(20);
     }
+    setFB(0);
+    setDRFB(0);
 }
 bool pidDrive(double dist, unsigned long wait, bool lineTrack) {
     if (DL_pid.doneTime + wait < millis() && DR_pid.doneTime + wait < millis()) {

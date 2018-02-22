@@ -65,7 +65,12 @@ void setFB(int n) {
 
 void setRollers(int n) {  //	set rollers
     limMotorVal(&n);
-    // n = updateSlew(&roller_slew, n);
+    motorSet(M11, n);
+    printf("roller=%d", n);
+}
+void setRollersSlew(int n) {
+    limMotorVal(&n);
+    n = updateSlew(&roller_slew, n);
     motorSet(M11, n);
 }
 void setMGL(int n) {  //	set mobile goal lift
@@ -128,55 +133,166 @@ void printEnc_all() {
     printDRFBFB();
     printf("\n");
 }
-int autonMode = 0, autonModeLen = 6;
+AutoSel autoSel = {.stackH = 1, .zone = 5, .nAuton = 0, .leftSide = true, .loaderSide = true};
+
 void autoSelect() {
     static int prevBtn = 0;
+
     int btn = lcdReadButtons(LCD);
-    if (btn & LCD_BTN_CENTER) {
-        lcdSetText(LCD, 1, "Hi");
-    } else {
-        if (btn & LCD_BTN_LEFT && !(prevBtn & LCD_BTN_LEFT)) {
-            if (autonMode > 0) { autonMode--; }
-        } else if (btn & LCD_BTN_RIGHT && !(prevBtn & LCD_BTN_RIGHT)) {
-            if (autonMode < autonModeLen - 1) { autonMode++; }
-        }
-        lcdClear(LCD);
-        lcdPrint(LCD, 1, "<   Auton  %d   >", autonMode);
-        int i = 0;
-        if (autonMode == i++) {
-            lcdPrint(LCD, 1, "auto:  %d", autonMode);
-            lcdSetText(LCD, 2, "--- NONE ---");
-        } else if (autonMode == i++) {
-            lcdPrint(LCD, 1, "auto:  %d", autonMode);
-            lcdSetText(LCD, 2, "110 20");
-        } else if (autonMode == i++) {
-            lcdPrint(LCD, 1, "auto:  %d", autonMode);
-            lcdSetText(LCD, 2, "120 20");
-        } else if (autonMode == i++) {
-            lcdPrint(LCD, 1, "auto:  %d", autonMode);
-            lcdSetText(LCD, 2, "130 20");
-        } else if (autonMode == i++) {
-            lcdPrint(LCD, 1, "auto:  %d", autonMode);
-            lcdSetText(LCD, 2, "010 20");
-        } else if (autonMode == i++) {
-            lcdPrint(LCD, 1, "auto skills: %d", autonMode);
-            lcdSetText(LCD, 2, "020 20");
-        } else if (autonMode == i++) {
-            lcdPrint(LCD, 1, "auto skills: %d", autonMode);
-            lcdSetText(LCD, 2, "030 20");
+    if (btn == LCD_BTN_LEFT && !(prevBtn & LCD_BTN_LEFT)) {
+        autoSel.leftSide = !autoSel.leftSide;
+    } else if (btn == LCD_BTN_CENTER && !(prevBtn & LCD_BTN_CENTER)) {
+        autoSel.stackH++;
+        if (autoSel.stackH > 3) autoSel.stackH = 1;
+    } else if (btn == LCD_BTN_RIGHT && !(prevBtn & LCD_BTN_RIGHT)) {
+        autoSel.loaderSide = !autoSel.loaderSide;
+    }
+    if (btn == (LCD_BTN_LEFT | LCD_BTN_CENTER) && prevBtn != (LCD_BTN_LEFT | LCD_BTN_CENTER)) {
+        autoSel.nAuton++;
+        if (autoSel.nAuton > 2) autoSel.nAuton = 0;
+    }
+    if (btn == (LCD_BTN_RIGHT | LCD_BTN_CENTER) && prevBtn != (LCD_BTN_RIGHT | LCD_BTN_CENTER)) {
+        if (autoSel.zone == 5) {
+            autoSel.zone = 10;
+        } else if (autoSel.zone == 10) {
+            autoSel.zone = 20;
         } else {
-            lcdSetText(LCD, 1, "INVALID");
-            lcdSetText(LCD, 2, "INVALID");
+            autoSel.zone = 5;
         }
     }
+    lcdClear(LCD);
+    if (autoSel.nAuton == 0) {
+        lcdPrint(LCD, 1, "AUTON SELECT");
+        lcdSetText(LCD, 2, "--- NONE ---");
+    } else {
+        lcdPrint(LCD, 1, "A %d:%d %s", autoSel.nAuton, autoSel.zone, autoSel.nAuton == 1 ? "Field" : "Loader");
+        lcdPrint(LCD, 2, " %s    C:%d    L:%s", autoSel.leftSide ? "L" : "R", autoSel.stackH, autoSel.loaderSide ? "Y" : "N");
+    }
     prevBtn = btn;
+}
+int drfba[][2] = {{15, 4}, {18, 13}, {27, 22}, {37, 30}, {44, 36}, {52, 44}, {59, 52}, {67, 58}, {76, 67}, {85, 76}, {93, 85}, {103, 94}, {119, 108}};
+int ldrGrabI = 0, ldrStackI = 0;
+/* PRECONDITIONS:
+    DRFB+FB just stacked a cone,
+    ldrHvrI is set to 0 when function is first called
+    a1: height to lift drfb above cone
+*/
+bool loaderGrab(double a1) {
+    int fbUp = FB_UP_POS - 2;
+    int j = 0;
+    static double drfba1;
+    if (ldrGrabI == j++) {  // release cone
+        drfba1 = a1;
+        if (drfba1 < DRFB_LDR_UP) drfba1 = DRFB_LDR_UP;
+        if (drfbGet() > drfba1 - 2) {
+            ldrGrabI++;
+        } else {
+            pidDRFB(drfba1 + 3, 999999, true);
+            setRollers(-80);
+            pidFB(fbUp, 999999, true);
+        }
+    } else if (ldrGrabI == j++) {  // grab cone
+        setRollers(80);
+        pidFB(FB_MID_POS, 999999, true);
+        if (fbGet() < FB_CLEAR_OF_STACK) {
+            pidDRFB(DRFB_LDR_DOWN, 999999, true);
+        } else {
+            pidDRFB(drfba1, 999999, true);
+        }
+        if (drfbGet() < DRFB_LDR_DOWN + 7 && fbGet() < FB_MID_POS + 5) {
+            setRollers(25);
+            return true;
+        }
+    }
+    return false;
+}
+
+/* PRECONDITIONS:
+    DRFB+FB grab
+    ldrStackI is set to 0 when function is first called
+    a1: drfb upper position: cone above stack
+    a2: drfb lower position: cone on stack
+*/
+bool loaderStack(double a1, double a2) {
+    int fbUp = FB_UP_POS - 2;
+    int j = 0;
+    static double drfba1;
+    static unsigned long t0 = 0, lastT = 0;
+    if (millis() - lastT > 200) t0 = millis();
+    lastT = millis();
+    if (ldrStackI == j++) {  // lift cone
+        drfba1 = a1;
+        if (drfba1 < DRFB_LDR_DOWN) drfba1 = DRFB_LDR_DOWN;
+        pidDRFB(drfba1, 999999, true);
+        setRollers(millis() - t0 > 100 ? 25 : 80);
+        if (drfbGet() > drfba1 - 5) {
+            pidFB(fbUp, 999999, true);
+            if (fbGet() > fbUp - 12) ldrStackI++;
+        } else {
+            pidFB(FB_MID_POS, 999999, true);
+        }
+    } else if (ldrStackI == j++) {  // stack cone
+        setRollers(25);
+        pidFB(fbUp, 999999, true);
+        pidDRFB(a2, 999999, true);
+        if (drfbGet() < a2 + 5) return true;
+    }
+    return false;
+}
+/*
+PRECONDITION: autoStacking = false
+range: start to end (inclusive)
+valid numbers: 1 to 13
+*/
+bool autoStacking = false;
+bool autoStack(int start, int end) {
+    static int q, u, prevU;
+    static unsigned long autoStackT0, lastT;
+    if (autoStacking == false) {
+        q = start - 1;
+        u = 0;
+        prevU = u;
+        autoStacking = true;
+        autoStackT0 = millis();
+        lastT = millis();
+    }
+    if (q < end) {
+        if (u != prevU) lastT = millis();
+        // safety first
+        if (millis() - lastT > 2500) {
+            resetMotors();
+            return false;
+        }
+        prevU = u;
+        int h = 0;
+        if (u == h++) {
+            if (loaderGrab(drfba[q][0])) {
+                ldrStackI = 0;
+                u++;
+            }
+        } else if (u == h++) {
+            if (loaderStack(drfba[q][0], drfba[q][1])) {
+                ldrGrabI = 0;
+                u++;
+            }
+        } else if (u == h++) {
+            u = 0;
+            q++;
+            printf("\n\ncone %d\n\n", q + 1);
+        }
+        printEnc_pidDRFBFB();
+    } else {
+        printf("\n\n\nTIME:\t%ld\n\n\n", millis() - autoStackT0);
+        return true;
+    }
+    return false;
 }
 
 unsigned long dt = 0, prevT = 0;
 int DL_brake_out = 0, DR_brake_out = 0;
 void opctrlDrive() {
-    DL_brake.kd = 20;
-    DR_brake.kd = 20;
+    DL_brake.kd = 0;
+    DR_brake.kd = 0;
 
     const int td = 15;
     int drv = joystickGetAnalog(1, 3);

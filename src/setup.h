@@ -55,6 +55,10 @@ extern double fbUpP;
 #define MGL_UP_POS 1
 #define LT_LIGHT -1000
 
+#define FB_CLEAR_OF_STACK 105
+#define DRFB_LDR_UP 46
+#define DRFB_LDR_DOWN 35
+
 #define DRIVE_TURN_MAX 100
 #define DRIVE_DRIVE_MAX 110
 #define DRFB_MAX 127
@@ -72,6 +76,7 @@ void setDR(int n);
 void setDRFB(int n);
 void setFB(int n);
 void setRollers(int n);
+void setRollersSlew(int n);
 void setMGL(int n);
 void resetMotors();
 
@@ -83,6 +88,11 @@ int eDLGet();
 int eDRGet();
 void opctrlDrive();
 
+bool loaderGrab(double a1);
+bool loaderStack(double a1, double a2);
+extern bool autoStacking;
+bool autoStack(int start, int end);
+
 // zeroes drive encoders
 void resetDriveEnc();
 
@@ -92,9 +102,14 @@ void printEnc_pidDRFBFB();
 void printEnc_all();
 void setupLCD();
 
-extern int autonMode, autonModeLen;
 void autoSelect();
-
+typedef struct AutoSel {
+    int stackH, zone, nAuton;
+    bool leftSide, loaderSide;
+} AutoSel;
+extern AutoSel autoSel;
+extern int ldrGrabI, ldrStackI;
+extern int drfba[][2];
 #define DM 2
 /*
 
@@ -104,9 +119,9 @@ j4:         ----                ----
 j3:         drive               fb
 j1:         turn                ----
 j2:         ----                drfb
-btn7L:      ----                ----
+btn7L:      ----                resetFbUp
 btn7U:      ----                incFbUp
-btn7R:      ----                ----
+btn7R:      ----                resetFbUp
 btn7D:      setDownStack        decFbUp
 btn8L:      mglAutoMid          stopRollers
 btn8U:      mglManualUp         stopRollers
