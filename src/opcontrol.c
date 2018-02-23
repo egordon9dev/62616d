@@ -97,7 +97,7 @@ void test(int n) {
             }
             break;
         case 1:
-            while (!pidTurn(-90, 1000)) {
+            while (!pidTurn(-10, 1000)) {
                 printEnc_pidDrive();
                 delay(20);
             }
@@ -138,24 +138,21 @@ void controllerTest() {
 }
 #include "auto.h"
 void operatorControl() {
-    DL_slew.a = 1;
-    DR_slew.a = 1;
+    DL_slew.a = 1.0;
+    DR_slew.a = 1.0;
     while (0) {
         printf("LT1: %d\tLT2: %d\tLT3: %d\n", analogReadCalibrated(LT1), analogReadCalibrated(LT2), analogReadCalibrated(LT3));
         delay(20);
     }
     while (0) {
-        setRollers(25);
         printEnc();
         delay(20);
     }
-    /*
-        for (int i = 15; i > 0; i--) {
-            delay(200);
-            printf("%d\n", i);
-        } /*
-         auton2(true, 4, 20);
-         return;*/
+    for (int i = 15; i > 0; i--) {
+        delay(200);
+        printf("%d\n", i);
+    }
+    auton2(true, 4, 20);
     opT0 = millis();
     char rollDir = 0;
     unsigned long tMglOff = 0, tRollersOff = 0;
@@ -163,7 +160,7 @@ void operatorControl() {
     bool mglPidRunning = false; /*
      while (!autoStack(1, 12)) delay(20);
      return;*/
-    printf("running\n");
+    printf("\n\nOPERATOR CONTROL\n\n");
     while (true) {
         // printEnc();
         updateLift();

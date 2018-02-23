@@ -390,29 +390,30 @@ void auton2(bool leftSide, int stackH, int zone) {
     int i = 0, prevI = 0, u = 0, y = 0;
     double prevSens[3] = {0, 0, 0};
     unsigned long breakTime = 5000;
-    int driveT = 200;
-    while (millis() - funcT0 < 999999999) {
+    int driveT = 0;
+    while (millis() - funcT0 < 15000) {
         if (i != prevI) lastT = millis();
         if (millis() - lastT > breakTime) break;
         prevI = i;
         int j = 0;
         if (i == j++) {  // deploy
-            if (millis() - t0 < 200) {
-                setRollers(70);
-            } else {
-                setRollers(25);
-            }
-            if (fbGet() > 20) {
-                pidMGL(MGL_DOWN_POS, 0);
-                pidDRFB(0, 999999, true);  // 10
-            }
-            pidFB(FB_UP_POS, 999999, true);
             if (mglGet() > 5) {
                 i++;
                 u = 0;
                 mgl_pid.doneTime = LONG_MAX;
                 drfb_pid_auto.doneTime = LONG_MAX;
                 fb_pid_auto.doneTime = LONG_MAX;
+            } else {
+                if (millis() - t0 < 200) {
+                    setRollers(70);
+                } else {
+                    setRollers(25);
+                }
+                if (fbGet() > 20) {
+                    pidMGL(MGL_DOWN_POS, 0);
+                    pidDRFB(0, 999999, true);  // 10
+                }
+                pidFB(FB_UP_POS, 999999, true);
             }
         } else if (i == j++) {  // grab MG
             setRollers(25);
@@ -430,7 +431,7 @@ void auton2(bool leftSide, int stackH, int zone) {
                 pidDRFB(40, 999999, true);
             }
             double d = (eDRGet() + eDLGet()) * 0.5 / DRIVE_TICKS_PER_IN;
-            if (d > 51) pidMGL(MGL_UP_POS, 999999);
+            if (d > 50.0) pidMGL(MGL_UP_POS, 999999);
             if (pidDrive(54, driveT, false)) {
                 mgl_pid.doneTime = LONG_MAX;
                 i++;
@@ -475,14 +476,14 @@ void auton2(bool leftSide, int stackH, int zone) {
             }
             int g = 0, ymax = -1;
             if (y == g++) {
-                if (pidDrive(-21, driveT, false)) {
+                if (pidDrive(-11, driveT, false)) {
                     resetDriveEnc();
                     DLturn_pid.doneTime = LONG_MAX;
                     DRturn_pid.doneTime = LONG_MAX;
                     y++;
                 }
             } else if (y == g++) {
-                int a = leftSide ? 60 : -60;
+                int a = leftSide ? 102 : -102;
                 if (mglGet() < MGL_MID_POS && pidTurn(a, driveT)) y++;
             } else if (y == g++) {
                 ymax = y;
@@ -505,19 +506,19 @@ void auton2(bool leftSide, int stackH, int zone) {
                 DRturn_pid.doneTime = LONG_MAX;
                 resetDriveEnc();
                 u = 0;
+                t0 = millis();
                 breakTime = 3000;
             }
         } else if (i == j++) {
             pidDRFB(drfba[stackH - 1][0], 999999, true);
             pidFB(FB_UP_POS, 999999, true);
-            setRollers(-20);
             double a;
             if (zone == 5) {
                 a = leftSide ? 85 : -85;
             } else if (zone == 10) {
                 a = leftSide ? 100 : -100;
             } else {
-                a = leftSide ? 130 : -130;
+                a = leftSide ? 95 : -95;
             }
             if (zone == 5 && fabs((eDRGet() + eDLGet()) * 0.5 / DRIVE_TICKS_PER_DEG) > 30.0) pidMGL(MGL_MID_POS - 10, 999999);
             if (pidTurn(a, driveT)) {
@@ -538,7 +539,7 @@ void auton2(bool leftSide, int stackH, int zone) {
             } else if (zone == 10) {
                 d = 25;
             } else {
-                d = 51;
+                d = 50;
             }
             if (pidDrive(d, driveT, false)) {
                 DLturn_pid.doneTime = LONG_MAX;
@@ -555,7 +556,7 @@ void auton2(bool leftSide, int stackH, int zone) {
                     a = leftSide ? -45 : 45;
                     pidMGL(MGL_MID_POS + 15, 999999);
                 } else {
-                    a = leftSide ? -60 : 60;
+                    a = leftSide ? -64 : 64;
                 }
                 if (pidTurn(a, driveT)) {
                     DL_pid.doneTime = LONG_MAX;
@@ -574,9 +575,9 @@ void auton2(bool leftSide, int stackH, int zone) {
             prevSens[1] = prevSens[2];
             prevSens[2] = eDLGet() + eDRGet();
             if (zone == 20) {
-                pidDumbDrive(42, 999999);
+                pidDumbDrive(42, 999999);  // 42
                 pidMGL(MGL_MID_POS - 10, 999999);
-                if (eDLGet() + eDRGet() - prevSens[1] <= 10 && d > 15.0) {
+                if (eDLGet() + eDRGet() - prevSens[1] <= 10 && d > 30.0) {
                     t0 = LONG_MAX;
                     i++;
                 }
@@ -595,12 +596,12 @@ void auton2(bool leftSide, int stackH, int zone) {
             if (zone == 20) {
                 pidFB(FB_UP_POS, 999999, true);
                 pidDRFB(drfba[stackH - 1][0], 999999, true);
-                pidMGL(MGL_MID_POS + 21, 999999);
+                pidMGL(MGL_MID_POS + 25, 999999);  // target: 21
                 setDL(25);
                 setDR(25);
-                if (mglGet() >= MGL_MID_POS + 15 && t0 == LONG_MAX) t0 = millis();
+                if (mglGet() >= MGL_MID_POS + 20 && t0 == LONG_MAX) t0 = millis();
             }
-            if (millis() - t0 > 300 || zone != 20) {
+            if (millis() - t0 >= 0 || zone != 20) {
                 DL_pid.doneTime = LONG_MAX;
                 DR_pid.doneTime = LONG_MAX;
                 mgl_pid.doneTime = LONG_MAX;
@@ -613,10 +614,10 @@ void auton2(bool leftSide, int stackH, int zone) {
             pidDRFB(drfba[stackH - 1][0], 999999, true);
             double d = (eDLGet() + eDRGet()) * 0.5 / DRIVE_TICKS_PER_IN;
             if (zone == 20) {
-                if (d < -6.0) {
+                if (d < -7.0) {
                     pidMGL(MGL_UP_POS, 999999);
                 } else {
-                    pidMGL(MGL_MID_POS + 15, 999999);
+                    pidMGL(MGL_MID_POS + 18, 999999);
                 }
                 if (pidDrive(-10, driveT, false)) i++;
             } else if (zone == 10) {

@@ -282,9 +282,8 @@ bool autoStack(int start, int end) {
             q++;
             printf("\n\ncone %d\n\n", q + 1);
         }
-        printEnc_pidDRFBFB();
     } else {
-        printf("\n\n\nTIME:\t%ld\n\n\n", millis() - autoStackT0);
+        printf("\n\n\nSTACK TIME:\t%ld\n\n\n", millis() - autoStackT0);
         return true;
     }
     return false;

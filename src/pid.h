@@ -38,6 +38,7 @@ bool pidDumbDrive(double dist, unsigned long wait);
 bool pidDrive(double dist, unsigned long wait, bool lineTrack);
 // angle: degrees
 bool pidTurn(double angle, unsigned long wait);
+bool pidTurnShort(double angle, unsigned long wait, double fac);
 
 void setDownStack();
 
