@@ -4,6 +4,8 @@
 
 double fbUpP = 121;
 
+int DRIVE_DRIVE_MAX = 110, DRIVE_TURN_MAX = 90;
+
 //////////////////////////////          MOTORS
 const int MAX_POWER = 127;
 void limMotorVal(int* n) {
@@ -60,13 +62,11 @@ void setFB(int n) {
     if (fbA < FB_MIN_HOLD_ANGLE && n < 0) n = 0;
     n = updateSlew(&fb_slew, n);
     motorSet(M10, n);
-    printf("fb: %d", n);
 }
 
 void setRollers(int n) {  //	set rollers
     limMotorVal(&n);
     motorSet(M11, n);
-    printf("roller=%d", n);
 }
 void setRollersSlew(int n) {
     limMotorVal(&n);
@@ -178,18 +178,20 @@ int ldrGrabI = 0, ldrStackI = 0;
     a1: height to lift drfb above cone
 */
 bool loaderGrab(double a1) {
-    int fbUp = FB_UP_POS - 2;
     int j = 0;
-    static double drfba1;
-    if (ldrGrabI == j++) {  // release cone
+    static double drfba1, fb0;
+    if (ldrGrabI == j++) {
+        fb0 = fbGet();
+        ldrGrabI++;
+    } else if (ldrGrabI == j++) {  // release cone
         drfba1 = a1;
-        if (drfba1 < DRFB_LDR_UP) drfba1 = DRFB_LDR_UP;
+        if (drfba1 < DRFB_LDR_DOWN) drfba1 = DRFB_LDR_DOWN;
         if (drfbGet() > drfba1 - 2) {
             ldrGrabI++;
         } else {
             pidDRFB(drfba1 + 3, 999999, true);
             setRollers(-80);
-            pidFB(fbUp, 999999, true);
+            pidFB(fb0, 999999, true);
         }
     } else if (ldrGrabI == j++) {  // grab cone
         setRollers(80);
@@ -266,15 +268,15 @@ bool autoStack(int start, int end) {
         prevU = u;
         int h = 0;
         if (u == h++) {
+            ldrGrabI = 0;
+            u++;
+        } else if (u == h++) {
             if (loaderGrab(drfba[q][0])) {
                 ldrStackI = 0;
                 u++;
             }
         } else if (u == h++) {
-            if (loaderStack(drfba[q][0], drfba[q][1])) {
-                ldrGrabI = 0;
-                u++;
-            }
+            if (loaderStack(drfba[q][0], drfba[q][1])) u++;
         } else if (u == h++) {
             u = 0;
             q++;

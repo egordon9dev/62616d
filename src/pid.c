@@ -15,7 +15,7 @@
 */
 #define A 1  // motor value change per ms           0.7
 Slew fb_slew = {.a = 2 * A, .out = 0.0, .prevTime = 0};
-Slew drfb_slew = {.a = A, .out = 0.0, .prevTime = 0};
+Slew drfb_slew = {.a = 1.3, .out = 0.0, .prevTime = 0};
 Slew mgl_slew = {.a = 2 * A, .out = 0.0, .prevTime = 0};
 Slew DL_slew = {.a = 2 * A, .out = 0.0, .prevTime = 0};
 Slew DR_slew = {.a = 2 * A, .out = 0.0, .prevTime = 0};
@@ -34,16 +34,16 @@ PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 8, .maxIntegral = 30, 
 // Drive
 #define DIA 50
 #define DDZ 12
-#define DKP 0.52   // .44
-#define DKI 0.004  //.0007, .0015
-#define DKD 55.0   // 40
+#define DKP 0.52
+#define DKI 0.004
+#define DKD 55.0
 PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
 PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0};
 PidVars driveCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 6, .ki = 0.006, .kd = 0.0, .prevTime = 0, .unwind = 0};  // 7, 0, 0
 #define TIA 40
 #define TDZ 7
-#define TKP 1.45   // 1.35, 1.2
-#define TKI 0.006  //.002, .003
+#define TKP 1.45
+#define TKI 0.006
 #define TKD 160.0
 PidVars DLturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = TDZ, .maxIntegral = 45, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = TKP, .ki = TKI, .kd = TKD, .prevTime = 0, .unwind = 0};
 PidVars DRturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = TDZ, .maxIntegral = 45, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = TKP, .ki = TKI, .kd = TKD, .prevTime = 0, .unwind = 0};

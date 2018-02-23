@@ -59,8 +59,7 @@ extern double fbUpP;
 #define DRFB_LDR_UP 46
 #define DRFB_LDR_DOWN 35
 
-#define DRIVE_TURN_MAX 100
-#define DRIVE_DRIVE_MAX 110
+extern int DRIVE_DRIVE_MAX, DRIVE_TURN_MAX;
 #define DRFB_MAX 127
 
 #define DRIVE_TICKS_PER_IN 27.6067
@@ -126,7 +125,7 @@ btn7D:      setDownStack        decFbUp
 btn8L:      mglAutoMid          stopRollers
 btn8U:      mglManualUp         stopRollers
 btn8R:      mglAutoUp           stopRollers
-btn8D:      mglManualDown       stopRollers
+btn8D:      mglManualDown       limitDrive
 btn5U:      mglAutoMid          fbAutoUp
 btn5D:      setDownStack        fbAutoMid
 btn6U:      mglAutoUp           rollerIn
