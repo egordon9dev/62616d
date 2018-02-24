@@ -66,7 +66,9 @@ void updateLift() {
         }
         if (fbPidRunning) {
             if (fbHoldAngle < FB_MIN_HOLD_ANGLE) fbHoldAngle = FB_MIN_HOLD_ANGLE;
-            pidFB(fbHoldAngle, 999999, true);
+            fb_pid.sensVal = fbGet();
+            fb_pid.target = fbHoldAngle;
+            setFB(updatePID(&fb_pid));
         }
         const int t = 15;
         int js = joystickGetAnalog(2, 2) * DRFB_MAX / 127.0;
@@ -118,8 +120,8 @@ void test(int n) {
             break;
         case 4:
             while (true) {
-                printEnc();
-                if (pidMGL(MGL_DOWN_POS, 0)) setMGL(0);
+                printEnc_all();
+                pidMGL(MGL_MID_POS, 999999);
                 delay(20);
             }
             break;
@@ -138,8 +140,6 @@ void controllerTest() {
 }
 #include "auto.h"
 void operatorControl() {
-    DL_slew.a = 1.0;
-    DR_slew.a = 1.0;
     while (0) {
         printf("LT1: %d\tLT2: %d\tLT3: %d\n", analogReadCalibrated(LT1), analogReadCalibrated(LT2), analogReadCalibrated(LT3));
         delay(20);
@@ -157,10 +157,10 @@ void operatorControl() {
     char rollDir = 0;
     unsigned long tMglOff = 0, tRollersOff = 0;
     double mglHoldAngle = 0;
-    bool mglPidRunning = false; /*
-     while (!autoStack(1, 12)) delay(20);
-     return;*/
+    bool mglPidRunning = false;
     printf("\n\nOPERATOR CONTROL\n\n");
+    DL_slew.a = 1.0;
+    DR_slew.a = 1.0;
     while (true) {
         // printEnc();
         updateLift();

@@ -7,10 +7,10 @@
 #define LCD uart1
 
 //------- Digital -------
-#define DRIVE_L_ENC_TOP 1
-#define DRIVE_L_ENC_BOT 2
-#define DRIVE_R_ENC_TOP 3
-#define DRIVE_R_ENC_BOT 4
+#define DRIVE_L_ENC_T 1
+#define DRIVE_L_ENC_B 2
+#define DRIVE_R_ENC_B 3
+#define DRIVE_R_ENC_T 4
 
 //------- Analog -------
 #define MGL_POT 1
@@ -54,10 +54,13 @@ extern double fbUpP;
 #define MGL_MID_POS 88
 #define MGL_UP_POS 1
 #define LT_LIGHT -1000
-
+/*
+MG_MID - 10 -->  fb:    91
+MG_MID      -->         69
+*/
 #define FB_CLEAR_OF_STACK 105
 #define DRFB_LDR_UP 46
-#define DRFB_LDR_DOWN 35
+#define DRFB_LDR_DOWN 37
 
 extern int DRIVE_DRIVE_MAX, DRIVE_TURN_MAX;
 #define DRFB_MAX 127
@@ -109,6 +112,7 @@ typedef struct AutoSel {
 extern AutoSel autoSel;
 extern int ldrGrabI, ldrStackI;
 extern int drfba[][2];
+extern int drfbDownA[];
 #define DM 2
 /*
 

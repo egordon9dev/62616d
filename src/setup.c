@@ -62,6 +62,7 @@ void setFB(int n) {
     if (fbA < FB_MIN_HOLD_ANGLE && n < 0) n = 0;
     n = updateSlew(&fb_slew, n);
     motorSet(M10, n);
+    printf("(fb:%d)", n);
 }
 
 void setRollers(int n) {  //	set rollers
@@ -102,8 +103,8 @@ PidVars DL_brake, DR_brake;
 void setupSens() {
     DL_brake = pidDef;
     DR_brake = pidDef;
-    eDL = encoderInit(DRIVE_L_ENC_TOP, DRIVE_L_ENC_BOT, false);
-    eDR = encoderInit(DRIVE_R_ENC_TOP, DRIVE_R_ENC_BOT, false);
+    eDL = encoderInit(DRIVE_L_ENC_T, DRIVE_L_ENC_B, false);
+    eDR = encoderInit(DRIVE_R_ENC_B, DRIVE_R_ENC_T, false);
     encoderReset(eDL);
     encoderReset(eDR);
 }
@@ -116,20 +117,22 @@ int eDRGet() { return encoderGet(eDR); }
 
 void printEnc() { printf("dr4b: %d\tfb: %d\tmgl: %d\tDL: %d\tDR: %d\t\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet()); }
 void printDrv() {
-    printf("DL: %d/%d\tDR: %d/%d\tDLt: %d/%d\tDRt: %d/%d\tt: %ld\t", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)DLturn_pid.sensVal, (int)DLturn_pid.target, (int)DRturn_pid.sensVal, (int)DRturn_pid.target, millis());
-    printf("driveCurve: %d/%d\tturnCurve: %d/%d\t", (int)driveCurve_pid.sensVal, (int)driveCurve_pid.target, (int)turnCurve_pid.sensVal, (int)turnCurve_pid.target);
+    printf("DLR: %d/%d, %d/%d\tDLRt: %d/%d, %d/%d\tt: %ld\t", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)DLturn_pid.sensVal, (int)DLturn_pid.target, (int)DRturn_pid.sensVal, (int)DRturn_pid.target, millis());
+    printf("dCrv: %d/%d, tCrv: %d/%d\t", (int)driveCurve_pid.sensVal, (int)driveCurve_pid.target, (int)turnCurve_pid.sensVal, (int)turnCurve_pid.target);
 }
 void printEnc_pidDrive() {
     printDrv();
     printf("\n");
 }
-void printDRFBFB() { printf("drfb: %d/%d\tfb: %d/%d\t", (int)drfb_pid_auto.sensVal, (int)drfb_pid_auto.target, (int)fb_pid_auto.sensVal, (int)fb_pid_auto.target); }
+void printDRFBFB() { printf("drfb: %d/%d, fb: %d/%d\t", (int)drfb_pid_auto.sensVal, (int)drfb_pid_auto.target, (int)fb_pid_auto.sensVal, (int)fb_pid_auto.target); }
+void printMGL() { printf("mgl: %d/%d\t", (int)mgl_pid.sensVal, (int)mgl_pid.target); }
 void printEnc_pidDRFBFB() {
     printDRFBFB();
     printf("\n");
 }
 void printEnc_all() {
     printDrv();
+    printMGL();
     printDRFBFB();
     printf("\n");
 }
@@ -143,7 +146,13 @@ void autoSelect() {
         autoSel.leftSide = !autoSel.leftSide;
     } else if (btn == LCD_BTN_CENTER && !(prevBtn & LCD_BTN_CENTER)) {
         autoSel.stackH++;
-        if (autoSel.stackH > 3) autoSel.stackH = 1;
+        if (autoSel.nAuton == 1) {
+            if (autoSel.stackH > 3) autoSel.stackH = 1;
+        } else if (autoSel.nAuton == 2) {
+            if (autoSel.zone == 20 && autoSel.stackH > 3) autoSel.stackH = 1;
+            if (autoSel.zone == 10 && autoSel.stackH > 4) autoSel.stackH = 1;
+            if (autoSel.zone == 5 && autoSel.stackH > 5) autoSel.stackH = 1;
+        }
     } else if (btn == LCD_BTN_RIGHT && !(prevBtn & LCD_BTN_RIGHT)) {
         autoSel.loaderSide = !autoSel.loaderSide;
     }
@@ -170,7 +179,8 @@ void autoSelect() {
     }
     prevBtn = btn;
 }
-int drfba[][2] = {{15, 4}, {18, 13}, {27, 22}, {37, 30}, {44, 36}, {52, 44}, {59, 52}, {67, 58}, {76, 67}, {85, 76}, {93, 85}, {103, 94}, {119, 108}};
+int drfba[][2] = {{15, 4}, {18, 13}, {27, 22}, {37, 29}, {44, 36}, {52, 44}, {59, 52}, {67, 58}, {76, 67}, {85, 76}, {93, 85}, {103, 94}, {119, 108}};
+int drfbDownA[] = {0, 0, 15, 21, 31, 40, 47, 55, 61, 69, 77, 84, 96};
 int ldrGrabI = 0, ldrStackI = 0;
 /* PRECONDITIONS:
     DRFB+FB just stacked a cone,
@@ -194,15 +204,20 @@ bool loaderGrab(double a1) {
             pidFB(fb0, 999999, true);
         }
     } else if (ldrGrabI == j++) {  // grab cone
-        setRollers(80);
         pidFB(FB_MID_POS, 999999, true);
         if (fbGet() < FB_CLEAR_OF_STACK) {
-            pidDRFB(DRFB_LDR_DOWN, 999999, true);
+            setRollers(80);
+            pidDRFB(DRFB_LDR_DOWN, 999999, true); /*
+             if (drfbGet() < DRFB_LDR_DOWN + 14) {
+                 setDRFB(0);
+             } else {
+                 setDRFB(-127);
+             }*/
         } else {
             pidDRFB(drfba1, 999999, true);
         }
-        if (drfbGet() < DRFB_LDR_DOWN + 7 && fbGet() < FB_MID_POS + 5) {
-            setRollers(25);
+        if (drfbGet() < DRFB_LDR_DOWN + 14 && fbGet() < FB_MID_POS + 9) {  // 7, 5
+            setRollers(60);
             return true;
         }
     }
@@ -216,7 +231,7 @@ bool loaderGrab(double a1) {
     a2: drfb lower position: cone on stack
 */
 bool loaderStack(double a1, double a2) {
-    int fbUp = FB_UP_POS - 2;
+    int fbUp = FB_UP_POS - 7;
     int j = 0;
     static double drfba1;
     static unsigned long t0 = 0, lastT = 0;
@@ -229,7 +244,7 @@ bool loaderStack(double a1, double a2) {
         setRollers(millis() - t0 > 100 ? 25 : 80);
         if (drfbGet() > drfba1 - 5) {
             pidFB(fbUp, 999999, true);
-            if (fbGet() > fbUp - 12) ldrStackI++;
+            if (fbGet() > fbUp - 10) ldrStackI++;
         } else {
             pidFB(FB_MID_POS, 999999, true);
         }
