@@ -148,11 +148,13 @@ void operatorControl() {
         printEnc();
         delay(20);
     }
-    for (int i = 15; i > 0; i--) {
-        delay(200);
-        printf("%d\n", i);
+    if (0) {
+        for (int i = 15; i > 0; i--) {
+            delay(200);
+            printf("%d\n", i);
+        }
+        auton2(true, 4, 20);
     }
-    auton2(true, 4, 20);
     opT0 = millis();
     char rollDir = 0;
     unsigned long tMglOff = 0, tRollersOff = 0;

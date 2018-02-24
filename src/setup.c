@@ -62,7 +62,7 @@ void setFB(int n) {
     if (fbA < FB_MIN_HOLD_ANGLE && n < 0) n = 0;
     n = updateSlew(&fb_slew, n);
     motorSet(M10, n);
-    printf("(fb:%d)", n);
+    // printf("(fb:%d)", n);
 }
 
 void setRollers(int n) {  //	set rollers
@@ -149,7 +149,7 @@ void autoSelect() {
         if (autoSel.nAuton == 1) {
             if (autoSel.stackH > 3) autoSel.stackH = 1;
         } else if (autoSel.nAuton == 2) {
-            if (autoSel.zone == 20 && autoSel.stackH > 3) autoSel.stackH = 1;
+            if (autoSel.zone == 20 && autoSel.stackH > 4) autoSel.stackH = 1;
             if (autoSel.zone == 10 && autoSel.stackH > 4) autoSel.stackH = 1;
             if (autoSel.zone == 5 && autoSel.stackH > 5) autoSel.stackH = 1;
         }
