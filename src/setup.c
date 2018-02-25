@@ -76,7 +76,7 @@ void setRollersSlew(int n) {
 }
 void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
-    int maxD = 20, maxU = 25;
+    int maxD = 25, maxU = 25;
     if (mglGet() > MGL_MAX) {
         if (n >= 0) n = maxD;
     }
@@ -109,7 +109,7 @@ void setupSens() {
     encoderReset(eDR);
 }
 #define POT_SENSITIVITY 0.06105006105
-int drfbGet() { return (-analogRead(DRFB_POT) + 2750) * POT_SENSITIVITY; }
+int drfbGet() { return (2727 - analogRead(DRFB_POT)) * POT_SENSITIVITY; }
 int fbGet() { return (1840 - analogRead(FB_POT)) * POT_SENSITIVITY + 40; }
 int mglGet() { return (4095 - analogRead(MGL_POT)) * POT_SENSITIVITY; }
 int eDLGet() { return encoderGet(eDL); }
@@ -240,9 +240,9 @@ bool loaderStack(double a1, double a2) {
     if (ldrStackI == j++) {  // lift cone
         drfba1 = a1;
         if (drfba1 < DRFB_LDR_DOWN) drfba1 = DRFB_LDR_DOWN;
-        pidDRFB(drfba1, 999999, true);
+        pidDRFB(drfba1 + 3, 999999, true);
         setRollers(millis() - t0 > 100 ? 25 : 80);
-        if (drfbGet() > drfba1 - 5) {
+        if (drfbGet() > drfba1 - 3) {
             pidFB(fbUp, 999999, true);
             if (fbGet() > fbUp - 10) ldrStackI++;
         } else {

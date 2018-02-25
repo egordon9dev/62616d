@@ -60,7 +60,7 @@ MG_MID      -->         69
 */
 #define FB_CLEAR_OF_STACK 105
 #define DRFB_LDR_UP 46
-#define DRFB_LDR_DOWN 37
+#define DRFB_LDR_DOWN 33.5
 
 extern int DRIVE_DRIVE_MAX, DRIVE_TURN_MAX;
 #define DRFB_MAX 127

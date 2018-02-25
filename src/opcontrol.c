@@ -140,20 +140,36 @@ void controllerTest() {
 }
 #include "auto.h"
 void operatorControl() {
-    while (0) {
-        printf("LT1: %d\tLT2: %d\tLT3: %d\n", analogReadCalibrated(LT1), analogReadCalibrated(LT2), analogReadCalibrated(LT3));
-        delay(20);
-    }
-    while (0) {
-        printEnc();
-        delay(20);
-    }
     if (0) {
-        for (int i = 15; i > 0; i--) {
-            delay(200);
-            printf("%d\n", i);
+        while (0) {
+            printf("%d\n", drfbGet());
+            delay(20);
         }
-        auton2(true, 4, 20);
+        while (0) {
+            printf("LT1: %d\tLT2: %d\tLT3: %d\n", analogReadCalibrated(LT1), analogReadCalibrated(LT2), analogReadCalibrated(LT3));
+            delay(20);
+        }
+        while (0) {
+            printEnc();
+            delay(20);
+        }
+        if (1) {
+            for (int i = 15; i > 0; i--) {
+                delay(200);
+                printf("%d\n", i);
+            }
+            auton2(true, 5, 5);
+        }
+        if (0) {
+            while (!autoStack(2, 6)) {
+                delay(20);
+                printEnc_all();
+            }
+        }
+        while (1) {
+            printf("%d\n", mglGet());
+            delay(20);
+        }
     }
     opT0 = millis();
     char rollDir = 0;
