@@ -111,14 +111,14 @@ void test(int n) {
             DL_pid.doneTime = LONG_MAX;
             DR_pid.doneTime = LONG_MAX;
             resetDriveEnc();
-            while (!pidDrive(20, 500, false)) {
+            while (!pidDrive(6, 100, false)) {
                 printEnc_pidDrive();
                 delay(5);
             }
             DL_pid.doneTime = LONG_MAX;
             DR_pid.doneTime = LONG_MAX;
             resetDriveEnc();
-            while (!pidDrive(-20, 500, false)) {
+            while (!pidDrive(-6, 100, false)) {
                 printEnc_pidDrive();
                 delay(5);
             }
