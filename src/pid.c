@@ -152,53 +152,58 @@ bool killPID(int d, int s, PidVars *p) {
 // note: wrap rubber bands 2 extra times around rubber band mounts
 bool pidFB(double a, unsigned long wait, bool auton) {  // set fb angle with PID
     PidVars *pid = auton ? &fb_pid_auto : &fb_pid;
-    if (pid->doneTime + wait < millis()) {
-        setFB(0);
-        return true;
-    }
     pid->target = a;
     pid->sensVal = fbGet();
     setFB(2 + updatePID(pid));
+    if (pid->doneTime + wait < millis()) return true;
     return false;
 }
 bool pidDRFB(double a, unsigned long wait, bool auton) {  // set drfb angle with PID
     PidVars *pid = auton ? &drfb_pid_auto : &drfb_pid;
-    if (pid->doneTime + wait < millis()) {
-        setDRFB(0);
-        return true;
-    }
     pid->target = a;
     pid->sensVal = drfbGet();
     setDRFB(updatePID(pid));
+    if (pid->doneTime + wait < millis()) return true;
     return false;
 }
 bool pidMGL(double a, unsigned long wait) {  // set mgl angle with PID
-    if (mgl_pid.doneTime + wait < millis()) {
-        setMGL(0);
-        return true;
-    }
     mgl_pid.target = a;
     mgl_pid.sensVal = mglGet();
     setMGL(updatePID(&mgl_pid));
+    if (mgl_pid.doneTime + wait < millis()) return true;
     return false;
 }
 double ltdKi = 0.5, ltdKp = 12.0, ltdInt = 0.0;
-// dist is in inches
-void setDownStack() {
-    int i = 0;
-    mgl_pid.doneTime = LONG_MAX;
-    unsigned long t0 = millis();
+/*
+ ######  ######## ########    ########   #######  ##      ## ##    ##     ######  ########    ###     ######  ##    ##
+##    ## ##          ##       ##     ## ##     ## ##  ##  ## ###   ##    ##    ##    ##      ## ##   ##    ## ##   ##
+##       ##          ##       ##     ## ##     ## ##  ##  ## ####  ##    ##          ##     ##   ##  ##       ##  ##
+ ######  ######      ##       ##     ## ##     ## ##  ##  ## ## ## ##     ######     ##    ##     ## ##       #####
+      ## ##          ##       ##     ## ##     ## ##  ##  ## ##  ####          ##    ##    ######### ##       ##  ##
+##    ## ##          ##       ##     ## ##     ## ##  ##  ## ##   ###    ##    ##    ##    ##     ## ##    ## ##   ##
+ ######  ########    ##       ########   #######   ###  ###  ##    ##     ######     ##    ##     ##  ######  ##    ##
+*/
+bool setDownStackAuton() {
+    static int i = 0, prevI;
+    static unsigned long prevT, prevRunT = 0;
+    if (millis() - prevRunT > 1000) i = 0;
+    prevRunT = millis();
     double h = 0.09 + sin((M_PI / 180.0) * (drfbGet() - DRFB_HORIZONTAL));
     if (h > 1.0) h = 1.0;
-    while (true) {
+    mgl_pid.doneTime = LONG_MAX;
+    bool allowRepeat = true;
+    while (allowRepeat) {
+        allowRepeat = false;
         int j = 0;
         if (i == j++) {
+            prevI = i;
+            i++;
+        } else if (i == j++) {
             fb_pid_auto.target = FB_MID_POS;
             fb_pid_auto.sensVal = fbGet();
             setFB(limInt((int)updatePID(&fb_pid_auto), -30, 30));  // limit fb to keep claw from going ahead of cone
             pidDRFB(DRFB_HORIZONTAL + (180.0 / M_PI) * asin(h), 999999, true);
-            if (pidMGL(MGL_DOWN_POS, 0) || millis() - t0 > 2000) {
-                t0 = millis();
+            if (pidMGL(MGL_DOWN_POS, 0)) {
                 h = -0.65 + sin((M_PI / 180.0) * (drfbGet() - DRFB_HORIZONTAL));
                 if (h < -1.0) h = -1.0;
                 drfb_pid_auto.doneTime = LONG_MAX;
@@ -211,10 +216,26 @@ void setDownStack() {
             fb_pid_auto.sensVal = fbGet();
             setFB(limInt((int)updatePID(&fb_pid_auto), -60, 60));
             pidDRFB(drfba, 999999, true);
-            if ((fbGet() > FB_UP_POS - 32 && drfbGet() < drfba + 8) || millis() - t0 > 2500) i++;
-        } else if (i == j++) {
-            break;
+            if ((fbGet() > FB_UP_POS - 32 && drfbGet() < drfba + 8)) return true;
         }
+
+        if (i != prevI) {
+            prevT = millis();
+            allowRepeat = true;
+        }
+        prevI = i;
+        // safety first (ptc tripped or robot got stuck)
+        if (millis() - prevT > 3000) {
+            resetMotors();
+            return true;
+        }
+    }
+    return false;
+}
+void setDownStack() {
+    while (true) {
+        int j = 0;
+        setDownStackAuton();
         opctrlDrive();
         printEnc_all();
         delay(5);
@@ -232,11 +253,6 @@ void setDownStack() {
 */
 
 bool pidDrive(double dist, unsigned long wait, bool lineTrack) {
-    if (DL_pid.doneTime + wait < millis() && DR_pid.doneTime + wait < millis()) {
-        setDL(0);
-        setDR(0);
-        return true;
-    }
     if (lineTrack) {
         double eAvg = (eDLGet() + eDRGet()) * 0.5;
         DL_pid.sensVal = eAvg;
@@ -333,35 +349,10 @@ bool pidDrive(double dist, unsigned long wait, bool lineTrack) {
     limMotorVal(&powerR);
     setDL(powerL);
     setDR(powerR);
-    return false;
-}
-bool pidDumbDrive(double dist, unsigned long wait) {
-    if (DL_pid.doneTime + wait < millis() && DR_pid.doneTime + wait < millis()) {
-        setDL(0);
-        setDR(0);
-        return true;
-    }
-    DL_pid.sensVal = eDLGet();
-    DR_pid.sensVal = eDRGet();
-    // 89 inches = 2457 ticks : 2457.0/89.0 = 27.6067
-    DL_pid.target = dist * DRIVE_TICKS_PER_IN;
-    DR_pid.target = dist * DRIVE_TICKS_PER_IN;
-    int powerL = updatePID(&DL_pid);
-    int powerR = updatePID(&DR_pid);
-    limMotorVal(&powerL);
-    limMotorVal(&powerR);
-    setDL(powerL);
-    setDR(powerR);
+    if (DL_pid.doneTime + wait < millis() && DR_pid.doneTime + wait < millis()) return true;
     return false;
 }
 bool pidTurn(double angle, unsigned long wait) {
-    if (DLturn_pid.doneTime + wait < millis() && DRturn_pid.doneTime + wait < millis()) {
-        setDL(0);
-        setDR(0);
-        printf("DONE(pidTurn)\n");
-        return true;
-    }
-
     DLturn_pid.sensVal = eDLGet();
     DLturn_pid.target = -angle * DRIVE_TICKS_PER_DEG;
     DRturn_pid.sensVal = eDRGet();
@@ -390,6 +381,27 @@ bool pidTurn(double angle, unsigned long wait) {
     }
     setDL(powerL + curve);
     setDR(powerR + curve);
+    if (DLturn_pid.doneTime + wait < millis() && DRturn_pid.doneTime + wait < millis()) return true;
+    return false;
+}
+
+bool pidDumbDrive(double dist, unsigned long wait) {
+    if (DL_pid.doneTime + wait < millis() && DR_pid.doneTime + wait < millis()) {
+        setDL(0);
+        setDR(0);
+        return true;
+    }
+    DL_pid.sensVal = eDLGet();
+    DR_pid.sensVal = eDRGet();
+    // 89 inches = 2457 ticks : 2457.0/89.0 = 27.6067
+    DL_pid.target = dist * DRIVE_TICKS_PER_IN;
+    DR_pid.target = dist * DRIVE_TICKS_PER_IN;
+    int powerL = updatePID(&DL_pid);
+    int powerR = updatePID(&DR_pid);
+    limMotorVal(&powerL);
+    limMotorVal(&powerR);
+    setDL(powerL);
+    setDR(powerR);
     return false;
 }
 bool pidTurnShort(double angle, unsigned long wait, double fac) {

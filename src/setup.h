@@ -83,6 +83,7 @@ void setDR(int n);
 void setDRFB(int n);
 void setFB(int n);
 void setMGL(int n);
+void stopMGL();
 void resetMotors();
 
 void setupSens();
@@ -94,6 +95,7 @@ int eDRGet();
 void opctrlDrive();
 
 extern bool autoStacking;
+bool stackConeQ(int q);
 bool autoStack(int start, int end);
 
 // zeroes drive encoders

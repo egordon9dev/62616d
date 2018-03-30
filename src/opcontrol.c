@@ -218,12 +218,12 @@ void operatorControl() {
             printEnc();
             delay(5);
         }
-        if (0) {
+        if (1) {
             for (int i = 15; i > 0; i--) {
                 delay(200);
                 printf("%d\n", i);
             }
-            auton2(true, 5, 5);
+            auton2(true, 3, 20);
         }
         if (0) {
             autoStacking = false;
@@ -237,7 +237,7 @@ void operatorControl() {
             printf("%d\n", (int)mglGet());
             delay(5);
         }
-        if (1) { test(1); }
+        if (0) { test(1); }
     }
     opT0 = millis();
     unsigned long tMglOff = 0;

@@ -427,352 +427,298 @@ void auton1(bool leftSide, int stackH, bool loaderSide, int zone) {
 */
 
 void auton2(bool leftSide, int stackH, int zone) {
-    unsigned long t0 = millis(), lastT = millis(), funcT0 = millis();
-    int i = 0, prevI = 0, u = 0, y = 0;
+    unsigned long t0 = millis(), prevT = millis(), funcT0 = millis();
+    int i = 0, prevI = 0, u = 0, prevU = 0, y = 0, prevY = 0;
     double prevSens[3] = {0, 0, 0};
     double prevMGL[3] = {0, 0, 0};
     unsigned long breakTime = 5000;
     double driveIntegral = 0.0;
     int driveT = 80;
     while (millis() - funcT0 < 15000) {
-        if (i != prevI) lastT = millis();
-        if (millis() - lastT > breakTime) break;
-        prevI = i;
-        int j = 0;
-        if (i == j++) {  // deploy
-            if (mglGet() > 5) {
-                i++;
-                u = 0;
-                mgl_pid.doneTime = LONG_MAX;
-                drfb_pid_auto.doneTime = LONG_MAX;
-                fb_pid_auto.doneTime = LONG_MAX;
-            } else {
-                if (fbGet() > 20) {
-                    setMGL(127);
-                    pidDRFB(0, 999999, true);  // 10
-                }
-                pidFB(FB_UP_POS, 999999, true);
-            }
-        } else if (i == j++) {  // grab MG
-            setMGL(127);
-            int h = 0;
-            if (u == h++) {  // deploy
-                bool fbDone = pidFB(FB_UP_POS, 0, true), drfbDone = pidDRFB(0, 0, true);
-                if (fbDone && drfbDone) {
-                    u++;
+        bool allowRepeat = true;
+        while (allowRepeat) {
+            allowRepeat = false;
+            int j = 0;
+            if (i == j++) {  // deploy
+                if (mglGet() > 5) {
+                    i++;
+                    mgl_pid.doneTime = LONG_MAX;
+                    drfb_pid_auto.doneTime = LONG_MAX;
                     fb_pid_auto.doneTime = LONG_MAX;
-                    drfb_pid_auto.doneTime = LONG_MAX;
-                }
-            } else if (u == h++) {  // deploy
-                pidFB(FB_MID_POS, 999999, true);
-                pidDRFB(40, 999999, true);
-            }
-            double d = (eDRGet() + eDLGet()) * 0.5 / DRIVE_TICKS_PER_IN;
-            if (d > 49.0) pidMGL(MGL_UP_POS, 999999);
-            if (pidDrive(54, driveT, false)) {
-                mgl_pid.doneTime = LONG_MAX;
-                i++;
-            }
-        } else if (i == j++) {  // lift MG
-            pidFB(FB_UP_POS, 999999, true);
-            pidDRFB(20, 999999, true);
-            pidMGL(MGL_UP_POS, 999999);
-            if (mglGet() < 95) {  // low battery: 110
-                i++;
-                mgl_pid.doneTime = LONG_MAX;
-                DR_pid.doneTime = LONG_MAX;
-                DL_pid.doneTime = LONG_MAX;
-                resetDriveEnc();
-                u = 0;
-            }
-        } else if (i == j++) {  // stack cone 1, align to loader
-            bool mglDone = pidMGL(MGL_UP_POS, 0);
-            int h = 0, umax = -1;
-            if (u == h++) {
-                pidFB(FB_UP_POS, 999999, true);
-                if (mglDone) {
-                    if (pidDRFB(0, 0, true)) {
-                        drfb_pid_auto.doneTime = LONG_MAX;
-                        u++;
-                    }
-                } else {
-                    pidDRFB(20, 999999, true);
-                    drfb_pid_auto.doneTime = LONG_MAX;
-                }
-            } else if (u == h++) {
-                pidFB(FB_UP_POS, 999999, true);
-                if (pidDRFB(DRFB_LDR_UP, 0, true)) { u++; }
-            } else if (u == h++) {
-                pidFB(FB_UP_POS, 999999, true);
-                pidDRFB(DRFB_LDR_UP, 999999, true);
-                umax = u;
-            }
-            int g = 0, ymax = -1;
-            if (y == g++) {
-                if (pidDrive(-19, driveT, false)) {
                     resetDriveEnc();
-                    DLturn_pid.doneTime = LONG_MAX;
-                    DRturn_pid.doneTime = LONG_MAX;
-                    y++;
-                }
-            } else if (y == g++) {
-                int a = leftSide ? 67.5 : -67.5;
-                if (mglGet() < MGL_MID_POS && pidTurn(a, driveT)) y++;
-            } else if (y == g++) {
-                ymax = y;
-            }
-            if (umax != -1 && ymax != -1) {
-                i++;
-                u = 0;
-                resetDriveEnc();
-                DLturn_pid.doneTime = LONG_MAX;
-                DRturn_pid.doneTime = LONG_MAX;
-                drfb_pid.doneTime = LONG_MAX;
-                fb_pid_auto.doneTime = LONG_MAX;
-                autoStacking = false;
-            }
-        } else if (i == j++) {  // stack cones
-            breakTime = 12000;
-            if (autoStack(2, stackH)) {
-                i++;
-                DL_pid.doneTime = LONG_MAX;
-                DR_pid.doneTime = LONG_MAX;
-                resetDriveEnc();
-                u = 0;
-                t0 = millis();
-                breakTime = 3000;
-            }
-        } else if (i == j++) {
-            pidDRFB(drfba[stackH - 1][1], 999999, true);
-            pidFB(FB_UP_POS, 999999, true);
-            if (pidDrive(-5, driveT, false)) {
-                DLturn_pid.doneTime = LONG_MAX;
-                DRturn_pid.doneTime = LONG_MAX;
-                resetDriveEnc();
-                i++;
-            }
-        } else if (i == j++) {
-            pidDRFB(drfba[stackH - 1][1], 999999, true);
-            double a;
-            if (zone == 10) {
-                a = leftSide ? 120 : -120;
-                pidMGL(MGL_MID_POS + 15, 999999);
-                pidFB(FB_UP_POS, 999999, true);
-            } else if (zone == 20) {
-                a = leftSide ? 117 : -117;
-                pidFB(FB_UP_POS, 999999, true);
-            } else {
-                a = leftSide ? 90 : -90;
-                pidFB(FB_UP_POS, 999999, true);
-            }
-            if (pidTurn(a, driveT)) {
-                DL_pid.doneTime = LONG_MAX;
-                DR_pid.doneTime = LONG_MAX;
-                resetDriveEnc();
-                i++;
-            }
-        } else if (i == j++) {
-            pidDRFB(drfba[stackH - 1][1], 999999, true);
-            if (zone == 5) {
-                pidMGL(MGL_DOWN_POS, 999999);
-                pidFB(FB_MID_POS, 999999, true);
-            } else {
-                pidMGL(MGL_MID_POS, 999999);
-                pidFB(69, 999999, true);
-            }
-            double d;
-            if (zone == 20) {
-                d = 43.5;
-            } else if (zone == 10) {
-                d = 30;
-            } else {
-                d = 12;
-            }
-            if (pidDrive(d, driveT, false)) {
-                i++;
-                DLturn_pid.doneTime = LONG_MAX;
-                DRturn_pid.doneTime = LONG_MAX;
-                resetDriveEnc();
-            }
-        } else if (i == j++) {
-            if (zone != 5) {
-                pidDRFB(drfba[stackH - 1][1], 999999, true);
-                pidMGL(MGL_MID_POS, 999999);
-                pidFB(69, 999999, true);
-                double a;
-                if (zone == 20) {
-                    a = leftSide ? -43 : 43;
                 } else {
-                    a = leftSide ? -45 : 45;
-                }
-                if (pidTurn(a, driveT)) i++;
-            } else {
-                i++;
-            }
-        } else if (i == j++) {
-            DL_pid.doneTime = LONG_MAX;
-            DR_pid.doneTime = LONG_MAX;
-            resetDriveEnc();
-            i++;
-        } else if (i == j++) {  // score MG
-            if (zone != 5) {
-                if (stackH > 2) {
-                    pidDRFB(drfba[stackH - 1][1], 999999, true);
-                } else {
+                    setMGL(127);
+                    pidFB(FB_UP_POS, 999999, true);
                     pidDRFB(30, 999999, true);
                 }
-                double d = (eDLGet() + eDRGet()) * 0.5 / DRIVE_TICKS_PER_IN;
-
-                prevSens[0] = prevSens[1];
-                prevSens[1] = prevSens[2];
-                prevSens[2] = eDLGet() + eDRGet();
-                if (zone == 20) {
-                    setDL(127);
-                    setDR(127);
-                    pidMGL(MGL_MID_POS, 999999);
-                    pidFB(69, 999999, true);
-                    if (eDLGet() + eDRGet() - prevSens[1] <= 4 && d > 20.0) {
-                        t0 = LONG_MAX;
-                        i++;
-                    }
-                } else if (zone == 10) {
-                    pidFB(69, 999999, true);
-                    double d = (eDLGet() + eDRGet()) * 0.5 / DRIVE_TICKS_PER_IN;
-                    pidMGL(MGL_MID_POS, 999999);
-                    setDL(80);
-                    setDR(80);
-                    if ((eDLGet() + eDRGet() - prevSens[1] <= 15 && d > 3.0)) i++;
-                }
-
-            } else {
-                i++;
-            }
-        } else if (i == j++) {
-            u = 0;
-            i++;
-            resetDriveEnc();
-        } else if (i == j++) {  // lower MG into 20|10 pt zone
-            if (zone != 5) {
-                if (stackH > 2) {
-                    pidDRFB(drfba[stackH - 1][1], 999999, true);
+            } else if (i == j++) {  // grab MG
+                pidFB(FB_UP_POS, 999999, true);
+                pidDRFB(30, 999999, true);
+                double d = (eDRGet() + eDLGet()) * 0.5 / DRIVE_TICKS_PER_IN;
+                if (d > 49.0) {
+                    pidMGL(MGL_UP_POS, 999999);
                 } else {
-                    pidFB(FB_MID_POS, 999999, true);
-                    pidDRFB(30, 999999, true);
+                    setMGL(127);
                 }
-                prevMGL[0] = prevMGL[1];
-                prevMGL[1] = prevMGL[2];
-                prevMGL[2] = mglGet();
-                prevSens[0] = prevSens[1];
-                prevSens[1] = prevSens[2];
-                prevSens[2] = eDRGet() + eDLGet();
-                if (zone == 20) {
-                    double d = (eDRGet() + eDLGet()) * 0.5 / DRIVE_TICKS_PER_IN;
-                    int h = 0;
-                    /*if (u == h++) {
-                        pidFB(69, 999999, true);
-                        pidMGL(MGL_MID_POS, 999999);
-                        setDL(-127);
-                        setDR(-127);
-                        if (d < -4.5) {
-                            u++;
-                            resetDriveEnc();
-                        }
-                    } else if (u == h++) {
-                        pidFB(69, 999999, true);
-                        pidMGL(MGL_MID_POS, 999999);
-                        setDL(127);
-                        setDR(127);
-                        if (eDLGet() + eDRGet() - prevSens[1] <= 10 && d > 1.0) {
-                            u++;
-                            resetDriveEnc();
-                        }
-                    } else */
-                    if (u == h++) {
-                        setDR(40);
-                        setDL(40);
-                        pidFB(75, 999999, true);
-                        pidMGL(MGL_MID_POS + 21, 999999);  // target: 21
-                        if (mglGet() - prevMGL[1] <= 3 && mglGet() > MGL_MID_POS + 10) i++;
-                    }
-                } else {
-                    pidMGL(MGL_DOWN_POS, 999999);
+                if (pidDrive(54, driveT, false)) i++;
+            } else if (i == j++) {  // lift MG
+                pidFB(FB_UP_POS, 999999, true);
+                pidDRFB(30, 999999, true);
+                pidMGL(MGL_UP_POS, 999999);
+                if (mglGet() < 95) {  // low battery: 110
+                    i++;
+                    mgl_pid.doneTime = LONG_MAX;
+                    DR_pid.doneTime = LONG_MAX;
+                    DL_pid.doneTime = LONG_MAX;
+                    resetDriveEnc();
+                    u = 0;
+                    y = 0;
                 }
-            } else {
-                i++;
-            }
-        } else if (i == j++) {
-            DL_pid.doneTime = LONG_MAX;
-            DR_pid.doneTime = LONG_MAX;
-            mgl_pid.doneTime = LONG_MAX;
-            resetDriveEnc();
-            u = 0;
-            t0 = millis();
-            i++;
-            driveIntegral = -40;
-        } else if (i == j++) {  // get rid of MG
-            if (drfbGet() < 70) {
-                setDRFB(127);
-            } else {
-                setDRFB(0);
-            }
-            double fba;
-            if (zone == 5) {
-                fba = FB_MID_POS;
-            } else {
-                fba = 75;  // 69;
-            }
-            pidFB(fba, 999999, true);
-            double d = (eDLGet() + eDRGet()) * 0.5 / DRIVE_TICKS_PER_IN;
-            if (zone == 20) {
-                setDR((int)driveIntegral);
-                setDL((int)driveIntegral);
-                driveIntegral -= 0.35;
-                setDL(driveIntegral);
-                setDR(driveIntegral);
-                if (d < -10.0) i++;
-                pidMGL(MGL_MID_POS + 21, 999999);
-            } else if (zone == 10) {
+            } else if (i == j++) {  // stack cone 1, align to loader
+                bool mglDone = pidMGL(MGL_UP_POS, 0);
                 int h = 0;
+                bool uDone = false;
                 if (u == h++) {
-                    if (d > -4.0) {
-                        pidMGL(MGL_DOWN_POS, 999999);
+                    if (mglDone) {
+                        if (stackConeQ(0)) u++;
                     } else {
-                        pidMGL(MGL_UP_POS, 999999);
+                        pidFB(FB_UP_POS, 999999, true);
+                        pidDRFB(30, 999999, true);
                     }
-                    if (pidDrive(-6, 0, false)) {
+                } else if (u == h++) {
+                    pidFB(FB_UP_POS, 999999, true);
+                    pidDRFB(DRFB_LDR_UP, 999999, true);
+                    uDone = true;
+                }
+                int g = 0;
+                bool yDone = false;
+                if (y == g++) {
+                    if (pidDrive(-19, driveT, false)) {
                         resetDriveEnc();
                         DLturn_pid.doneTime = LONG_MAX;
                         DRturn_pid.doneTime = LONG_MAX;
-                        u++;
+                        y++;
                     }
-                } else if (u == h++) {
-                    pidMGL(MGL_UP_POS, 999999);
-                    if (pidTurn(leftSide ? 30 : -30, 0)) {
-                        resetDriveEnc();
-                        DL_pid.doneTime = LONG_MAX;
-                        DR_pid.doneTime = LONG_MAX;
-                        u++;
-                    }
-                } else if (u == h++) {
-                    pidMGL(MGL_UP_POS, 999999);
-                    if (pidDrive(-20, 0, false)) u++;
-                } else if (u == h++) {
+                } else if (y == g++) {
+                    int a = leftSide ? 67.5 : -67.5;
+                    if (mglGet() < MGL_UP_POS + 40 && pidTurn(a, driveT)) yDone = true;
+                }
+                if (uDone && yDone) {
+                    i++;
+                    autoStacking = false;
+                }
+            } else if (i == j++) {  // stack cones
+                breakTime = 999999;
+                if (autoStack(2, stackH)) {
+                    i++;
+                    DL_pid.doneTime = LONG_MAX;
+                    DR_pid.doneTime = LONG_MAX;
+                    resetDriveEnc();
+                    breakTime = 3000;
+                }
+            } else if (i == j++) {
+                pidDRFB(drfba[stackH - 1][1], 999999, true);
+                pidFB(FB_UP_POS, 999999, true);
+                if (pidDrive(-5, driveT, false)) {
+                    DLturn_pid.doneTime = LONG_MAX;
+                    DRturn_pid.doneTime = LONG_MAX;
+                    resetDriveEnc();
                     i++;
                 }
-            } else {
-                setMGL(127);
-                setDL(-127);
-                setDR(-127);
-                if (d < -10.0) i++;
+            } else if (i == j++) {
+                pidDRFB(drfba[stackH - 1][1], 999999, true);
+                pidFB(FB_UP_POS, 999999, true);
+                double a;
+                if (zone == 20) {
+                    a = leftSide ? 117 : -117;
+                } else if (zone == 10) {
+                    a = leftSide ? 120 : -120;
+                    pidMGL(MGL_MID_POS + 15, 999999);
+                } else {
+                    a = leftSide ? 90 : -90;
+                }
+                if (pidTurn(a, driveT)) {
+                    DL_pid.doneTime = LONG_MAX;
+                    DR_pid.doneTime = LONG_MAX;
+                    resetDriveEnc();
+                    i++;
+                }
+            } else if (i == j++) {
+                pidDRFB(drfba[stackH - 1][1], 999999, true);
+                if (zone == 20 || zone == 10) {
+                    pidFB(FB_UP_POS, 999999, true);
+                } else {
+                    pidMGL(MGL_DOWN_POS, 999999);
+                    pidFB(FB_MID_POS, 999999, true);
+                }
+                double d;
+                if (zone == 20) {
+                    d = 43.5;
+                } else if (zone == 10) {
+                    d = 30;
+                } else {
+                    d = 12;
+                }
+                if (pidDrive(d, driveT, false)) {
+                    i++;
+                    DLturn_pid.doneTime = LONG_MAX;
+                    DRturn_pid.doneTime = LONG_MAX;
+                    resetDriveEnc();
+                }
+            } else if (i == j++) {
+                if (zone != 5) {
+                    pidDRFB(drfba[stackH - 1][1], 999999, true);
+                    pidMGL(MGL_MID_POS, 999999);
+                    pidFB(69, 999999, true);
+                    double a;
+                    if (zone == 20) {
+                        a = leftSide ? -43 : 43;
+                    } else {
+                        a = leftSide ? -45 : 45;
+                    }
+                    if (pidTurn(a, driveT)) i++;
+                } else {
+                    i++;
+                }
+            } else if (i == j++) {
+                DL_pid.doneTime = LONG_MAX;
+                DR_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
+                i++;
+            } else if (i == j++) {  // get into MG scoring position
+                if (zone != 5) {
+                    pidDRFB(drfba[stackH - 1][1], 999999, true);
+                    double d = (eDLGet() + eDRGet()) * 0.5 / DRIVE_TICKS_PER_IN;
+                    prevSens[0] = prevSens[1];
+                    prevSens[1] = prevSens[2];
+                    prevSens[2] = eDLGet() + eDRGet();
+                    if (zone == 20) {
+                        setDL(127);
+                        setDR(127);
+                        pidMGL(MGL_MID_POS, 999999);
+                        pidFB(69, 999999, true);
+                        if (eDLGet() + eDRGet() - prevSens[1] <= 4 && d > 20.0) {
+                            t0 = LONG_MAX;
+                            i++;
+                        }
+                    } else if (zone == 10) {
+                        pidFB(69, 999999, true);
+                        pidMGL(MGL_MID_POS, 999999);
+                        setDL(80);
+                        setDR(80);
+                        if ((eDLGet() + eDRGet() - prevSens[1] <= 15 && d > 3.0)) i++;
+                    }
+                } else {
+                    i++;
+                }
+            } else if (i == j++) {
+                u = 0;
+                i++;
+                resetDriveEnc();
+            } else if (i == j++) {  // score MG
+                if (zone != 5) {
+                    pidDRFB(drfba[stackH - 1][1], 999999, true);
+                    prevMGL[0] = prevMGL[1];
+                    prevMGL[1] = prevMGL[2];
+                    prevMGL[2] = mglGet();
+                    prevSens[0] = prevSens[1];
+                    prevSens[1] = prevSens[2];
+                    prevSens[2] = eDRGet() + eDLGet();
+                    if (zone == 20) {
+                        setDR(40);
+                        setDL(40);
+                        // pidMGL(MGL_MID_POS + 21, 999999);  // target: 21
+                        if (setDownStackAuton()) i++;
+                    } else {
+                        pidMGL(MGL_DOWN_POS, 999999);
+                    }
+                } else {
+                    i++;
+                }
+            } else if (i == j++) {
+                DL_pid.doneTime = LONG_MAX;
+                DR_pid.doneTime = LONG_MAX;
+                mgl_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
+                u = 0;
+                t0 = millis();
+                i++;
+                driveIntegral = -40;
+            } else if (i == j++) {  // get rid of MG
+                setDRFB(-20);
+                pidFB(FB_UP_POS, 999999, true);
+                double d = (eDLGet() + eDRGet()) * 0.5 / DRIVE_TICKS_PER_IN;
+                if (zone == 20) {
+                    setDR(-127);
+                    setDL(-127);
+                    //****************************************************************************************************
+                    if (d > -3) {  // <----------- ***INSERT ULTRASOUND DETECTION HERE TO DETECT WHEN MGL IS UNLOADED***
+                        setMGL(0);
+                    } else {
+                        setMGL(-20);
+                    }
+                    /*
+                    driveIntegral -= 0.35;
+                    setDL(driveIntegral);
+                    setDR(driveIntegral);
+                    if (d < -10.0) i++;
+                    pidMGL(MGL_MID_POS + 21, 999999);*/
+                } else if (zone == 10) {
+                    int h = 0;
+                    if (u == h++) {
+                        if (d > -4.0) {
+                            pidMGL(MGL_DOWN_POS, 999999);
+                        } else {
+                            pidMGL(MGL_UP_POS, 999999);
+                        }
+                        if (pidDrive(-6, 0, false)) {
+                            resetDriveEnc();
+                            DLturn_pid.doneTime = LONG_MAX;
+                            DRturn_pid.doneTime = LONG_MAX;
+                            u++;
+                        }
+                    } else if (u == h++) {
+                        pidMGL(MGL_UP_POS, 999999);
+                        if (pidTurn(leftSide ? 30 : -30, 0)) {
+                            resetDriveEnc();
+                            DL_pid.doneTime = LONG_MAX;
+                            DR_pid.doneTime = LONG_MAX;
+                            u++;
+                        }
+                    } else if (u == h++) {
+                        pidMGL(MGL_UP_POS, 999999);
+                        if (pidDrive(-20, 0, false)) u++;
+                    } else if (u == h++) {
+                        i++;
+                    }
+                } else {
+                    setMGL(127);
+                    setDL(-127);
+                    setDR(-127);
+                    if (d < -10.0) i++;
+                }
+            } else if (i == j++) {
+                setDRFB(0);
+                setFB(0);
+                setMGL(0);
+                setDL(0);
+                setDR(0);
+                i++;
+            } else if (i == j++) {
+                break;
             }
-        } else if (i == j++) {
-            setDRFB(0);
-            setFB(0);
-            setDL(0);
-            setDR(0);
-            i++;
-        } else if (i == j++) {
-            break;
+            if (i != prevI || u != prevU || y != prevY) {
+                prevT = millis();
+                allowRepeat = true;
+            }
+            prevI = i;
+            prevU = u;
+            prevY = y;
+            // safety first (ptc tripped or robot got stuck)
+            if (millis() - prevT > breakTime) {
+                resetMotors();
+                return;
+            }
         }
         printEnc_all();
         delay(5);

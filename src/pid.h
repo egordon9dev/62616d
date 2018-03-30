@@ -40,6 +40,7 @@ bool pidDrive(double dist, unsigned long wait, bool lineTrack);
 bool pidTurn(double angle, unsigned long wait);
 bool pidTurnShort(double angle, unsigned long wait, double fac);
 
+bool setDownStackAuton();
 void setDownStack();
 
 void ltTurn(bool dir);

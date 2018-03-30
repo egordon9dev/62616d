@@ -88,6 +88,8 @@ void setMGL(int n) {  //	set mobile goal lift
     n = updateSlew(&mgl_slew, n);
     motorSet(M6_7, n);
 }
+void stopMGL() { motorSet(M6_7, updateSlew(&mgl_slew, 0)); }
+
 void resetMotors() {
     for (int i = 1; i <= 10; i++) { motorSet(i, 0); }
 }
@@ -212,6 +214,25 @@ void autoSelect() {
 
 int drfba[][2] = {{20, 0}, {27, 6}, {36, 18}, {45, 28}, {52, 37}, {61, 45}, {68, 53}, {77, 62}, {84, 69}, {92, 77}, {102, 85}, {115, 94}, {124, 103}};
 /* PRECONDITIONS:
+-DRFB up
+-fb at FB_UP_POS
+*/
+bool stackConeQ(int q) {
+    double a2 = drfba[q][1];
+    if (drfbGet() > a2) {
+        setDRFB(-127);
+    } else {
+        setDRFB(30);
+    }
+    if (drfbGet() < a2 + 4) {
+        pidFB(FB_MID_POS, 999999, true);
+        if (fbGet() < FB_MID_POS + 25) return true;
+    } else {
+        pidFB(FB_UP_POS, 999999, true);
+    }
+    return false;
+}
+/* PRECONDITIONS:
     - DRFB+FB just stacked a cone     or      robot is lined up for first cone
     - asi set to 0
     - ** drive encoders should not move or be reset in between function calls **
@@ -246,22 +267,11 @@ int loaderGrabAndStack(int q, bool firstCone) {
                     } else {
                         driveDone = true;
                     }
-                    double a2 = drfba[q][1];
-                    if (drfbGet() > a2) {
-                        setDRFB(-127);
-                    } else {
-                        setDRFB(30);
-                    }
-                    if (drfbGet() < a2 + 4) {
-                        pidFB(FB_MID_POS, 999999, true);
-                        if (fbGet() < FB_MID_POS + 25 && driveDone) {
-                            DL_pid.doneTime = LONG_MAX;
-                            DR_pid.doneTime = LONG_MAX;
-                            resetDriveEnc();
-                            u++;
-                        }
-                    } else {
-                        pidFB(FB_UP_POS, 999999, true);
+                    if (stackCone(q) && driveDone) {
+                        DL_pid.doneTime = LONG_MAX;
+                        DR_pid.doneTime = LONG_MAX;
+                        resetDriveEnc();
+                        u++;
                     }
                 } else if (u == h++) {  // drive forward, hover over cone
                     if (q >= AUTO_STACK_STATIONARY) {
