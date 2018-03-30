@@ -124,7 +124,17 @@ void test(int n) {
             }
             break;
         case 1:
-            while (!pidTurn(-10, 1000)) {
+            DLturn_pid.doneTime = LONG_MAX;
+            DRturn_pid.doneTime = LONG_MAX;
+            resetDriveEnc();
+            while (!pidTurn(90, 100)) {
+                printEnc_pidDrive();
+                delay(5);
+            }
+            DLturn_pid.doneTime = LONG_MAX;
+            DRturn_pid.doneTime = LONG_MAX;
+            resetDriveEnc();
+            while (!pidTurn(-90, 100)) {
                 printEnc_pidDrive();
                 delay(5);
             }
@@ -227,7 +237,7 @@ void operatorControl() {
             printf("%d\n", (int)mglGet());
             delay(5);
         }
-        if (1) { test(0); }
+        if (1) { test(1); }
     }
     opT0 = millis();
     unsigned long tMglOff = 0;
