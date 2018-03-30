@@ -31,7 +31,7 @@ void initialize() {
     analogCalibrate(LT3);
     while (!isEnabled()) {
         autoSelect();
-        delay(20);
+        delay(5);
     }
     lcdSetText(LCD, 1, "RUNNING");
 }

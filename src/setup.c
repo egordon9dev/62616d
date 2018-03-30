@@ -2,11 +2,20 @@
 #include "API.h"
 #include "pid.h"
 
-double fbUpP = 121;
+double fbUpP = FB_UP_P0;
 
 int DRIVE_DRIVE_MAX = 110, DRIVE_TURN_MAX = 90;
 
-//////////////////////////////          MOTORS
+/*
+##     ##  #######  ########  #######  ########   ######
+###   ### ##     ##    ##    ##     ## ##     ## ##    ##
+#### #### ##     ##    ##    ##     ## ##     ## ##
+## ### ## ##     ##    ##    ##     ## ########   ######
+##     ## ##     ##    ##    ##     ## ##   ##         ##
+##     ## ##     ##    ##    ##     ## ##    ##  ##    ##
+##     ##  #######     ##     #######  ##     ##  ######
+*/
+
 const int MAX_POWER = 127;
 void limMotorVal(int* n) {
     if (*n > MAX_POWER) *n = MAX_POWER;
@@ -45,12 +54,13 @@ void setDRFB(int n) {  //	set main 4 bar lift
     int drfbA = drfbGet();
     if (drfbA > DRFB_MAX_HOLD_ANGLE && n > 0) n = 0;
     if ((drfbA < DRFB_MIN && n < 0) || (drfbA > DRFB_MAX1 && n > 0)) {
-        if (drfbA < DRFB_MIN / 3 || drfbA > DRFB_MAX2) max /= 3;
+        if (drfbA < DRFB_MIN / 2 || drfbA > DRFB_MAX2) max /= 2;
         if (n > max) n = max;
         if (n < -max) n = -max;
     }
     n = updateSlew(&drfb_slew, n);
-    motorSet(M8_9, -n);
+    n *= -1;
+    motorSet(M8_9, n);
 }
 
 void setFB(int n) {
@@ -61,22 +71,14 @@ void setFB(int n) {
     if (fbA < FB_MIN && n < -max) n = -max;
     if (fbA < FB_MIN_HOLD_ANGLE && n < 0) n = 0;
     n = updateSlew(&fb_slew, n);
-    motorSet(M10, n);
-    // printf("(fb:%d)", n);
-}
-
-void setRollers(int n) {  //	set rollers
-    limMotorVal(&n);
-    motorSet(M11, n);
-}
-void setRollersSlew(int n) {
-    limMotorVal(&n);
-    n = updateSlew(&roller_slew, n);
-    motorSet(M11, n);
+    motorSet(M10, -n);
+    printf("(fb:%d)\t", n);
 }
 void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
-    int maxD = 25, maxU = 25;
+    // when drfb is down only allow holding MG up
+    if (drfbGet() < 19 && !(mglGet() < MGL_MIN && n < 0)) n = 0;
+    int maxD = 22, maxU = 22;
     if (mglGet() > MGL_MAX) {
         if (n >= 0) n = maxD;
     }
@@ -89,6 +91,16 @@ void setMGL(int n) {  //	set mobile goal lift
 void resetMotors() {
     for (int i = 1; i <= 10; i++) { motorSet(i, 0); }
 }
+/*
+ ######  ######## ##    ##  ######   #######  ########   ######
+##    ## ##       ###   ## ##    ## ##     ## ##     ## ##    ##
+##       ##       ####  ## ##       ##     ## ##     ## ##
+ ######  ######   ## ## ##  ######  ##     ## ########   ######
+      ## ##       ##  ####       ## ##     ## ##   ##         ##
+##    ## ##       ##   ### ##    ## ##     ## ##    ##  ##    ##
+ ######  ######## ##    ##  ######   #######  ##     ##  ######
+*/
+
 void setupLCD() {
     lcdInit(LCD);
     lcdClear(LCD);
@@ -109,13 +121,13 @@ void setupSens() {
     encoderReset(eDR);
 }
 #define POT_SENSITIVITY 0.06105006105
-int drfbGet() { return (2727 - analogRead(DRFB_POT)) * POT_SENSITIVITY; }
-int fbGet() { return (1840 - analogRead(FB_POT)) * POT_SENSITIVITY + 40; }
-int mglGet() { return (4095 - analogRead(MGL_POT)) * POT_SENSITIVITY; }
+double drfbGet() { return (2727 - analogRead(DRFB_POT)) * POT_SENSITIVITY; }
+double fbGet() { return (503 - analogRead(FB_POT)) * POT_SENSITIVITY + 140; }
+double mglGet() { return (4095 - analogRead(MGL_POT)) * POT_SENSITIVITY; }
 int eDLGet() { return encoderGet(eDL); }
 int eDRGet() { return encoderGet(eDR); }
 
-void printEnc() { printf("dr4b: %d\tfb: %d\tmgl: %d\tDL: %d\tDR: %d\t\n", drfbGet(), fbGet(), mglGet(), eDLGet(), eDRGet()); }
+void printEnc() { printf("dr4b: %d\tfb: %d\tmgl: %d\tDL: %d\tDR: %d\t\n", (int)drfbGet(), (int)fbGet(), (int)mglGet(), eDLGet(), eDRGet()); }
 void printDrv() {
     printf("DLR: %d/%d, %d/%d\tDLRt: %d/%d, %d/%d\tt: %ld\t", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)DLturn_pid.sensVal, (int)DLturn_pid.target, (int)DRturn_pid.sensVal, (int)DRturn_pid.target, millis());
     printf("dCrv: %d/%d, tCrv: %d/%d\t", (int)driveCurve_pid.sensVal, (int)driveCurve_pid.target, (int)turnCurve_pid.sensVal, (int)turnCurve_pid.target);
@@ -136,8 +148,16 @@ void printEnc_all() {
     printDRFBFB();
     printf("\n");
 }
+/*
+   ###    ##     ## ########  #######      ######  ######## ##       ########  ######  ########
+  ## ##   ##     ##    ##    ##     ##    ##    ## ##       ##       ##       ##    ##    ##
+ ##   ##  ##     ##    ##    ##     ##    ##       ##       ##       ##       ##          ##
+##     ## ##     ##    ##    ##     ##     ######  ######   ##       ######   ##          ##
+######### ##     ##    ##    ##     ##          ## ##       ##       ##       ##          ##
+##     ## ##     ##    ##    ##     ##    ##    ## ##       ##       ##       ##    ##    ##
+##     ##  #######     ##     #######      ######  ######## ######## ########  ######     ##
+*/
 AutoSel autoSel = {.stackH = 1, .zone = 5, .nAuton = 0, .leftSide = true, .loaderSide = true};
-
 void autoSelect() {
     static int prevBtn = 0;
 
@@ -179,82 +199,131 @@ void autoSelect() {
     }
     prevBtn = btn;
 }
-int drfba[][2] = {{15, 4}, {18, 13}, {27, 22}, {37, 29}, {44, 36}, {52, 44}, {59, 52}, {67, 58}, {76, 67}, {85, 76}, {93, 85}, {103, 94}, {119, 108}};
-int drfbDownA[] = {0, 0, 15, 21, 31, 40, 47, 55, 61, 69, 77, 84, 96};
-int ldrGrabI = 0, ldrStackI = 0;
-/* PRECONDITIONS:
-    DRFB+FB just stacked a cone,
-    ldrHvrI is set to 0 when function is first called
-    a1: height to lift drfb above cone
-*/
-bool loaderGrab(double a1) {
-    int j = 0;
-    static double drfba1, fb0;
-    if (ldrGrabI == j++) {
-        fb0 = fbGet();
-        ldrGrabI++;
-    } else if (ldrGrabI == j++) {  // release cone
-        drfba1 = a1;
-        if (drfba1 < DRFB_LDR_DOWN) drfba1 = DRFB_LDR_DOWN;
-        if (drfbGet() > drfba1 - 2) {
-            ldrGrabI++;
-        } else {
-            pidDRFB(drfba1 + 3, 999999, true);
-            setRollers(-80);
-            pidFB(fb0, 999999, true);
-        }
-    } else if (ldrGrabI == j++) {  // grab cone
-        pidFB(FB_MID_POS, 999999, true);
-        if (fbGet() < FB_CLEAR_OF_STACK) {
-            setRollers(80);
-            pidDRFB(DRFB_LDR_DOWN, 999999, true); /*
-             if (drfbGet() < DRFB_LDR_DOWN + 14) {
-                 setDRFB(0);
-             } else {
-                 setDRFB(-127);
-             }*/
-        } else {
-            pidDRFB(drfba1, 999999, true);
-        }
-        if (drfbGet() < DRFB_LDR_DOWN + 14 && fbGet() < FB_MID_POS + 9) {  // 7, 5
-            setRollers(60);
-            return true;
-        }
-    }
-    return false;
-}
 
-/* PRECONDITIONS:
-    DRFB+FB grab
-    ldrStackI is set to 0 when function is first called
-    a1: drfb upper position: cone above stack
-    a2: drfb lower position: cone on stack
+/*
+   ###    ##     ## ########  #######      ######  ########    ###     ######  ##    ##
+  ## ##   ##     ##    ##    ##     ##    ##    ##    ##      ## ##   ##    ## ##   ##
+ ##   ##  ##     ##    ##    ##     ##    ##          ##     ##   ##  ##       ##  ##
+##     ## ##     ##    ##    ##     ##     ######     ##    ##     ## ##       #####
+######### ##     ##    ##    ##     ##          ##    ##    ######### ##       ##  ##
+##     ## ##     ##    ##    ##     ##    ##    ##    ##    ##     ## ##    ## ##   ##
+##     ##  #######     ##     #######      ######     ##    ##     ##  ######  ##    ##
 */
-bool loaderStack(double a1, double a2) {
-    int fbUp = FB_UP_POS - 7;
-    int j = 0;
-    static double drfba1;
-    static unsigned long t0 = 0, lastT = 0;
-    if (millis() - lastT > 200) t0 = millis();
-    lastT = millis();
-    if (ldrStackI == j++) {  // lift cone
-        drfba1 = a1;
-        if (drfba1 < DRFB_LDR_DOWN) drfba1 = DRFB_LDR_DOWN;
-        pidDRFB(drfba1 + 3, 999999, true);
-        setRollers(millis() - t0 > 100 ? 25 : 80);
-        if (drfbGet() > drfba1 - 3) {
-            pidFB(fbUp, 999999, true);
-            if (fbGet() > fbUp - 10) ldrStackI++;
-        } else {
-            pidFB(FB_MID_POS, 999999, true);
+
+int drfba[][2] = {{20, 0}, {27, 6}, {36, 18}, {45, 28}, {52, 37}, {61, 45}, {68, 53}, {77, 62}, {84, 69}, {92, 77}, {102, 85}, {115, 94}, {124, 103}};
+/* PRECONDITIONS:
+    - DRFB+FB just stacked a cone     or      robot is lined up for first cone
+    - asi set to 0
+    - ** drive encoders should not move or be reset in between function calls **
+*/
+int asi;  // auto stack index
+int loaderGrabAndStack(int q, bool firstCone) {
+    static int u, prevU, prevAsi;  // auto stack sub-index
+    static unsigned long prevT;
+    int driveT = 200;
+    unsigned long t0 = 0;
+    double driveDist = 7.0;
+    // allows code to progress to next step immediately rather than waiting for the next task iteration
+    bool allowRepeat = true;
+    while (allowRepeat) {
+        allowRepeat = false;
+        int j = 0;
+        if (asi == j++) {
+            u = 0;
+            prevT = millis();
+            prevU = u;
+            prevAsi = asi;
+            asi++;
+        } else if (asi == j++) {  // release cone
+            if (firstCone) {
+                asi++;
+            } else {
+                int h = 0;
+                if (u == h++) {  // stack cone and finish driving back
+                    bool driveDone = false;
+                    if (q < AUTO_STACK_STATIONARY) {
+                        driveDone = pidDrive(-driveDist, driveT, false);
+                    } else {
+                        driveDone = true;
+                    }
+                    double a2 = drfba[q][1];
+                    if (drfbGet() > a2) {
+                        setDRFB(-127);
+                    } else {
+                        setDRFB(30);
+                    }
+                    if (drfbGet() < a2 + 4) {
+                        pidFB(FB_MID_POS, 999999, true);
+                        if (fbGet() < FB_MID_POS + 25 && driveDone) {
+                            DL_pid.doneTime = LONG_MAX;
+                            DR_pid.doneTime = LONG_MAX;
+                            resetDriveEnc();
+                            u++;
+                        }
+                    } else {
+                        pidFB(FB_UP_POS, 999999, true);
+                    }
+                } else if (u == h++) {  // drive forward, hover over cone
+                    if (q >= AUTO_STACK_STATIONARY) {
+                        u++;
+                    } else {
+                        pidFB(FB_MID_POS + 25, 999999, true);
+                        pidDRFB(DRFB_LDR_UP, 999999, true);
+                        if (drfbGet() > DRFB_LDR_UP - 6 && pidDrive(driveDist, driveT, false)) u++;
+                    }
+                } else if (u == h++) {
+                    asi++;
+                }
+            }
+        } else if (asi == j++) {
+            t0 = LONG_MAX;
+            asi++;
+        } else if (asi == j++) {  // grab cone
+            if (fbGet() < FB_MID_POS + 3 && t0 == LONG_MAX) t0 = millis();
+            if (millis() - t0 > 200) {
+                pidFB(FB_MID_POS, 999999, true);
+            } else {
+                if (t0 == LONG_MAX) {
+                    setFB(-127);
+                } else {
+                    setFB(-50);
+                }
+            }
+            pidDRFB(DRFB_LDR_DOWN, 999999, true);
+            if (fabs(FB_MID_POS - fbGet()) < 6 && fabs(DRFB_LDR_DOWN - drfbGet()) < 4) {
+                resetDriveEnc();
+                DL_pid.doneTime = LONG_MAX;
+                DR_pid.doneTime = LONG_MAX;
+                asi++;
+            }
+        } else if (asi == j++) {  // stack cone, drive back
+            double a1 = drfba[q][0];
+            if (a1 < DRFB_LDR_DOWN) a1 = DRFB_LDR_DOWN;
+            pidDRFB(a1 + 5, 999999, true);
+            if (q < AUTO_STACK_STATIONARY) pidDrive(-driveDist, 999999, false);
+            if (drfbGet() > a1) {
+                pidFB(FB_UP_POS, 999999, true);
+                if (fbGet() > FB_UP_POS - 6) { asi++; }
+            } else {
+                pidFB(FB_MID_POS, 999999, true);
+            }
+        } else if (asi == j++) {
+            return 1;
         }
-    } else if (ldrStackI == j++) {  // stack cone
-        setRollers(25);
-        pidFB(fbUp, 999999, true);
-        pidDRFB(a2, 999999, true);
-        if (drfbGet() < a2 + 5) return true;
+        if (u != prevU || asi != prevAsi) {
+            prevT = millis();
+            allowRepeat = true;
+        }
+        // safety first (ptc tripped or robot got stuck)
+        if (millis() - prevT > 2500) {
+            resetMotors();
+            return -1;
+        }
+        prevU = u;
+        prevAsi = asi;
+        printf("asi: %d, u: %d\n", asi, u);
     }
-    return false;
+    return 0;
 }
 /*
 PRECONDITION: autoStacking = false
@@ -263,42 +332,32 @@ valid numbers: 1 to 13
 */
 bool autoStacking = false;
 bool autoStack(int start, int end) {
-    static int q, u, prevU;
-    static unsigned long autoStackT0, lastT;
+    static int q, u;
+    static unsigned long autoStackT0;
     if (autoStacking == false) {
         q = start - 1;
         u = 0;
-        prevU = u;
         autoStacking = true;
         autoStackT0 = millis();
-        lastT = millis();
     }
     if (q < end) {
-        if (u != prevU) lastT = millis();
-        // safety first
-        if (millis() - lastT > 2500) {
-            resetMotors();
-            return false;
-        }
-        prevU = u;
         int h = 0;
         if (u == h++) {
-            ldrGrabI = 0;
+            asi = 0;
             u++;
-        } else if (u == h++) {
-            if (loaderGrab(drfba[q][0])) {
-                ldrStackI = 0;
-                u++;
-            }
-        } else if (u == h++) {
-            if (loaderStack(drfba[q][0], drfba[q][1])) u++;
-        } else if (u == h++) {
+        }
+        int n = loaderGrabAndStack(q, q == start - 1);
+        if (n == 1) {
             u = 0;
             q++;
-            printf("\n\ncone %d\n\n", q + 1);
+            printf("\n\nSTART: cone %d\n\n", q + 1);
+        } else if (n == -1) {
+            printf("\n\nTIMEOUT\n\n");
+            return true;
         }
     } else {
         printf("\n\n\nSTACK TIME:\t%ld\n\n\n", millis() - autoStackT0);
+        resetMotors();
         return true;
     }
     return false;

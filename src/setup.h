@@ -37,16 +37,18 @@
 #define M0 8
 #define M4_5 9
 
-#define FB_MAX 130                                         // 153
-#define FB_MIN 0                                           // -13
+#define FB_MAX 145                                         // 152
+#define FB_MIN 15                                          // -13
 #define FB_MIN_HOLD_ANGLE (drfbGet() <= 7 ? 20 : -999999)  // <------ keep these parentheses!
 extern double fbUpP;
-#define FB_UP_P0 120.0
-#define FB_UP_POS (fbUpP + drfbGet() * 0.1 + (drfbGet() > 108 ? 5 : 0))
-#define FB_MID_POS 43
+#define FB_UP_P0 147.0  // 154
+#define FB_HALF_UP_POS (fbUpP - 38)
+#define FB_UP_POS fbUpP  //(fbUpP + drfbGet() * 0.01 + (drfbGet() > 108 ? 1 : 0))
+#define FB_MID_POS 65
+#define DRFB_HORIZONTAL 55
 #define DRFB_MAX_HOLD_ANGLE 999
-#define DRFB_MAX1 112
-#define DRFB_MAX2 119  // 124, 105
+#define DRFB_MAX1 119
+#define DRFB_MAX2 123  // 124, 105
 #define DRFB_MIN 20
 #define MGL_MAX 114  // 120
 #define MGL_MIN 6    // 1
@@ -59,8 +61,11 @@ MG_MID - 10 -->  fb:    91
 MG_MID      -->         69
 */
 #define FB_CLEAR_OF_STACK 105
-#define DRFB_LDR_UP 46
-#define DRFB_LDR_DOWN 33.5
+#define DRFB_LDR_UP 70
+#define DRFB_LDR_DOWN 38
+
+// height when stacking from loader when drive can be stationary
+#define AUTO_STACK_STATIONARY 8
 
 extern int DRIVE_DRIVE_MAX, DRIVE_TURN_MAX;
 #define DRFB_MAX 127
@@ -77,21 +82,17 @@ void setDL(int n);
 void setDR(int n);
 void setDRFB(int n);
 void setFB(int n);
-void setRollers(int n);
-void setRollersSlew(int n);
 void setMGL(int n);
 void resetMotors();
 
 void setupSens();
-int drfbGet();
-int fbGet();
-int mglGet();
+double drfbGet();
+double fbGet();
+double mglGet();
 int eDLGet();
 int eDRGet();
 void opctrlDrive();
 
-bool loaderGrab(double a1);
-bool loaderStack(double a1, double a2);
 extern bool autoStacking;
 bool autoStack(int start, int end);
 
@@ -126,13 +127,13 @@ btn7L:      ----                resetFbUp
 btn7U:      ----                incFbUp
 btn7R:      ----                resetFbUp
 btn7D:      setDownStack        decFbUp
-btn8L:      mglAutoMid          stopRollers
-btn8U:      mglManualUp         stopRollers
-btn8R:      mglAutoUp           stopRollers
+btn8L:      mglAutoMid          ----
+btn8U:      mglManualUp         ----
+btn8R:      mglAutoUp           ----
 btn8D:      mglManualDown       limitDrive
 btn5U:      mglAutoMid          fbAutoUp
 btn5D:      setDownStack        fbAutoMid
-btn6U:      mglAutoUp           rollerIn
-btn6D:      mglAutoDown         rollerOut
+btn6U:      mglAutoUp           ----
+btn6D:      mglAutoDown         ----
 */
 #endif  // SETUP_H

@@ -8,11 +8,19 @@ double fbHoldAngle = 0, drfbHoldAngle = 0;
 bool fbPidRunning = false, drfbPidRunning = false;
 /*
 todo:
--make sure rahul picks mg up all the way
--one sided c channel front mgl
-
+-make claw top c channel shorter -> easier to drive -> doesn't hit the wall/loader
+-add wheels to mgl -> auton doesn't necessarily have to be aligned perfectly at the 20pt zone
 */
 
+/*
+##     ## ########  ########     ###    ######## ########    ##       #### ######## ########
+##     ## ##     ## ##     ##   ## ##      ##    ##          ##        ##  ##          ##
+##     ## ##     ## ##     ##  ##   ##     ##    ##          ##        ##  ##          ##
+##     ## ########  ##     ## ##     ##    ##    ######      ##        ##  ######      ##
+##     ## ##        ##     ## #########    ##    ##          ##        ##  ##          ##
+##     ## ##        ##     ## ##     ##    ##    ##          ##        ##  ##          ##
+ #######  ##        ########  ##     ##    ##    ########    ######## #### ##          ##
+*/
 unsigned long opT0;
 bool prev7u = false, prev7d = false;
 void updateLift() {
@@ -48,6 +56,13 @@ void updateLift() {
         autoStacking = false;
         if (abs(j3) > 15) {
             setFB(j3);
+            tFbOff = millis();
+            fbPidRunning = false;
+        } else if (joystickGetDigital(2, 6, JOY_UP)) {
+            fbHoldAngle = FB_HALF_UP_POS;
+            fbPidRunning = true;
+        } else if (joystickGetDigital(2, 6, JOY_DOWN)) {
+            setFB(-127);
             tFbOff = millis();
             fbPidRunning = false;
         } else if (joystickGetDigital(2, 5, JOY_UP)) {
@@ -93,36 +108,65 @@ void updateLift() {
 void test(int n) {
     switch (n) {
         case 0:
-            while (!pidDrive(-8, 1000, false)) {
+            DL_pid.doneTime = LONG_MAX;
+            DR_pid.doneTime = LONG_MAX;
+            resetDriveEnc();
+            while (!pidDrive(20, 500, false)) {
                 printEnc_pidDrive();
-                delay(20);
+                delay(5);
+            }
+            DL_pid.doneTime = LONG_MAX;
+            DR_pid.doneTime = LONG_MAX;
+            resetDriveEnc();
+            while (!pidDrive(-20, 500, false)) {
+                printEnc_pidDrive();
+                delay(5);
             }
             break;
         case 1:
             while (!pidTurn(-10, 1000)) {
                 printEnc_pidDrive();
-                delay(20);
+                delay(5);
             }
             break;
         case 2:
             while (true) {
-                printEnc_pidDRFBFB();
-                pidFB(FB_UP_POS, 999999, true);
-                delay(20);
+                fb_pid_auto.doneTime = LONG_MAX;
+                while (!pidFB(FB_UP_POS, 500, true)) {
+                    printEnc_pidDRFBFB();
+                    delay(5);
+                }
+                fb_pid_auto.doneTime = LONG_MAX;
+                while (!pidFB(FB_MID_POS, 500, true)) {
+                    printEnc_pidDRFBFB();
+                    delay(5);
+                }
             }
             break;
         case 3:
             while (true) {
-                printEnc_pidDRFBFB();
-                pidDRFB(30, 999999, true);
-                delay(20);
+                drfb_pid_auto.doneTime = LONG_MAX;
+                while (!pidDRFB(30, 500, true)) {
+                    printEnc_pidDRFBFB();
+                    delay(5);
+                }
+                drfb_pid_auto.doneTime = LONG_MAX;
+                while (!pidDRFB(40, 500, true)) {
+                    printEnc_pidDRFBFB();
+                    delay(5);
+                }
+                drfb_pid_auto.doneTime = LONG_MAX;
+                while (!pidDRFB(100, 500, true)) {
+                    printEnc_pidDRFBFB();
+                    delay(5);
+                }
             }
             break;
         case 4:
             while (true) {
                 printEnc_all();
                 pidMGL(MGL_MID_POS, 999999);
-                delay(20);
+                delay(5);
             }
             break;
     }
@@ -135,25 +179,36 @@ void controllerTest() {
         } else if (joystickGetDigital(2, 8, JOY_UP)) {
             lcdSetText(LCD, 1, "    2    \n");
         }
-        delay(20);
+        delay(5);
     }
 }
+
+/*
+ #######  ########   ######   #######  ##    ## ######## ########   #######  ##
+##     ## ##     ## ##    ## ##     ## ###   ##    ##    ##     ## ##     ## ##
+##     ## ##     ## ##       ##     ## ####  ##    ##    ##     ## ##     ## ##
+##     ## ########  ##       ##     ## ## ## ##    ##    ########  ##     ## ##
+##     ## ##        ##       ##     ## ##  ####    ##    ##   ##   ##     ## ##
+##     ## ##        ##    ## ##     ## ##   ###    ##    ##    ##  ##     ## ##
+ #######  ##         ######   #######  ##    ##    ##    ##     ##  #######  ########
+*/
 #include "auto.h"
 void operatorControl() {
-    if (0) {
+    if (1) {
+        if (0) setDownStack();
         while (0) {
-            printf("%d\n", drfbGet());
-            delay(20);
+            printEnc();
+            delay(5);
         }
         while (0) {
             printf("LT1: %d\tLT2: %d\tLT3: %d\n", analogReadCalibrated(LT1), analogReadCalibrated(LT2), analogReadCalibrated(LT3));
-            delay(20);
+            delay(5);
         }
         while (0) {
             printEnc();
-            delay(20);
+            delay(5);
         }
-        if (1) {
+        if (0) {
             for (int i = 15; i > 0; i--) {
                 delay(200);
                 printf("%d\n", i);
@@ -161,19 +216,21 @@ void operatorControl() {
             auton2(true, 5, 5);
         }
         if (0) {
-            while (!autoStack(2, 6)) {
-                delay(20);
+            autoStacking = false;
+            while (autoStack(1, 12) == 0) {
+                delay(5);
                 printEnc_all();
             }
+            while (true) delay(5);
         }
-        while (1) {
-            printf("%d\n", mglGet());
-            delay(20);
+        while (0) {
+            printf("%d\n", (int)mglGet());
+            delay(5);
         }
+        if (1) { test(0); }
     }
     opT0 = millis();
-    char rollDir = 0;
-    unsigned long tMglOff = 0, tRollersOff = 0;
+    unsigned long tMglOff = 0;
     double mglHoldAngle = 0;
     bool mglPidRunning = false;
     printf("\n\nOPERATOR CONTROL\n\n");
@@ -202,13 +259,15 @@ void operatorControl() {
             mglHoldAngle = MGL_DOWN_POS;
         } else if (joystickGetDigital(1, 7, JOY_DOWN) || joystickGetDigital(1, 5, JOY_DOWN)) {
             setDownStack();
-            tMglOff = millis();
-            mglPidRunning = false;
+            mglPidRunning = true;
+            mglHoldAngle = MGL_DOWN_POS;
+            fbHoldAngle = fbGet();
+            drfbHoldAngle = drfbGet();
         } else if (!mglPidRunning && millis() - tMglOff > 200) {
-            if (mglGet() <= MGL_MAX && mglGet() >= MGL_MIN) {
-                mglPidRunning = true;
-                mglHoldAngle = mglGet();
-            }
+            // if (mglGet() <= MGL_MAX && mglGet() >= MGL_MIN) {
+            mglPidRunning = true;
+            mglHoldAngle = mglGet();
+            //}
         } else if (!mglPidRunning) {
             setMGL(0);
         }
@@ -221,33 +280,7 @@ void operatorControl() {
                 pidMGL(mglHoldAngle, 999999);
             }
         }
-        //----- rollers -----//
-        if (joystickGetDigital(2, 8, JOY_UP)) {
-            // do nothing, let auto stack handle this
-        } else if (joystickGetDigital(2, 8, JOY_RIGHT)) {
-            // stop rollers
-            rollDir = 0;
-            setRollersSlew(0);
-        } else if (joystickGetDigital(2, 6, JOY_UP)) {
-            // intake
-            rollDir = 1;
-            tRollersOff = millis();
-            setRollersSlew(90);
-        } else if (joystickGetDigital(2, 6, JOY_DOWN)) {
-            // outtake
-            rollDir = -1;
-            tRollersOff = millis();
-            setRollersSlew(-80);
-        } else {
-            if (millis() - tRollersOff < 500 && rollDir == -1) {
-                setRollersSlew(-60);
-            } else if (rollDir != 0) {
-                setRollersSlew(25);
-            } else {
-                setRollersSlew(0);
-            }
-        }
         opctrlDrive();
-        delay(20);
+        delay(5);
     }
 }
