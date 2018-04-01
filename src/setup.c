@@ -51,7 +51,7 @@ void setDR(int n) {  //	set left drive motors
 void setDRFB(int n) {  //	set main 4 bar lift
     limMotorVal(&n);
     int max = 50;
-    int drfbA = drfbGet();
+    double drfbA = drfbGet();
     if (drfbA > DRFB_MAX_HOLD_ANGLE && n > 0) n = 0;
     if ((drfbA < DRFB_MIN && n < 0) || (drfbA > DRFB_MAX1 && n > 0)) {
         if (drfbA < DRFB_MIN / 2 || drfbA > DRFB_MAX2) max /= 2;
@@ -66,13 +66,12 @@ void setDRFB(int n) {  //	set main 4 bar lift
 void setFB(int n) {
     limMotorVal(&n);
     int max = 20;
-    int fbA = fbGet();
+    double fbA = fbGet();
     if (fbA > FB_MAX && n > max) n = max;
     if (fbA < FB_MIN && n < -max) n = -max;
     if (fbA < FB_MIN_HOLD_ANGLE && n < 0) n = 0;
     n = updateSlew(&fb_slew, n);
     motorSet(M10, -n);
-    printf("(fb:%d)\t", n);
 }
 void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
@@ -114,6 +113,7 @@ void resetDriveEnc() {
     encoderReset(eDR);
 }
 PidVars DL_brake, DR_brake;
+Ultrasonic us1;
 void setupSens() {
     DL_brake = pidDef;
     DR_brake = pidDef;
@@ -121,24 +121,27 @@ void setupSens() {
     eDR = encoderInit(DRIVE_R_ENC_B, DRIVE_R_ENC_T, false);
     encoderReset(eDL);
     encoderReset(eDR);
+    us1 = ultrasonicInit(US1_OUT, US1_IN);
 }
+void shutdownSens() { ultrasonicShutdown(us1); }
 #define POT_SENSITIVITY 0.06105006105
 double drfbGet() { return (2727 - analogRead(DRFB_POT)) * POT_SENSITIVITY; }
 double fbGet() { return (503 - analogRead(FB_POT)) * POT_SENSITIVITY + 140; }
 double mglGet() { return (4095 - analogRead(MGL_POT)) * POT_SENSITIVITY; }
 int eDLGet() { return encoderGet(eDL); }
 int eDRGet() { return encoderGet(eDR); }
+int us1Get() { return ultrasonicGet(us1); }
 
-void printEnc() { printf("dr4b: %d\tfb: %d\tmgl: %d\tDL: %d\tDR: %d\t\n", (int)drfbGet(), (int)fbGet(), (int)mglGet(), eDLGet(), eDRGet()); }
+void printEnc() { printf("dr4b: %d\tfb: %d\tmgl: %d\tDL: %d\tDR: %d\tus1:%d\t\n", (int)drfbGet(), (int)fbGet(), (int)mglGet(), eDLGet(), eDRGet(), us1Get()); }
 void printDrv() {
-    printf("DLR: %d/%d, %d/%d\tDLRt: %d/%d, %d/%d\tt: %ld\t", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)DLturn_pid.sensVal, (int)DLturn_pid.target, (int)DRturn_pid.sensVal, (int)DRturn_pid.target, millis());
-    printf("dCrv: %d/%d, tCrv: %d/%d\t", (int)driveCurve_pid.sensVal, (int)driveCurve_pid.target, (int)turnCurve_pid.sensVal, (int)turnCurve_pid.target);
+    printf("d %d/%d %d/%d dt %d/%d %d/%d t %ld ", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)DLturn_pid.sensVal, (int)DLturn_pid.target, (int)DRturn_pid.sensVal, (int)DRturn_pid.target, millis());
+    printf("dCv %d/%d tCv %d/%d ", (int)driveCurve_pid.sensVal, (int)driveCurve_pid.target, (int)turnCurve_pid.sensVal, (int)turnCurve_pid.target);
 }
 void printEnc_pidDrive() {
     printDrv();
     printf("\n");
 }
-void printDRFBFB() { printf("drfb: %d/%d, fb: %d/%d\t", (int)drfb_pid_auto.sensVal, (int)drfb_pid_auto.target, (int)fb_pid_auto.sensVal, (int)fb_pid_auto.target); }
+void printDRFBFB() { printf("drfb %d/%d fb %d/%d ", (int)drfb_pid_auto.sensVal, (int)drfb_pid_auto.target, (int)fb_pid_auto.sensVal, (int)fb_pid_auto.target); }
 void printMGL() { printf("mgl: %d/%d\t", (int)mgl_pid.sensVal, (int)mgl_pid.target); }
 void printEnc_pidDRFBFB() {
     printDRFBFB();
@@ -148,7 +151,38 @@ void printEnc_all() {
     printDrv();
     printMGL();
     printDRFBFB();
-    printf("\n");
+    printf("us %d\n", us1Get());
+}
+/*
+uses linear approximation to estimate true ultrasound sensor reading
+this is meant to compensate for the 50 ms gap between us sensor updates
+
+PRECONDITION: usPredicted set to 0 before first function call
+*/
+unsigned long usPredicted = 0;
+double usPredict() {
+    static int prevUs1;
+    static unsigned long prevT;
+
+    int curUs1 = us1Get();
+    unsigned long curT = millis();
+
+    static double lpfSlope = 0.0;
+    if (usPredicted > 0) {
+        double curSlope = (double)(curUs1 - prevUs1) / (double)(curT - prevT);
+        if (usPredicted == 1) {
+            lpfSlope = curSlope;
+        } else if ((curUs1 != prevUs1 || curT - prevT > 50) && curUs1 != 0) {
+            lpfSlope = /*(0.5 * lpfSlope) + (0.5 * */ curSlope /*)*/;
+            prevUs1 = curUs1;
+            prevT = curT;
+        }
+    } else {
+        prevUs1 = curUs1;
+        prevT = curT;
+    }
+    usPredicted++;
+    return prevUs1 + lpfSlope * (curT - prevT);
 }
 /*
    ###    ##     ## ########  #######      ######  ######## ##       ########  ######  ########
@@ -267,7 +301,7 @@ int loaderGrabAndStack(int q, bool firstCone) {
                     } else {
                         driveDone = true;
                     }
-                    if (stackCone(q) && driveDone) {
+                    if (stackConeQ(q) && driveDone) {
                         DL_pid.doneTime = LONG_MAX;
                         DR_pid.doneTime = LONG_MAX;
                         resetDriveEnc();
@@ -331,7 +365,6 @@ int loaderGrabAndStack(int q, bool firstCone) {
         }
         prevU = u;
         prevAsi = asi;
-        printf("asi: %d, u: %d\n", asi, u);
     }
     return 0;
 }
@@ -372,14 +405,22 @@ bool autoStack(int start, int end) {
     }
     return false;
 }
-
+/*
+ #######  ########   ######  ######## ########  ##          ########  ########  #### ##     ## ########
+##     ## ##     ## ##    ##    ##    ##     ## ##          ##     ## ##     ##  ##  ##     ## ##
+##     ## ##     ## ##          ##    ##     ## ##          ##     ## ##     ##  ##  ##     ## ##
+##     ## ########  ##          ##    ########  ##          ##     ## ########   ##  ##     ## ######
+##     ## ##        ##          ##    ##   ##   ##          ##     ## ##   ##    ##   ##   ##  ##
+##     ## ##        ##    ##    ##    ##    ##  ##          ##     ## ##    ##   ##    ## ##   ##
+ #######  ##         ######     ##    ##     ## ########    ########  ##     ## ####    ###    ########
+*/
 unsigned long dt = 0, prevT = 0;
 int DL_brake_out = 0, DR_brake_out = 0;
 void opctrlDrive() {
     DL_brake.kd = 0;
     DR_brake.kd = 0;
 
-    const int td = 15;
+    const int td = 17;
     int drv = joystickGetAnalog(1, 3);
     int trn = joystickGetAnalog(1, 1) * DRIVE_TURN_MAX / 127.0;
     if (drv > DRIVE_DRIVE_MAX) drv = DRIVE_DRIVE_MAX;

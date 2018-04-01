@@ -205,7 +205,18 @@ void controllerTest() {
 #include "auto.h"
 void operatorControl() {
     if (1) {
-        if (0) setDownStack();
+        int ijk = 0;
+        while (1) {
+            if (ijk % 500 == 0) usPredicted = 0;
+            ijk++;
+            printf("us1: %d, predicted: %d\n", us1Get(), (int)usPredict());
+            delay(5);
+        }
+        while (0) {
+            lcdPrint(LCD, 1, "%d %d %d %d", joystickGetAnalog(1, 4), joystickGetAnalog(1, 3), joystickGetAnalog(1, 1), joystickGetAnalog(1, 2));
+            lcdPrint(LCD, 2, "%d %d %d %d", joystickGetAnalog(2, 4), joystickGetAnalog(2, 3), joystickGetAnalog(2, 1), joystickGetAnalog(2, 2));
+            delay(5);
+        }
         while (0) {
             printEnc();
             delay(5);
@@ -223,7 +234,7 @@ void operatorControl() {
                 delay(200);
                 printf("%d\n", i);
             }
-            auton2(true, 3, 20);
+            auton2(true, 2, 20);
         }
         if (0) {
             autoStacking = false;
@@ -239,6 +250,7 @@ void operatorControl() {
         }
         if (0) { test(1); }
     }
+    shutdownSens();
     opT0 = millis();
     unsigned long tMglOff = 0;
     double mglHoldAngle = 0;
@@ -246,50 +258,61 @@ void operatorControl() {
     printf("\n\nOPERATOR CONTROL\n\n");
     DL_slew.a = 1.0;
     DR_slew.a = 1.0;
+    bool prevSetDownStack = false, curSetDownStack = false;
     while (true) {
-        // printEnc();
-        updateLift();
-        //----- mobile-goal lift -----//
-        if (joystickGetDigital(1, 8, JOY_RIGHT) || joystickGetDigital(1, 6, JOY_UP)) {
-            mglPidRunning = true;
-            mglHoldAngle = MGL_UP_POS;
-        } else if (joystickGetDigital(1, 8, JOY_LEFT) || joystickGetDigital(1, 5, JOY_UP)) {
-            mglPidRunning = true;
-            mglHoldAngle = MGL_MID_POS - 10;
-        } else if (joystickGetDigital(1, 8, JOY_UP)) {
-            tMglOff = millis();
-            mglPidRunning = false;
-            setMGL(-127);
-        } else if (joystickGetDigital(1, 8, JOY_DOWN)) {
-            tMglOff = millis();
-            mglPidRunning = false;
-            setMGL(127);
-        } else if (joystickGetDigital(1, 6, JOY_DOWN)) {
+        if (curSetDownStack) {
+            if (setDownStack()) { curSetDownStack = false; }
             mglPidRunning = true;
             mglHoldAngle = MGL_DOWN_POS;
-        } else if (joystickGetDigital(1, 7, JOY_DOWN) || joystickGetDigital(1, 5, JOY_DOWN)) {
-            setDownStack();
-            mglPidRunning = true;
-            mglHoldAngle = MGL_DOWN_POS;
+            fbPidRunning = true;
             fbHoldAngle = fbGet();
+            drfbPidRunning = true;
             drfbHoldAngle = drfbGet();
-        } else if (!mglPidRunning && millis() - tMglOff > 200) {
-            // if (mglGet() <= MGL_MAX && mglGet() >= MGL_MIN) {
-            mglPidRunning = true;
-            mglHoldAngle = mglGet();
-            //}
-        } else if (!mglPidRunning) {
-            setMGL(0);
-        }
-        if (mglPidRunning) {
-            if (mglHoldAngle <= 8 && mglGet() <= 8) {
-                setMGL(-80);
-            } else if (mglHoldAngle >= MGL_DOWN_POS - 8 && mglGet() >= MGL_DOWN_POS - 8) {
-                setMGL(80);
-            } else {
-                pidMGL(mglHoldAngle, 999999);
+        } else {
+            // printEnc();
+            updateLift();
+            //----- mobile-goal lift -----//
+            if (joystickGetDigital(1, 8, JOY_RIGHT) || joystickGetDigital(1, 6, JOY_UP)) {
+                mglPidRunning = true;
+                mglHoldAngle = MGL_UP_POS;
+            } else if (joystickGetDigital(1, 8, JOY_LEFT) || joystickGetDigital(1, 5, JOY_UP)) {
+                mglPidRunning = true;
+                mglHoldAngle = MGL_MID_POS - 10;
+            } else if (joystickGetDigital(1, 8, JOY_UP)) {
+                tMglOff = millis();
+                mglPidRunning = false;
+                setMGL(-127);
+            } else if (joystickGetDigital(1, 8, JOY_DOWN)) {
+                tMglOff = millis();
+                mglPidRunning = false;
+                setMGL(127);
+            } else if (joystickGetDigital(1, 6, JOY_DOWN)) {
+                mglPidRunning = true;
+                mglHoldAngle = MGL_DOWN_POS;
+            } else if (joystickGetDigital(1, 7, JOY_DOWN) || joystickGetDigital(1, 5, JOY_DOWN)) {
+                if (drfbGet() > 20) {
+                    curSetDownStack = true;
+                    if (curSetDownStack != prevSetDownStack) settingDownStack = false;
+                }
+            } else if (!mglPidRunning && millis() - tMglOff > 200) {
+                // if (mglGet() <= MGL_MAX && mglGet() >= MGL_MIN) {
+                mglPidRunning = true;
+                mglHoldAngle = mglGet();
+                //}
+            } else if (!mglPidRunning) {
+                setMGL(0);
+            }
+            if (mglPidRunning) {
+                if (mglHoldAngle <= 8 && mglGet() <= 8) {
+                    setMGL(-80);
+                } else if (mglHoldAngle >= MGL_DOWN_POS - 8 && mglGet() >= MGL_DOWN_POS - 8) {
+                    setMGL(80);
+                } else {
+                    pidMGL(mglHoldAngle, 999999);
+                }
             }
         }
+        prevSetDownStack = curSetDownStack;
         opctrlDrive();
         delay(5);
     }

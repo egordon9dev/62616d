@@ -11,6 +11,8 @@
 #define DRIVE_L_ENC_B 2
 #define DRIVE_R_ENC_B 3
 #define DRIVE_R_ENC_T 4
+#define US1_IN 5
+#define US1_OUT 6
 
 //------- Analog -------
 #define MGL_POT 1
@@ -47,8 +49,10 @@ extern double fbUpP;
 #define FB_MID_POS 65
 #define DRFB_HORIZONTAL 55
 #define DRFB_MAX_HOLD_ANGLE 999
+#define DRFB_ENDPT_UP 124
+#define DRFB_ENDPT_DOWN 0
 #define DRFB_MAX1 119
-#define DRFB_MAX2 123  // 124, 105
+#define DRFB_MAX2 121.5  // 124, 105
 #define DRFB_MIN 20
 #define MGL_MAX 114  // 120
 #define MGL_MIN 6    // 1
@@ -87,11 +91,13 @@ void stopMGL();
 void resetMotors();
 
 void setupSens();
+void shutdownSens();
 double drfbGet();
 double fbGet();
 double mglGet();
 int eDLGet();
 int eDRGet();
+int us1Get();
 void opctrlDrive();
 
 extern bool autoStacking;
@@ -106,6 +112,8 @@ void printEnc_pidDrive();
 void printEnc_pidDRFBFB();
 void printEnc_all();
 void setupLCD();
+extern unsigned long usPredicted;
+double usPredict();
 
 void autoSelect();
 typedef struct AutoSel {

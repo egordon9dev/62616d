@@ -101,7 +101,6 @@ double updatePID(PidVars *pidVars) {
         pidVars->deriv = d;  // save new derivative
         pidVars->prevSensVal = pidVars->sensVal;
     }
-    printf("d: %d\t", (int)d);
     // INTEGRAL
     pidVars->errTot += err * dt;
     if (fabs(err) > pidVars->iActiveZone) pidVars->errTot = 0;
@@ -183,14 +182,22 @@ double ltdKi = 0.5, ltdKp = 12.0, ltdInt = 0.0;
 ##    ## ##          ##       ##     ## ##     ## ##  ##  ## ##   ###    ##    ##    ##    ##     ## ##    ## ##   ##
  ######  ########    ##       ########   #######   ###  ###  ##    ##     ######     ##    ##     ##  ######  ##    ##
 */
-bool setDownStackAuton() {
+bool settingDownStack = false;
+/* PRECONDITIONS:
+-settingDownStack set to false before starting
+-at least 3 cones stacked on MG in robot
+*/
+bool setDownStack() {
     static int i = 0, prevI;
-    static unsigned long prevT, prevRunT = 0;
-    if (millis() - prevRunT > 1000) i = 0;
-    prevRunT = millis();
-    double h = 0.09 + sin((M_PI / 180.0) * (drfbGet() - DRFB_HORIZONTAL));
-    if (h > 1.0) h = 1.0;
-    mgl_pid.doneTime = LONG_MAX;
+    static unsigned long prevT;
+    static double h = 0.0;
+    if (settingDownStack == false) {
+        i = 0;
+        settingDownStack = true;
+        h = 0.09 + sin((M_PI / 180.0) * (drfbGet() - DRFB_HORIZONTAL));
+        if (h > 1.0) h = 1.0;
+        mgl_pid.doneTime = LONG_MAX;
+    }
     bool allowRepeat = true;
     while (allowRepeat) {
         allowRepeat = false;
@@ -202,7 +209,10 @@ bool setDownStackAuton() {
             fb_pid_auto.target = FB_MID_POS;
             fb_pid_auto.sensVal = fbGet();
             setFB(limInt((int)updatePID(&fb_pid_auto), -30, 30));  // limit fb to keep claw from going ahead of cone
-            pidDRFB(DRFB_HORIZONTAL + (180.0 / M_PI) * asin(h), 999999, true);
+            double angleUp = DRFB_HORIZONTAL + (180.0 / M_PI) * asin(h);
+            if (angleUp > DRFB_ENDPT_UP) angleUp = DRFB_ENDPT_UP;
+            pidDRFB(angleUp, 999999, true);
+            lcdPrint(LCD, 1, "up:%d", (int)angleUp);
             if (pidMGL(MGL_DOWN_POS, 0)) {
                 h = -0.65 + sin((M_PI / 180.0) * (drfbGet() - DRFB_HORIZONTAL));
                 if (h < -1.0) h = -1.0;
@@ -211,12 +221,16 @@ bool setDownStackAuton() {
             }
         } else if (i == j++) {
             pidMGL(MGL_DOWN_POS, 999999);
-            double drfba = DRFB_HORIZONTAL + (180.0 / M_PI) * asin(h);
-            fb_pid_auto.target = FB_UP_POS - 22;
+            double angleDown = DRFB_HORIZONTAL + (180.0 / M_PI) * asin(h);
+            lcdPrint(LCD, 1, "down:%d", (int)angleDown);
+            if (angleDown < DRFB_ENDPT_DOWN) angleDown = DRFB_ENDPT_DOWN;
+            pidDRFB(angleDown, 999999, true);
+            fb_pid_auto.target = FB_UP_POS - 15;  // 22
             fb_pid_auto.sensVal = fbGet();
             setFB(limInt((int)updatePID(&fb_pid_auto), -60, 60));
-            pidDRFB(drfba, 999999, true);
-            if ((fbGet() > FB_UP_POS - 32 && drfbGet() < drfba + 8)) return true;
+            if ((fbGet() > FB_UP_POS - 21 && drfbGet() < angleDown + 5)) i++;
+        } else if (i == j++) {
+            return true;
         }
 
         if (i != prevI) {
@@ -225,23 +239,19 @@ bool setDownStackAuton() {
         }
         prevI = i;
         // safety first (ptc tripped or robot got stuck)
-        if (millis() - prevT > 3000) {
-            resetMotors();
-            return true;
-        }
+        // if (millis() - prevT > 3000) i++;
     }
     return false;
-}
-void setDownStack() {
-    while (true) {
-        int j = 0;
-        setDownStackAuton();
-        opctrlDrive();
-        printEnc_all();
-        delay(5);
-    }
-    resetMotors();
-}
+} /*
+ void setDownStack() {
+     while (true) {
+         setDownStackAuton();
+         opctrlDrive();
+         printEnc_all();
+         delay(5);
+     }
+     resetMotors();
+ }*/
 /*
 ########  #### ########     ########  ########  #### ##     ## ########
 ##     ##  ##  ##     ##    ##     ## ##     ##  ##  ##     ## ##
