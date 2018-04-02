@@ -122,6 +122,7 @@ void setupSens() {
     encoderReset(eDL);
     encoderReset(eDR);
     us1 = ultrasonicInit(US1_OUT, US1_IN);
+    analogCalibrate(LT1);
 }
 void shutdownSens() { ultrasonicShutdown(us1); }
 #define POT_SENSITIVITY 0.06105006105
@@ -131,10 +132,12 @@ double mglGet() { return (4095 - analogRead(MGL_POT)) * POT_SENSITIVITY; }
 int eDLGet() { return encoderGet(eDL); }
 int eDRGet() { return encoderGet(eDR); }
 int us1Get() { return ultrasonicGet(us1); }
+int lt1Get() { return analogReadCalibrated(LT1); }
 
-void printEnc() { printf("dr4b: %d\tfb: %d\tmgl: %d\tDL: %d\tDR: %d\tus1:%d\t\n", (int)drfbGet(), (int)fbGet(), (int)mglGet(), eDLGet(), eDRGet(), us1Get()); }
+void printEnc() { printf("dr4b %d fb: %d mgl: %d DL: %d DR: %d us1 %d lt1 %d\n", (int)drfbGet(), (int)fbGet(), (int)mglGet(), eDLGet(), eDRGet(), us1Get(), lt1Get()); }
 void printDrv() {
-    printf("d %d/%d %d/%d dt %d/%d %d/%d t %ld ", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)DLturn_pid.sensVal, (int)DLturn_pid.target, (int)DRturn_pid.sensVal, (int)DRturn_pid.target, millis());
+    printf("d %d/%d %d/%d dt %d/%d %d/%d ", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)DLturn_pid.sensVal, (int)DLturn_pid.target, (int)DRturn_pid.sensVal, (int)DRturn_pid.target);
+    printf("ds %d/%d %d/%d t %ld ", (int)DLshort_pid.sensVal, (int)DLshort_pid.target, (int)DRshort_pid.sensVal, (int)DRshort_pid.target, millis());
     printf("dCv %d/%d tCv %d/%d ", (int)driveCurve_pid.sensVal, (int)driveCurve_pid.target, (int)turnCurve_pid.sensVal, (int)turnCurve_pid.target);
 }
 void printEnc_pidDrive() {
@@ -151,7 +154,7 @@ void printEnc_all() {
     printDrv();
     printMGL();
     printDRFBFB();
-    printf("us %d\n", us1Get());
+    printf("us %d lt %d\n", (int)usPredict(), lt1Get());
 }
 /*
 uses linear approximation to estimate true ultrasound sensor reading
@@ -253,10 +256,13 @@ int drfba[][2] = {{20, 0}, {27, 6}, {36, 18}, {45, 28}, {52, 37}, {61, 45}, {68,
 */
 bool stackConeQ(int q) {
     double a2 = drfba[q][1];
-    if (drfbGet() > a2) {
+    double da = drfbGet();
+    if (da > a2 + 3) {
         setDRFB(-127);
+    } else if (da > a2 - 1) {
+        setDRFB(-20);
     } else {
-        setDRFB(30);
+        setDRFB(20);
     }
     if (drfbGet() < a2 + 4) {
         pidFB(FB_MID_POS, 999999, true);
@@ -297,13 +303,13 @@ int loaderGrabAndStack(int q, bool firstCone) {
                 if (u == h++) {  // stack cone and finish driving back
                     bool driveDone = false;
                     if (q < AUTO_STACK_STATIONARY) {
-                        driveDone = pidDrive(-driveDist, driveT, false);
+                        driveDone = pidDriveShort(-driveDist, driveT);
                     } else {
                         driveDone = true;
                     }
                     if (stackConeQ(q) && driveDone) {
-                        DL_pid.doneTime = LONG_MAX;
-                        DR_pid.doneTime = LONG_MAX;
+                        DLshort_pid.doneTime = LONG_MAX;
+                        DRshort_pid.doneTime = LONG_MAX;
                         resetDriveEnc();
                         u++;
                     }
@@ -313,7 +319,7 @@ int loaderGrabAndStack(int q, bool firstCone) {
                     } else {
                         pidFB(FB_MID_POS + 25, 999999, true);
                         pidDRFB(DRFB_LDR_UP, 999999, true);
-                        if (drfbGet() > DRFB_LDR_UP - 6 && pidDrive(driveDist, driveT, false)) u++;
+                        if (drfbGet() > DRFB_LDR_UP - 6 && pidDriveShort(driveDist, driveT)) u++;
                     }
                 } else if (u == h++) {
                     asi++;
@@ -333,18 +339,18 @@ int loaderGrabAndStack(int q, bool firstCone) {
                     setFB(-50);
                 }
             }
-            pidDRFB(DRFB_LDR_DOWN, 999999, true);
-            if (fabs(FB_MID_POS - fbGet()) < 6 && fabs(DRFB_LDR_DOWN - drfbGet()) < 4) {
+            pidDRFB(DRFB_LDR_DOWN - 2, 999999, true);
+            if (fbGet() < FB_MID_POS + 4 && drfbGet() < DRFB_LDR_DOWN + 2) {
                 resetDriveEnc();
-                DL_pid.doneTime = LONG_MAX;
-                DR_pid.doneTime = LONG_MAX;
+                DLshort_pid.doneTime = LONG_MAX;
+                DRshort_pid.doneTime = LONG_MAX;
                 asi++;
             }
         } else if (asi == j++) {  // stack cone, drive back
             double a1 = drfba[q][0];
             if (a1 < DRFB_LDR_DOWN) a1 = DRFB_LDR_DOWN;
             pidDRFB(a1 + 5, 999999, true);
-            if (q < AUTO_STACK_STATIONARY) pidDrive(-driveDist, 999999, false);
+            if (q < AUTO_STACK_STATIONARY) pidDriveShort(-driveDist, 999999);
             if (drfbGet() > a1) {
                 pidFB(FB_UP_POS, 999999, true);
                 if (fbGet() > FB_UP_POS - 6) { asi++; }

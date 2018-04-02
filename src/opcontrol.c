@@ -108,19 +108,21 @@ void updateLift() {
 void test(int n) {
     switch (n) {
         case 0:
-            DL_pid.doneTime = LONG_MAX;
-            DR_pid.doneTime = LONG_MAX;
-            resetDriveEnc();
-            while (!pidDrive(6, 100, false)) {
-                printEnc_pidDrive();
-                delay(5);
-            }
-            DL_pid.doneTime = LONG_MAX;
-            DR_pid.doneTime = LONG_MAX;
-            resetDriveEnc();
-            while (!pidDrive(-6, 100, false)) {
-                printEnc_pidDrive();
-                delay(5);
+            while (true) {
+                DL_pid.doneTime = LONG_MAX;
+                DR_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
+                while (!pidDrive(12, 100)) {
+                    printEnc_pidDrive();
+                    delay(5);
+                }
+                DL_pid.doneTime = LONG_MAX;
+                DR_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
+                while (!pidDrive(-12, 100)) {
+                    printEnc_pidDrive();
+                    delay(5);
+                }
             }
             break;
         case 1:
@@ -179,6 +181,24 @@ void test(int n) {
                 delay(5);
             }
             break;
+        case 5:
+            while (true) {
+                DLshort_pid.doneTime = LONG_MAX;
+                DRshort_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
+                while (!pidDriveShort(2, 100)) {
+                    printEnc_pidDrive();
+                    delay(5);
+                }
+                DLshort_pid.doneTime = LONG_MAX;
+                DRshort_pid.doneTime = LONG_MAX;
+                resetDriveEnc();
+                while (!pidDriveShort(-2, 100)) {
+                    printEnc_pidDrive();
+                    delay(5);
+                }
+            }
+            break;
     }
     while (true) { delay(999); }
 }
@@ -205,10 +225,10 @@ void controllerTest() {
 #include "auto.h"
 void operatorControl() {
     if (1) {
-        int ijk = 0;
-        while (1) {
-            if (ijk % 500 == 0) usPredicted = 0;
-            ijk++;
+        int n = 0;
+        while (0) {
+            if (n % 500 == 0) usPredicted = 0;
+            n++;
             printf("us1: %d, predicted: %d\n", us1Get(), (int)usPredict());
             delay(5);
         }
@@ -222,14 +242,10 @@ void operatorControl() {
             delay(5);
         }
         while (0) {
-            printf("LT1: %d\tLT2: %d\tLT3: %d\n", analogReadCalibrated(LT1), analogReadCalibrated(LT2), analogReadCalibrated(LT3));
-            delay(5);
-        }
-        while (0) {
             printEnc();
             delay(5);
         }
-        if (1) {
+        if (0) {
             for (int i = 15; i > 0; i--) {
                 delay(200);
                 printf("%d\n", i);
@@ -248,7 +264,7 @@ void operatorControl() {
             printf("%d\n", (int)mglGet());
             delay(5);
         }
-        if (0) { test(1); }
+        if (1) { test(5); }
     }
     shutdownSens();
     opT0 = millis();

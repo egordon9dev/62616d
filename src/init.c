@@ -26,9 +26,6 @@ void initialize() {
     setupSens();
     lcdClear(LCD);
     lcdSetText(LCD, 1, "INIT.");
-    analogCalibrate(LT1);
-    analogCalibrate(LT2);
-    analogCalibrate(LT3);
     while (!isEnabled()) {
         autoSelect();
         delay(5);

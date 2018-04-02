@@ -18,11 +18,7 @@
 #define MGL_POT 1
 #define DRFB_POT 2
 #define FB_POT 3
-#define LT0 4
-#define LT1 5
-#define LT2 6
-#define LT3 7
-#define LT4 8
+#define LT1 4
 
 //------- MOTOR -------
 // CORTEX
@@ -59,6 +55,7 @@ extern double fbUpP;
 #define MGL_DOWN_POS 121
 #define MGL_MID_POS 88
 #define MGL_UP_POS 1
+
 #define LT_LIGHT -1000
 /*
 MG_MID - 10 -->  fb:    91
@@ -98,6 +95,7 @@ double mglGet();
 int eDLGet();
 int eDRGet();
 int us1Get();
+int lt1Get();
 void opctrlDrive();
 
 extern bool autoStacking;
@@ -109,6 +107,7 @@ void resetDriveEnc();
 
 void printEnc();
 void printEnc_pidDrive();
+void printEnc_pidDriveShort();
 void printEnc_pidDRFBFB();
 void printEnc_all();
 void setupLCD();
