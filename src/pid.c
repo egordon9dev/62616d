@@ -52,9 +52,9 @@ PidVars fb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = FBDZ, .maxIntegral = 40, .i
 #define DKD 63      // 60
 PidVars DL_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DKP, .ki = DKI, .kd = DKD, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
-#define DSKP 0.65    //.58
-#define DSKI 0.0035  // .004
-#define DSKD 80      // 60
+#define DSKP 1.5     //.65
+#define DSKI 0.0035  // .0035
+#define DSKD 130     // 80
 PidVars DLshort_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 50, .iActiveZone = 30, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DSKP, .ki = DSKI, .kd = DSKD, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 PidVars DRshort_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 50, .iActiveZone = 30, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DSKP, .ki = DSKI, .kd = DSKD, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 PidVars driveCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};  // 6, 0, 0
@@ -267,7 +267,7 @@ bool setDownStack() {
 ##        #### ########     ########  ##     ## ####    ###    ########
 */
 
-// This function is best when dist > 12
+// This function is best when dist > 6
 bool pidDrive(double dist, unsigned long wait) {
     DL_pid.sensVal = eDLGet();
     DR_pid.sensVal = eDRGet();
@@ -340,7 +340,7 @@ bool pidTurn(double angle, unsigned long wait) {
     return false;
 }
 
-// This function is best on on interval [0, 12]
+// This function is best on on interval [0, 6]
 bool pidDumbDrive(double dist, unsigned long wait) {
     if (DL_pid.doneTime + wait < millis() && DR_pid.doneTime + wait < millis()) {
         setDL(0);

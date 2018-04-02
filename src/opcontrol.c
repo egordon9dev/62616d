@@ -8,8 +8,7 @@ double fbHoldAngle = 0, drfbHoldAngle = 0;
 bool fbPidRunning = false, drfbPidRunning = false;
 /*
 todo:
--make claw top c channel shorter -> easier to drive -> doesn't hit the wall/loader
--add wheels to mgl -> auton doesn't necessarily have to be aligned perfectly at the 20pt zone
+-put line follower under cortex
 */
 
 /*
@@ -186,14 +185,14 @@ void test(int n) {
                 DLshort_pid.doneTime = LONG_MAX;
                 DRshort_pid.doneTime = LONG_MAX;
                 resetDriveEnc();
-                while (!pidDriveShort(2, 100)) {
+                while (!pidDriveShort(6, 100)) {
                     printEnc_pidDrive();
                     delay(5);
                 }
                 DLshort_pid.doneTime = LONG_MAX;
                 DRshort_pid.doneTime = LONG_MAX;
                 resetDriveEnc();
-                while (!pidDriveShort(-2, 100)) {
+                while (!pidDriveShort(-6, 100)) {
                     printEnc_pidDrive();
                     delay(5);
                 }
@@ -245,7 +244,7 @@ void operatorControl() {
             printEnc();
             delay(5);
         }
-        if (0) {
+        if (1) {
             for (int i = 15; i > 0; i--) {
                 delay(200);
                 printf("%d\n", i);
@@ -264,7 +263,7 @@ void operatorControl() {
             printf("%d\n", (int)mglGet());
             delay(5);
         }
-        if (1) { test(5); }
+        if (0) { test(5); }
     }
     shutdownSens();
     opT0 = millis();

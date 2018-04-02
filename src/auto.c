@@ -30,7 +30,7 @@ bool grabMGAuton(int driveT) {
     int i = 0, prevI = 0;
     unsigned long prevT = millis();
     unsigned long breakT = 5000;
-    while (true) {  // time 7613 to 7617 restarts function (sets i to 0)
+    while (true) {
         bool allowRepeat = true;
         while (allowRepeat) {
             allowRepeat = false;
@@ -88,6 +88,7 @@ bool scoreMG(bool leftSide, int zone) {
     unsigned long prevT = millis();
     unsigned long breakT = 3000;
     double driveD = 0;
+    bool usDone;
     while (true) {
         bool allowRepeat = true;
         while (allowRepeat) {
@@ -96,12 +97,8 @@ bool scoreMG(bool leftSide, int zone) {
             int j = 0;
             if (i == j++) {  // score MG
                 if (zone == 20) {
-                    setDR(40);
-                    setDL(40);
-                    // pidMGL(MGL_MID_POS + 21, 999999);  // target: 21
-                    /*
-                    FIX THIS: fix this this was meant for setdownstack to be blocking
-                    */
+                    setDR(30);
+                    setDL(30);
                     if (setDownStack()) i++;
                 } else if (zone == 10) {
                     setDR(20);
@@ -115,6 +112,8 @@ bool scoreMG(bool leftSide, int zone) {
                 DR_pid.doneTime = LONG_MAX;
                 mgl_pid.doneTime = LONG_MAX;
                 resetDriveEnc();
+                usPredicted = 0;
+                usDone = false;
                 i++;
             } else if (i == j++) {  // get rid of MG
                 setDRFB(-20);
@@ -122,18 +121,12 @@ bool scoreMG(bool leftSide, int zone) {
                 if (zone == 20) {
                     setDR(-127);
                     setDL(-127);
-                    //****************************************************************************************************
-                    if (driveD > -3) {  // <----------- ***FIX THIS: INSERT ULTRASOUND DETECTION HERE TO DETECT WHEN MGL IS UNLOADED***
-                        setMGL(0);
+                    if (usPredict() > 13) usDone = true;
+                    if (usDone) {
+                        setMGL(-60);
                     } else {
-                        setMGL(-20);
+                        setMGL(20);
                     }
-                    /*
-                    driveIntegral -= 0.35;
-                    setDL(driveIntegral);
-                    setDR(driveIntegral);
-                    if (d < -10.0) i++;
-                    pidMGL(MGL_MID_POS + 21, 999999);*/
                 } else if (zone == 10) {
                     int h = 0;
                     if (u == h++) {
@@ -517,18 +510,18 @@ void auton2(bool leftSide, int stackH, int zone) {
                     } else {
                         pidDrive(-36, 999999);
                     }
-                    if (lt1Get() < LT_LIGHT) {
+                    if (lt1Get() < LT_LIGHT && d0 > 999) {
                         t0 = millis();
-                        d0 = driveD + 3;
+                        d0 = driveD + 2;
                     }
-                    if (millis() - t0 > 200 && driveD > d0 - 0.5) {
+                    if (millis() - t0 > 200 && driveD > d0 - 0.4) {
                         resetDriveEnc();
                         DLturn_pid.doneTime = LONG_MAX;
                         DRturn_pid.doneTime = LONG_MAX;
                         y++;
                     }
                 } else if (y == g++) {
-                    int a = leftSide ? 53 : -53;  // 60
+                    int a = leftSide ? 58 : -58;  // 60
                     if (mglGet() < MGL_UP_POS + 40 && pidTurn(a, driveT)) yDone = true;
                 }
                 if (uDone && yDone) {
@@ -558,12 +551,12 @@ void auton2(bool leftSide, int stackH, int zone) {
                 pidFB(FB_UP_POS, 999999, true);
                 double a;
                 if (zone == 20) {
-                    a = leftSide ? 124.5 : -114.5;
+                    a = leftSide ? 126.5 : -126.5;
                 } else if (zone == 10) {
-                    a = leftSide ? 127.5 : -127.5;
+                    a = leftSide ? 129.5 : -129.5;
                     pidMGL(MGL_MID_POS + 15, 999999);
                 } else {
-                    a = leftSide ? 97.5 : -97.5;
+                    a = leftSide ? 99.5 : -99.5;
                 }
                 if (pidTurn(a, driveT)) {
                     DL_pid.doneTime = LONG_MAX;
@@ -656,7 +649,7 @@ void auton2(bool leftSide, int stackH, int zone) {
                 goto endLoop;
             }
         }
-        printEnc_all();
+        printEnc_pidDrive();
         delay(5);
     }
 endLoop:

@@ -41,12 +41,14 @@ void setDL(int n) {  //	set right drive motors
     n = updateSlew(&DL_slew, n);
     motorSet(M3, n);
     motorSet(M4_5, n);
+    printf("L %d ", n);
 }
 void setDR(int n) {  //	set left drive motors
     limMotorVal(&n);
     n = updateSlew(&DR_slew, n);
     motorSet(M0, -n);
     motorSet(M1_2, -n);
+    printf("R %d ", n);
 }
 void setDRFB(int n) {  //	set main 4 bar lift
     limMotorVal(&n);
