@@ -1,5 +1,5 @@
+#include "pros_src/myAPI.h"
 #include "setup.h"
-#include "API.h"
 #include "pid.h"
 
 double fbUpP = FB_UP_P0;
@@ -123,15 +123,15 @@ void setupSens() {
     eDR = encoderInit(DRIVE_R_ENC_B, DRIVE_R_ENC_T, false);
     encoderReset(eDL);
     encoderReset(eDR);
-    us1 = ultrasonicInit(US1_OUT, US1_IN);
-    us2 = ultrasonicInit(US2_OUT, US2_IN);
-    ultrasonicShutdown(us1);
+    us1 = myUltrasonicInit(US1_OUT, US1_IN);
+    us2 = myUltrasonicInit(US2_OUT, US2_IN);
+    myUltrasonicShutdown(us1);
     analogCalibrate(LT1);
     analogCalibrate(LT2);
 }
 void shutdownSens() {
-    ultrasonicShutdown(us1);
-    ultrasonicShutdown(us2);
+    myUltrasonicShutdown(us1);
+    myUltrasonicShutdown(us2);
 }
 #define POT_SENSITIVITY 0.06105006105
 double drfbGet() { return (2727 - analogRead(DRFB_POT)) * POT_SENSITIVITY; }
@@ -139,8 +139,8 @@ double fbGet() { return (503 - analogRead(FB_POT)) * POT_SENSITIVITY + 140; }
 double mglGet() { return (4095 - analogRead(MGL_POT)) * POT_SENSITIVITY; }
 int eDLGet() { return encoderGet(eDL); }
 int eDRGet() { return encoderGet(eDR); }
-int us1Get() { return ultrasonicGet(us1); }
-int us2Get() { return ultrasonicGet(us2); }
+int us1Get() { return myUltrasonicGet(us1); }
+int us2Get() { return myUltrasonicGet(us2); }
 int lt1Get() { return analogReadCalibrated(LT1); }
 int lt2Get() { return analogReadCalibrated(LT2); }
 
@@ -194,7 +194,7 @@ double usPredict(int sensNum) {
     int curSens = sensNum == 1 ? us1Get() : us2Get();
     unsigned long curT = millis();
     double dt = curT - (*prevT);
-    if ((curSens != *prevSens || dt >= 100) && curSens != 0) {
+    if ((curSens != *prevSens || dt >= 100) && curSens > 0) {
         *slope = dt > 200 ? 0.0 : (double)(curSens - (*prevSens)) / dt;
         *prevSens = curSens;
         *prevT = curT;

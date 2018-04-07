@@ -661,7 +661,7 @@ typedef void * Ultrasonic;
  * @param ult the Ultrasonic object from ultrasonicInit() to read
  * @return the distance to the nearest object in centimeters
  */
-int ultrasonicGet(Ultrasonic ult);
+int myUltrasonicGet(Ultrasonic ult);
 /**
  * Initializes an ultrasonic sensor on the specified digital ports.
  *
@@ -673,7 +673,7 @@ int ultrasonicGet(Ultrasonic ult);
  * @param portPing the port connected to the yellow cable from 1-12
  * @return an Ultrasonic object to be stored and used for later calls to ultrasonic functions
  */
-Ultrasonic ultrasonicInit(unsigned char portEcho, unsigned char portPing);
+Ultrasonic myUltrasonicInit(unsigned char portEcho, unsigned char portPing);
 /**
  * Stops and disables the ultrasonic sensor.
  *
@@ -682,7 +682,7 @@ Ultrasonic ultrasonicInit(unsigned char portEcho, unsigned char portPing);
  *
  * @param ult the Ultrasonic object from ultrasonicInit() to stop
  */
-void ultrasonicShutdown(Ultrasonic ult);
+void myUltrasonicShutdown(Ultrasonic ult);
 
 // -------------------- Custom sensor control functions --------------------
 

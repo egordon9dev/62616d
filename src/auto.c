@@ -675,6 +675,7 @@ void auton3(bool leftSide, int stackH, bool loaderSide, int zone) {
     unsigned long breakTime = 5000;
     int driveT = 80;
     double d0, driveD;
+    double prevSens[3] = {0, 0, 0};
     while (millis() - funcT0 < 15000) {
         bool allowRepeat = true;
         while (allowRepeat) {
@@ -725,7 +726,11 @@ void auton3(bool leftSide, int stackH, bool loaderSide, int zone) {
             } else if (i == j++) {
                 pidDRFB(35, 999999, true);
                 pidFB(FB_MID_POS + 20, 999999, true);
-                if (pidTurn(41, driveT)) { i++; }
+                pidTurn(48, driveT);  // 41
+                prevSens[2] = prevSens[1];
+                prevSens[1] = prevSens[0];
+                prevSens[0] = usPredict(2);
+                if (prevSens[0] < prevSens[1]) { i++; }
             } else if (i == j++) {
                 pidDRFB(0, 999999, true);
                 if (drfbGet() < 14) {
