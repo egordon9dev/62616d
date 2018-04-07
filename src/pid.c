@@ -34,7 +34,7 @@ Slew DR_slew = {.a = 1.2, .out = 0.0, .prevTime = 0}; /*
 PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX, .iActiveZone = 0.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 // weaker PID for opcontrol
 PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 30, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2.2, .ki = 0.006, .kd = 100, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
-PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 40, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5.0, .ki = 0.01, .kd = 250.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
+PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 127, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 6.0, .ki = 0.01, .kd = 80.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 // agressive PID mostly for autonomous
 PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 40, .iActiveZone = 12.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.01, .kd = 420, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 #define FBKP 3.0
@@ -193,13 +193,14 @@ bool settingDownStack = false;
 -at least 3 cones stacked on MG in robot
 */
 bool setDownStack() {
+    if (joystickGetDigital(2, 8, JOY_LEFT)) return true;
     static int i = 0, prevI;
     static unsigned long prevT;
     static double h = 0.0;
     if (settingDownStack == false) {
         i = 0;
         settingDownStack = true;
-        h = 0.09 + sin((M_PI / 180.0) * (drfbGet() - DRFB_HORIZONTAL));
+        h = /*0.04 + */ sin((M_PI / 180.0) * (drfbGet() - DRFB_HORIZONTAL));
         if (h > 1.0) h = 1.0;
         mgl_pid.doneTime = LONG_MAX;
     }
@@ -211,7 +212,7 @@ bool setDownStack() {
             prevI = i;
             i++;
         } else if (i == j++) {
-            fb_pid_auto.target = FB_MID_POS;
+            fb_pid_auto.target = FB_MID_POS - 15;
             fb_pid_auto.sensVal = fbGet();
             setFB(limInt((int)updatePID(&fb_pid_auto), -30, 30));  // limit fb to keep claw from going ahead of cone
             double angleUp = DRFB_HORIZONTAL + (180.0 / M_PI) * asin(h);
@@ -229,10 +230,14 @@ bool setDownStack() {
             double angleDown = DRFB_HORIZONTAL + (180.0 / M_PI) * asin(h);
             lcdPrint(LCD, 1, "down:%d", (int)angleDown);
             if (angleDown < DRFB_ENDPT_DOWN) angleDown = DRFB_ENDPT_DOWN;
-            pidDRFB(angleDown, 999999, true);
-            fb_pid_auto.target = FB_UP_POS - 15;  // 22
+            if (drfbGet() > angleDown + 10) {
+                setDRFB(-127);
+            } else {
+                pidDRFB(angleDown, 999999, true);
+            }
+            fb_pid_auto.target = FB_UP_POS;  // 22
             fb_pid_auto.sensVal = fbGet();
-            setFB(limInt((int)updatePID(&fb_pid_auto), -60, 60));
+            setFB(limInt((int)updatePID(&fb_pid_auto), -127, 127));
             if ((fbGet() > FB_UP_POS - 21 && drfbGet() < angleDown + 5)) i++;
         } else if (i == j++) {
             return true;

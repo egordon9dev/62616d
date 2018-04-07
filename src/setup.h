@@ -13,12 +13,15 @@
 #define DRIVE_R_ENC_T 4
 #define US1_IN 5
 #define US1_OUT 6
+#define US2_IN 7
+#define US2_OUT 8
 
 //------- Analog -------
 #define MGL_POT 1
 #define DRFB_POT 2
 #define FB_POT 3
 #define LT1 4
+#define LT2 5
 
 //------- MOTOR -------
 // CORTEX
@@ -50,7 +53,7 @@ extern double fbUpP;
 #define DRFB_MAX1 119
 #define DRFB_MAX2 121.5  // 124, 105
 #define DRFB_MIN 20
-#define MGL_MAX 114  // 120
+#define MGL_MAX 118  // 120
 #define MGL_MIN 6    // 1
 #define MGL_DOWN_POS 121
 #define MGL_MID_POS 88
@@ -62,8 +65,9 @@ MG_MID - 10 -->  fb:    91
 MG_MID      -->         69
 */
 #define FB_CLEAR_OF_STACK 105
-#define DRFB_LDR_UP 70
+#define DRFB_LDR_UP 66
 #define DRFB_LDR_DOWN 38
+#define DRFB_MGL_ACTIVE 19
 
 // height when stacking from loader when drive can be stationary
 #define AUTO_STACK_STATIONARY 8
@@ -94,12 +98,13 @@ double fbGet();
 double mglGet();
 int eDLGet();
 int eDRGet();
-int us1Get();
 int lt1Get();
+int lt2Get();
 void opctrlDrive();
 
 extern bool autoStacking;
 bool stackConeQ(int q);
+bool liftConeQ(int q);
 bool autoStack(int start, int end);
 
 // zeroes drive encoders
@@ -110,9 +115,10 @@ void printEnc_pidDrive();
 void printEnc_pidDriveShort();
 void printEnc_pidDRFBFB();
 void printEnc_all();
+void printUs();
 void setupLCD();
-extern unsigned long usPredicted;
-double usPredict();
+// extern unsigned long us1Predicted, us2Predicted;
+double usPredict(int sensNum);
 
 void autoSelect();
 typedef struct AutoSel {

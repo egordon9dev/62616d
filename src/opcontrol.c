@@ -162,12 +162,7 @@ void test(int n) {
                     delay(5);
                 }
                 drfb_pid_auto.doneTime = LONG_MAX;
-                while (!pidDRFB(40, 500, true)) {
-                    printEnc_pidDRFBFB();
-                    delay(5);
-                }
-                drfb_pid_auto.doneTime = LONG_MAX;
-                while (!pidDRFB(100, 500, true)) {
+                while (!pidDRFB(60, 500, true)) {
                     printEnc_pidDRFBFB();
                     delay(5);
                 }
@@ -224,20 +219,13 @@ void controllerTest() {
 #include "auto.h"
 void operatorControl() {
     if (1) {
-        int n = 0;
-        while (0) {
-            if (n % 500 == 0) usPredicted = 0;
-            n++;
-            printf("us1: %d, predicted: %d\n", us1Get(), (int)usPredict());
-            delay(5);
-        }
         while (0) {
             lcdPrint(LCD, 1, "%d %d %d %d", joystickGetAnalog(1, 4), joystickGetAnalog(1, 3), joystickGetAnalog(1, 1), joystickGetAnalog(1, 2));
             lcdPrint(LCD, 2, "%d %d %d %d", joystickGetAnalog(2, 4), joystickGetAnalog(2, 3), joystickGetAnalog(2, 1), joystickGetAnalog(2, 2));
             delay(5);
         }
-        while (0) {
-            printEnc();
+        while (1) {
+            printUs();
             delay(5);
         }
         while (0) {
@@ -249,7 +237,7 @@ void operatorControl() {
                 delay(200);
                 printf("%d\n", i);
             }
-            auton2(true, 2, 20);
+            auton3(true, 2, true, 20);
         }
         if (0) {
             autoStacking = false;
@@ -263,7 +251,7 @@ void operatorControl() {
             printf("%d\n", (int)mglGet());
             delay(5);
         }
-        if (0) { test(5); }
+        if (1) { test(4); }
     }
     shutdownSens();
     opT0 = millis();
@@ -304,24 +292,28 @@ void operatorControl() {
             } else if (joystickGetDigital(1, 6, JOY_DOWN)) {
                 mglPidRunning = true;
                 mglHoldAngle = MGL_DOWN_POS;
+                double da = drfbGet();  // fix this: test this
+                if (da < DRFB_MGL_ACTIVE + 8) {
+                    drfbPidRunning = true;
+                    da = DRFB_MGL_ACTIVE + 8;
+                }
+                drfbHoldAngle = da;
             } else if (joystickGetDigital(1, 7, JOY_DOWN) || joystickGetDigital(1, 5, JOY_DOWN)) {
                 if (drfbGet() > 20) {
                     curSetDownStack = true;
                     if (curSetDownStack != prevSetDownStack) settingDownStack = false;
                 }
-            } else if (!mglPidRunning && millis() - tMglOff > 200) {
-                // if (mglGet() <= MGL_MAX && mglGet() >= MGL_MIN) {
+            } else if (!mglPidRunning && millis() - tMglOff > 0) {
                 mglPidRunning = true;
                 mglHoldAngle = mglGet();
-                //}
             } else if (!mglPidRunning) {
                 setMGL(0);
             }
             if (mglPidRunning) {
-                if (mglHoldAngle <= 8 && mglGet() <= 8) {
-                    setMGL(-80);
-                } else if (mglHoldAngle >= MGL_DOWN_POS - 8 && mglGet() >= MGL_DOWN_POS - 8) {
-                    setMGL(80);
+                if (mglHoldAngle <= 8) {
+                    setMGL(-127);
+                } else if (mglHoldAngle >= MGL_DOWN_POS - 8) {
+                    setMGL(127);
                 } else {
                     pidMGL(mglHoldAngle, 999999);
                 }
