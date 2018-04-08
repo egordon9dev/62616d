@@ -1,6 +1,6 @@
-#include "pros_src/myAPI.h"
 #include "setup.h"
 #include "pid.h"
+#include "pros_src/myAPI.h"
 
 double fbUpP = FB_UP_P0;
 
@@ -41,14 +41,12 @@ void setDL(int n) {  //	set right drive motors
     n = updateSlew(&DL_slew, n);
     motorSet(M3, n);
     motorSet(M4_5, n);
-    printf("L %d ", n);
 }
 void setDR(int n) {  //	set left drive motors
     limMotorVal(&n);
     n = updateSlew(&DR_slew, n);
     motorSet(M0, -n);
     motorSet(M1_2, -n);
-    printf("R %d ", n);
 }
 void setDRFB(int n) {  //	set main 4 bar lift
     limMotorVal(&n);
@@ -79,7 +77,7 @@ void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
     // when drfb is down only allow holding MG up
     if (drfbGet() < DRFB_MGL_ACTIVE && !(mglGet() < MGL_MIN && n < 0)) n = 0;
-    int maxD = 22, maxU = 22;
+    int maxD = 24, maxU = 22;
     if (mglGet() > MGL_MAX) {
         if (n >= 0) n = maxD;
     }
@@ -125,7 +123,6 @@ void setupSens() {
     encoderReset(eDR);
     us1 = myUltrasonicInit(US1_OUT, US1_IN);
     us2 = myUltrasonicInit(US2_OUT, US2_IN);
-    myUltrasonicShutdown(us1);
     analogCalibrate(LT1);
     analogCalibrate(LT2);
 }
@@ -144,7 +141,7 @@ int us2Get() { return myUltrasonicGet(us2); }
 int lt1Get() { return analogReadCalibrated(LT1); }
 int lt2Get() { return analogReadCalibrated(LT2); }
 
-void printEnc() { printf("dr4b %d fb: %d mgl: %d DL: %d DR: %d us %d %d lt1 %d\n", (int)drfbGet(), (int)fbGet(), (int)mglGet(), eDLGet(), eDRGet(), (int)usPredict(1), (int)usPredict(2), lt1Get()); }
+void printEnc() { printf("dr4b %d fb %d mgl %d dDst %d %d dAng %d %d us %d %d lt %d %d t %ld\n", (int)drfbGet(), (int)fbGet(), (int)mglGet(), (int)(eDLGet() / DRIVE_TICKS_PER_IN), (int)(eDRGet() / DRIVE_TICKS_PER_IN), (int)(eDLGet() / DRIVE_TICKS_PER_DEG), (int)(eDRGet() / DRIVE_TICKS_PER_DEG), (int)usPredict(1), (int)usPredict(2), lt1Get(), lt2Get(), millis()); }
 void printUs() { printf("1) %d\t1P) %d\t2) %d\t2P) %d\t\n", us1Get(), (int)usPredict(1), us2Get(), (int)usPredict(2)); }
 void printDrv() {
     printf("d %d/%d %d/%d dt %d/%d %d/%d ", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)DLturn_pid.sensVal, (int)DLturn_pid.target, (int)DRturn_pid.sensVal, (int)DRturn_pid.target);
@@ -200,7 +197,9 @@ double usPredict(int sensNum) {
         *prevT = curT;
     }
     dt = curT - (*prevT);  // update afterwards
-    return (*prevSens) + 0.8 * (*slope) * dt;
+    double predict = (*prevSens) + 0.8 * (*slope) * dt;
+    if (predict < 0.0) predict = 0.0;
+    return predict;
 }
 /*
     ###    ##     ## ########  #######      ######  ######## ##       ########  ######  ########
@@ -253,7 +252,26 @@ void autoSelect() {
     }
     prevBtn = btn;
 }
+/*
+########  #### ########  ######## ########  ########  #### ##     ## ########
+##     ##  ##  ##     ## ##       ##     ## ##     ##  ##  ##     ## ##
+##     ##  ##  ##     ## ##       ##     ## ##     ##  ##  ##     ## ##
+########   ##  ########  ######   ##     ## ########   ##  ##     ## ######
+##         ##  ##        ##       ##     ## ##   ##    ##   ##   ##  ##
+##         ##  ##        ##       ##     ## ##    ##   ##    ## ##   ##
+##        #### ##        ######## ########  ##     ## ####    ###    ########
+*/
 
+unsigned long pipeDriveT0 = 0;
+void pipeDrive() {
+    if (usPredict(2) > 3 || millis() - pipeDriveT0 < 800) {
+        setDL(127);
+        setDR(127);
+    } else if (usPredict(2) > 2) {
+        setDL(45);
+        setDR(45);
+    }
+}
 /*
    ###    ##     ## ########  #######      ######  ########    ###     ######  ##    ##
   ## ##   ##     ##    ##    ##     ##    ##    ##    ##      ## ##   ##    ## ##   ##
@@ -272,16 +290,20 @@ int drfba[][2] = {{20, 0}, {27, 6}, {36, 18}, {45, 28}, {52, 37}, {61, 45}, {68,
 bool stackConeQ(int q) {
     double a2 = drfba[q][1];
     double da = drfbGet();
-    if (da > a2 + 3) {
+    if (da > a2 + 8) {
         setDRFB(-127);
-    } else if (da > a2 - 1) {
-        setDRFB(-20);
+    } else if (da > a2 + 4) {
+        setDRFB(-50);
     } else {
-        setDRFB(20);
+        if (q < 3) {
+            pidDRFB(a2, 999999, true);
+        } else {
+            setDRFB(-20);
+        }
     }
     if (drfbGet() < a2 + 4) {
         pidFB(FB_MID_POS, 999999, true);
-        if (fbGet() < FB_MID_POS + 25) return true;
+        if (fbGet() < FB_MID_POS + 30) return true;
     } else {
         pidFB(FB_UP_POS, 999999, true);
     }
@@ -289,8 +311,8 @@ bool stackConeQ(int q) {
 }
 bool liftConeQ(int q) {
     double a1 = drfba[q][0];
-    pidDRFB(a1 + 5, 999999, true);
-    if (drfbGet() > a1) {
+    pidDRFB(a1 + 7, 999999, true);
+    if (drfbGet() > a1 + 2) {
         pidFB(FB_UP_POS, 999999, true);
         if (fbGet() > FB_UP_POS - 6) return true;
     } else {
@@ -308,7 +330,6 @@ int loaderGrabAndStack(int q, bool firstCone, bool lastCone) {
     static int u, prevU, prevAsi;  // auto stack sub-index
     static unsigned long prevT;
     int driveT = 200;
-    unsigned long t0 = 0;
     double driveDist = 7.0;
     // allows code to progress to next step immediately rather than waiting for the next task iteration
     bool allowRepeat = true;
@@ -351,9 +372,6 @@ int loaderGrabAndStack(int q, bool firstCone, bool lastCone) {
                     asi++;
                 }
             }
-        } else if (asi == j++) {
-            t0 = LONG_MAX;
-            asi++;
         } else if (asi == j++) {  // grab cone
             // fix this, angles are guessed
             if (drfbGet() > DRFB_LDR_DOWN + 12) {
@@ -438,7 +456,14 @@ bool autoStack(int start, int end) {
 */
 unsigned long dt = 0, prevT = 0;
 int DL_brake_out = 0, DR_brake_out = 0;
+bool pipeDriving = false;
 void opctrlDrive() {
+    if (joystickGetDigital(1, 7, JOY_DOWN)) {
+        pipeDriving = true;
+        pipeDriveT0 = millis();
+    }
+    lcdPrint(LCD, 1, "%d", (int)usPredict(2));
+    if (pipeDriving) pipeDrive();
     DL_brake.kd = 0;
     DR_brake.kd = 0;
 
@@ -449,28 +474,32 @@ void opctrlDrive() {
     if (drv < -DRIVE_DRIVE_MAX) drv = -DRIVE_DRIVE_MAX;
     if (abs(drv) < td) drv = 0;
     if (abs(trn) < td) trn = 0;
-    double lvel = 0.0, rvel = 0.0;
-    if (dt != 0) {
-        lvel = (DL_brake.prevSensVal - eDLGet()) / (double)dt;
-        rvel = (DR_brake.prevSensVal - eDRGet()) / (double)dt;
-    }
-    DL_brake_out = lvel * DL_brake.kd;
-    DR_brake_out = rvel * DR_brake.kd;
-    setDL(drv + trn);
-    setDR(drv - trn);
-    if (drv == 0 && trn == 0) {
-        int brakeMax = 100;
-        if (DL_brake_out > brakeMax) DL_brake_out = brakeMax;
-        if (DL_brake_out < -brakeMax) DL_brake_out = -brakeMax;
-        if (DR_brake_out > brakeMax) DR_brake_out = brakeMax;
-        if (DR_brake_out < -brakeMax) DR_brake_out = -brakeMax;
+    if (drv != 0 || trn != 0) pipeDriving = false;
+    /*
+double lvel = 0.0, rvel = 0.0;
+if (dt != 0) {
+lvel = (DL_brake.prevSensVal - eDLGet()) / (double)dt;
+rvel = (DR_brake.prevSensVal - eDRGet()) / (double)dt;
+}
+DL_brake_out = lvel * DL_brake.kd;
+DR_brake_out = rvel * DR_brake.kd;*/
+    if (!pipeDriving) {
+        setDL(drv + trn);
+        setDR(drv - trn);
+    } /*
+     if (drv == 0 && trn == 0) {
+         int brakeMax = 100;
+         if (DL_brake_out > brakeMax) DL_brake_out = brakeMax;
+         if (DL_brake_out < -brakeMax) DL_brake_out = -brakeMax;
+         if (DR_brake_out > brakeMax) DR_brake_out = brakeMax;
+         if (DR_brake_out < -brakeMax) DR_brake_out = -brakeMax;
 
-        setDL(DL_brake_out);
-        setDR(DR_brake_out);
-    }
-    DL_brake.prevSensVal = eDLGet();
-    DR_brake.prevSensVal = eDRGet();
+         setDL(DL_brake_out);
+         setDR(DR_brake_out);
+     }
+     DL_brake.prevSensVal = eDLGet();
+     DR_brake.prevSensVal = eDRGet();
     dt = millis() - prevT;
     if (dt > 300) dt = 20;
-    prevT = millis();
+    prevT = millis();*/
 }

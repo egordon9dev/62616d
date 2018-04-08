@@ -141,7 +141,7 @@ j2:         ----                drfb
 btn7L:      ----                resetFbUp
 btn7U:      ----                incFbUp
 btn7R:      ----                resetFbUp
-btn7D:      setDownStack        decFbUp
+btn7D:      pipeDrive           decFbUp
 btn8L:      mglAutoMid          ----
 btn8U:      mglManualUp         ----
 btn8R:      mglAutoUp           ----

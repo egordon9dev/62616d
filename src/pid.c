@@ -57,7 +57,7 @@ PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 40, .iA
 #define DSKD 130     // 80
 PidVars DLshort_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 50, .iActiveZone = 30, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DSKP, .ki = DSKI, .kd = DSKD, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 PidVars DRshort_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 50, .iActiveZone = 30, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DSKP, .ki = DSKI, .kd = DSKD, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
-PidVars driveCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};  // 6, 0, 0
+PidVars driveCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};  // 6, 0, 0
 #define TIA 35
 #define TDZ 3
 #define TKP 1.575
@@ -66,6 +66,7 @@ PidVars driveCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 4
 PidVars DLturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = TDZ, .maxIntegral = 45, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = TKP, .ki = TKI, .kd = TKD, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 PidVars DRturn_pid = {.doneTime = LONG_MAX, .DONE_ZONE = TDZ, .maxIntegral = 45, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = TKP, .ki = TKI, .kd = TKD, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 PidVars turnCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 2, .maxIntegral = 20, .iActiveZone = TIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 1.5, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};  // 3
+PidVars turnUsCone_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 6, .maxIntegral = 45, .iActiveZone = 20, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 10.0, .ki = 0.006, .kd = 100.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 // 7.2,.013,560
 double updateSlew(Slew *slew, double in) {
     unsigned long dt = millis() - slew->prevTime;
@@ -173,11 +174,24 @@ bool pidDRFB(double a, unsigned long wait, bool auton) {  // set drfb angle with
 bool pidMGL(double a, unsigned long wait) {  // set mgl angle with PID
     mgl_pid.target = a;
     mgl_pid.sensVal = mglGet();
-    setMGL(updatePID(&mgl_pid));
+    double out = limInt(updatePID(&mgl_pid), -127, 127);
+    if (a <= 8) {
+        setMGL(-80);
+    } else if (a >= MGL_DOWN_POS - 8) {
+        setMGL(127);
+    } else {
+        setMGL(out);
+    }
     if (mgl_pid.doneTime + wait < millis()) return true;
     return false;
 }
-double ltdKi = 0.5, ltdKp = 12.0, ltdInt = 0.0;
+bool strictPidMGL(double a, unsigned long wait) {  // set mgl angle with PID
+    mgl_pid.target = a;
+    mgl_pid.sensVal = mglGet();
+    setMGL(limInt(updatePID(&mgl_pid), -127, 127));
+    if (mgl_pid.doneTime + wait < millis()) return true;
+    return false;
+}
 /*
  ######  ######## ########    ########   #######  ##      ## ##    ##     ######  ########    ###     ######  ##    ##
 ##    ## ##          ##       ##     ## ##     ## ##  ##  ## ###   ##    ##    ##    ##      ## ##   ##    ## ##   ##
@@ -219,7 +233,7 @@ bool setDownStack() {
             if (angleUp > DRFB_ENDPT_UP) angleUp = DRFB_ENDPT_UP;
             pidDRFB(angleUp, 999999, true);
             lcdPrint(LCD, 1, "up:%d", (int)angleUp);
-            if (pidMGL(MGL_DOWN_POS, 0)) {
+            if (strictPidMGL(MGL_DOWN_POS, 0)) {
                 h = -0.65 + sin((M_PI / 180.0) * (drfbGet() - DRFB_HORIZONTAL));
                 if (h < -1.0) h = -1.0;
                 drfb_pid_auto.doneTime = LONG_MAX;
@@ -339,9 +353,55 @@ bool pidTurn(double angle, unsigned long wait) {
             curve = limInt(curve, powerR * curveInfluence, -powerR * curveInfluence);
         }
     }
-    setDL(powerL + curve);
-    setDR(powerR + curve);
+    powerL += curve;
+    powerR += curve;
+    powerL = limInt(powerL, -127, 127);
+    powerR = limInt(powerR, -127, 127);
+    setDL(powerL);
+    setDR(powerR);
     if (DLturn_pid.doneTime + wait < millis() && DRturn_pid.doneTime + wait < millis()) return true;
+    return false;
+}
+// PRECONDITION: clear encoders before first function call
+bool pidTurnSweep(double tL, double tR, bool activeL, bool activeR, bool driveShort, unsigned long wait) {
+    bool turning = (tL >= 0.0 && tR <= 0.0) || (tL <= 0.0 && tR >= 0.0);
+    PidVars *pidL = driveShort ? &DLshort_pid : (turning ? &DLturn_pid : &DL_pid);
+    PidVars *pidR = driveShort ? &DRshort_pid : (turning ? &DRturn_pid : &DR_pid);
+    int el = eDLGet(), er = eDRGet();
+    pidL->sensVal = el;
+    pidR->sensVal = er;
+    double k = turning ? DRIVE_TICKS_PER_DEG : DRIVE_TICKS_PER_IN;
+    pidL->target = activeL ? tL * k : 0.0;
+    pidR->target = activeR ? tR * k : 0.0;
+    int powerL = limInt(updatePID(pidL), -127, 127);
+    int powerR = limInt(updatePID(pidR), -127, 127);
+    int curve = 0;
+    if (!turning) {
+        driveCurve_pid.sensVal = er - el * ((double)tR / (double)tL);
+        driveCurve_pid.target = 0.0;
+        curve = updatePID(&driveCurve_pid) * 0.5 * (fabs((DL_pid.target - DL_pid.sensVal) / DL_pid.target) + fabs((DR_pid.target - DR_pid.sensVal) / DR_pid.target));
+        double curveInfluence = 0.75;
+        if (abs(powerR) > abs(powerL)) {
+            if (powerL > 0) {
+                curve = limInt(curve, -powerL * curveInfluence, powerL * curveInfluence);
+            } else {
+                curve = limInt(curve, powerL * curveInfluence, -powerL * curveInfluence);
+            }
+        } else {
+            if (powerR > 0) {
+                curve = limInt(curve, -powerR * curveInfluence, powerR * curveInfluence);
+            } else {
+                curve = limInt(curve, powerR * curveInfluence, -powerR * curveInfluence);
+            }
+        }
+    }
+    powerL -= curve;
+    powerR += curve;
+    powerL = limInt(powerL, -127, 127);
+    powerR = limInt(powerR, -127, 127);
+    setDL(powerL);
+    setDR(powerR);
+    if (pidL->doneTime + wait < millis() && pidR->doneTime + wait < millis()) return true;
     return false;
 }
 
