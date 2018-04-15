@@ -21,8 +21,9 @@ todo:
  #######  ##        ########  ##     ##    ##    ########    ######## #### ##          ##
 */
 unsigned long opT0;
-bool prev7u = false, prev7d = false;
+bool prev7u = false, prev7d = false, liftingDrfbMgl = false;
 void updateLift() {
+    lcdPrint(LCD, 1, "fb %d drfb %d", (int)fbGet(), (int)drfbGet());
     if (joystickGetDigital(2, 8, JOY_DOWN)) {
         DL_slew.a = 0.3;
         DR_slew.a = 0.3;
@@ -53,7 +54,7 @@ void updateLift() {
         drfbPidRunning = true;
     } else {
         autoStacking = false;
-        if (abs(j3) > 15) {
+        if (abs(j3) > JOY_THRESHOLD) {
             setFB(j3);
             tFbOff = millis();
             fbPidRunning = false;
@@ -70,6 +71,11 @@ void updateLift() {
         } else if (joystickGetDigital(2, 5, JOY_DOWN)) {
             fbHoldAngle = FB_MID_POS;
             fbPidRunning = true;
+        } else if (joystickGetDigital(2, 7, JOY_DOWN)) {
+            fbHoldAngle = FB_FLIP_POS;
+            fbPidRunning = true;
+            drfbHoldAngle = DRFB_FLIP_POS;
+            drfbPidRunning = true;
         } else if (millis() - tFbOff > 300) {
             if (!fbPidRunning) {
                 fbHoldAngle = fbGet();
@@ -84,11 +90,11 @@ void updateLift() {
             fb_pid.target = fbHoldAngle;
             setFB(updatePID(&fb_pid));
         }
-        const int t = 15;
         int js = joystickGetAnalog(2, 2) * DRFB_MAX / 127.0;
-        if (abs(js) > t) {
+        if (abs(js) > JOY_THRESHOLD) {
             tDrfbOff = millis();
             drfbPidRunning = false;
+            liftingDrfbMgl = false;
             setDRFB(js);
         } else if (millis() - tDrfbOff > 300) {
             if (!drfbPidRunning) {
@@ -100,7 +106,16 @@ void updateLift() {
         }
         if (drfbPidRunning) {
             if (drfbHoldAngle > DRFB_MAX_HOLD_ANGLE) drfbHoldAngle = DRFB_MAX_HOLD_ANGLE;
-            pidDRFB(drfbHoldAngle, 999999, false);
+            if (liftingDrfbMgl) {
+                if (drfbGet() < DRFB_MGL_ACTIVE + 5) {
+                    setDRFB(127);
+                    drfbHoldAngle = DRFB_MGL_ACTIVE + 5;
+                } else {
+                    liftingDrfbMgl = false;
+                }
+            }
+            // don't combine these !!!!!!!
+            if (!liftingDrfbMgl) pidDRFB(drfbHoldAngle, 999999, false);
         }
     }
 }
@@ -206,7 +221,6 @@ void controllerTest() {
         delay(5);
     }
 }
-
 /*
  #######  ########   ######   #######  ##    ## ######## ########   #######  ##
 ##     ## ##     ## ##    ## ##     ## ###   ##    ##    ##     ## ##     ## ##
@@ -218,7 +232,7 @@ void controllerTest() {
 */
 #include "auto.h"
 void operatorControl() {
-    if (0) {
+    if (1) {
         while (0) {
             lcdPrint(LCD, 1, "%d %d %d %d", joystickGetAnalog(1, 4), joystickGetAnalog(1, 3), joystickGetAnalog(1, 1), joystickGetAnalog(1, 2));
             lcdPrint(LCD, 2, "%d %d %d %d", joystickGetAnalog(2, 4), joystickGetAnalog(2, 3), joystickGetAnalog(2, 1), joystickGetAnalog(2, 2));
@@ -230,9 +244,9 @@ void operatorControl() {
         }
         while (0) {
             printEnc();
-            delay(5);
+            delay(50);
         }
-        if (1) {
+        if (0) {
             for (int i = 15; i > 0; i--) {
                 delay(200);
                 printf("%d\n", i);
@@ -252,6 +266,12 @@ void operatorControl() {
             delay(5);
         }
         if (0) { test(4); }
+        if (1) {
+            settingDownStack = false;
+            while (!setDownStack()) delay(5);
+            resetMotors();
+            while (true) delay(5);
+        }
     }
     // shutdownSens();
     opT0 = millis();
@@ -261,56 +281,67 @@ void operatorControl() {
     printf("\n\nOPERATOR CONTROL\n\n");
     DL_slew.a = 1.0;
     DR_slew.a = 1.0;
-    bool prevSetDownStack = false, curSetDownStack = false;
+    bool curSetDownStack = false, prevSetDownStack = false;
     while (true) {
-        if (curSetDownStack) {
-            if (setDownStack()) { curSetDownStack = false; }
+        // if (!curSetDownStack) {
+        // printEnc();
+        updateLift();
+        //----- mobile-goal lift -----//
+        if (joystickGetDigital(1, 8, JOY_RIGHT) || joystickGetDigital(1, 6, JOY_UP)) {
+            mglPidRunning = true;
+            mglHoldAngle = MGL_UP_POS;
+            drfbPidRunning = true;
+            liftingDrfbMgl = true;
+        } else if (joystickGetDigital(1, 8, JOY_LEFT)) {
+            mglPidRunning = true;
+            mglHoldAngle = MGL_MID_POS - 10;
+            drfbPidRunning = true;
+            liftingDrfbMgl = true;
+        } else if (joystickGetDigital(1, 8, JOY_UP)) {
+            tMglOff = millis();
+            mglPidRunning = false;
+            setMGL(-127);
+            drfbPidRunning = true;
+            liftingDrfbMgl = true;
+        } else if (joystickGetDigital(1, 8, JOY_DOWN)) {
+            tMglOff = millis();
+            mglPidRunning = false;
+            setMGL(127);
+            drfbPidRunning = true;
+            liftingDrfbMgl = true;
+        } else if (joystickGetDigital(1, 6, JOY_DOWN)) {
             mglPidRunning = true;
             mglHoldAngle = MGL_DOWN_POS;
-            fbPidRunning = true;
-            fbHoldAngle = fbGet();
             drfbPidRunning = true;
-            drfbHoldAngle = drfbGet();
-        } else {
-            // printEnc();
-            updateLift();
-            //----- mobile-goal lift -----//
-            if (joystickGetDigital(1, 8, JOY_RIGHT) || joystickGetDigital(1, 6, JOY_UP)) {
-                mglPidRunning = true;
-                mglHoldAngle = MGL_UP_POS;
-            } else if (joystickGetDigital(1, 8, JOY_LEFT) || joystickGetDigital(1, 5, JOY_UP)) {
-                mglPidRunning = true;
-                mglHoldAngle = MGL_MID_POS - 10;
-            } else if (joystickGetDigital(1, 8, JOY_UP)) {
-                tMglOff = millis();
-                mglPidRunning = false;
-                setMGL(-127);
-            } else if (joystickGetDigital(1, 8, JOY_DOWN)) {
-                tMglOff = millis();
-                mglPidRunning = false;
-                setMGL(127);
-            } else if (joystickGetDigital(1, 6, JOY_DOWN)) {
+            liftingDrfbMgl = true;
+        } else if (joystickGetDigital(1, 5, JOY_UP)) {
+            mglPidRunning = false;
+            curSetDownStack = false;
+            tMglOff = LONG_MAX;
+        } else if (joystickGetDigital(1, 5, JOY_DOWN) || curSetDownStack) {
+            if (drfbGet() > DRFB_MGL_ACTIVE + 5 && drfbGet() > drfba[2][1] + 3) {
+                if (!prevSetDownStack) curSetDownStack = true;
+                if (setDownStack()) curSetDownStack = false;
                 mglPidRunning = true;
                 mglHoldAngle = MGL_DOWN_POS;
-                double da = drfbGet();  // fix this: test this
-                if (da < DRFB_MGL_ACTIVE + 8) {
-                    drfbPidRunning = true;
-                    da = DRFB_MGL_ACTIVE + 8;
-                }
-                drfbHoldAngle = da;
-            } else if (joystickGetDigital(1, 5, JOY_DOWN)) {
-                if (drfbGet() > 20) {
-                    curSetDownStack = true;
-                    if (curSetDownStack != prevSetDownStack) settingDownStack = false;
-                }
-            } else if (!mglPidRunning && millis() - tMglOff > 0) {
-                mglPidRunning = true;
-                mglHoldAngle = mglGet();
-            } else if (!mglPidRunning) {
-                setMGL(0);
+                fbPidRunning = true;
+                fbHoldAngle = fbGet();
+                drfbPidRunning = true;
+                drfbHoldAngle = drfbGet();
+            } else {
+                curSetDownStack = false;
             }
-            if (mglPidRunning) pidMGL(mglHoldAngle, 999999);
+        } else if (!mglPidRunning && (long)millis() - (long)tMglOff > 350L) {
+            mglPidRunning = true;
+            mglHoldAngle = mglGet();
+        } else if (!mglPidRunning) {
+            if (tMglOff < LONG_MAX) {
+                setMGL(0);
+            } else {
+                setMGL(-5);
+            }
         }
+        if (mglPidRunning) { pidMGL(mglHoldAngle, 999999); }
         prevSetDownStack = curSetDownStack;
         opctrlDrive();
         delay(5);

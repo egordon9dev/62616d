@@ -209,13 +209,13 @@ bool settingDownStack = false;
 bool setDownStack() {
     if (joystickGetDigital(2, 8, JOY_LEFT)) return true;
     static int i = 0, prevI;
-    static unsigned long prevT;
-    static double h = 0.0;
+    static unsigned long prevT, t0 = 0;
+    static double h = 0.0, da = 0.0;
     if (settingDownStack == false) {
         i = 0;
         settingDownStack = true;
-        h = /*0.04 + */ sin((M_PI / 180.0) * (drfbGet() - DRFB_HORIZONTAL));
-        if (h > 1.0) h = 1.0;
+        h = sin((M_PI / 180.0) * (drfbGet() - DRFB_HORIZONTAL));
+        h = limDouble(h, -1.0, 1.0);
         mgl_pid.doneTime = LONG_MAX;
     }
     bool allowRepeat = true;
@@ -224,37 +224,48 @@ bool setDownStack() {
         int j = 0;
         if (i == j++) {
             prevI = i;
+            da = DRFB_HORIZONTAL + (180.0 / M_PI) * asin(h - 0.03);
+            if (da < DRFB_MGL_ACTIVE + 5) da = DRFB_MGL_ACTIVE + 5;
             i++;
         } else if (i == j++) {
             fb_pid_auto.target = FB_MID_POS - 15;
             fb_pid_auto.sensVal = fbGet();
-            setFB(limInt((int)updatePID(&fb_pid_auto), -30, 30));  // limit fb to keep claw from going ahead of cone
-            double angleUp = DRFB_HORIZONTAL + (180.0 / M_PI) * asin(h);
-            if (angleUp > DRFB_ENDPT_UP) angleUp = DRFB_ENDPT_UP;
-            pidDRFB(angleUp, 999999, true);
-            lcdPrint(LCD, 1, "up:%d", (int)angleUp);
+            // sync up fb and mgl
+            if ((FB_UP_POS - fbGet()) * 118.0 / 85.0 < mglGet()) {
+                setFB(limInt((int)updatePID(&fb_pid_auto), -30, 30));  // limit fb to keep claw from going ahead of cone
+            } else {
+                setFB(10);
+            }
+            pidDRFB(da, 999999, true);
             if (strictPidMGL(MGL_DOWN_POS, 0)) {
-                h = -0.65 + sin((M_PI / 180.0) * (drfbGet() - DRFB_HORIZONTAL));
-                if (h < -1.0) h = -1.0;
-                drfb_pid_auto.doneTime = LONG_MAX;
+                da = DRFB_HORIZONTAL + (180.0 / M_PI) * asin(h - 0.65);
+                if (da < DRFB_ENDPT_DOWN) da = DRFB_ENDPT_DOWN;
+                t0 = millis();
                 i++;
             }
         } else if (i == j++) {
             pidMGL(MGL_DOWN_POS, 999999);
-            double angleDown = DRFB_HORIZONTAL + (180.0 / M_PI) * asin(h);
-            lcdPrint(LCD, 1, "down:%d", (int)angleDown);
-            if (angleDown < DRFB_ENDPT_DOWN) angleDown = DRFB_ENDPT_DOWN;
-            if (drfbGet() > angleDown + 10) {
+            if (fbGet() < FB_UP_POS - 35) {
+                if (((millis() - t0) / 80UL) % 3 == 2) {
+                    setDRFB(127);
+                } else {
+                    setDRFB(-127);
+                }
+            } else if (drfbGet() > da + 10) {
                 setDRFB(-127);
             } else {
-                pidDRFB(angleDown, 999999, true);
+                pidDRFB(da, 999999, true);
             }
+            if (fbGet() < FB_UP_POS - 10) {
+                setFB(127);
+            } else {
+                pidFB(FB_UP_POS, 999999, true);
+            }
+            /*
             fb_pid_auto.target = FB_UP_POS;  // 22
             fb_pid_auto.sensVal = fbGet();
-            setFB(limInt((int)updatePID(&fb_pid_auto), -127, 127));
-            if ((fbGet() > FB_UP_POS - 21 && drfbGet() < angleDown + 5)) i++;
-        } else if (i == j++) {
-            return true;
+            setFB(limInt((int)updatePID(&fb_pid_auto), -127, 127));*/
+            if ((fbGet() > FB_UP_POS - 21 && drfbGet() < da + 5)) return true;
         }
 
         if (i != prevI) {
@@ -263,7 +274,7 @@ bool setDownStack() {
         }
         prevI = i;
         // safety first (ptc tripped or robot got stuck)
-        if (millis() - prevT > 3000) i++;
+        if (millis() - prevT > 2000) return true;
     }
     return false;
 } /*

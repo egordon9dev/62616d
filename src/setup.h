@@ -42,10 +42,12 @@
 #define FB_MIN 15                                          // -13
 #define FB_MIN_HOLD_ANGLE (drfbGet() <= 7 ? 20 : -999999)  // <------ keep these parentheses!
 extern double fbUpP;
-#define FB_UP_P0 147.0  // 154
+#define FB_UP_P0 149.5  // 154
 #define FB_HALF_UP_POS (fbUpP - 38)
-#define FB_UP_POS fbUpP  //(fbUpP + drfbGet() * 0.01 + (drfbGet() > 108 ? 1 : 0))
+#define FB_UP_POS (fbUpP + drfbGet() * (4.0 / 70.0))
 #define FB_MID_POS 65
+#define FB_FLIP_POS 78
+#define DRFB_FLIP_POS 5
 #define DRFB_HORIZONTAL 55
 #define DRFB_MAX_HOLD_ANGLE 999
 #define DRFB_ENDPT_UP 124
@@ -68,6 +70,8 @@ MG_MID      -->         69
 #define DRFB_LDR_UP 66
 #define DRFB_LDR_DOWN 38
 #define DRFB_MGL_ACTIVE 19
+
+#define JOY_THRESHOLD 22
 
 // height when stacking from loader when drive can be stationary
 #define AUTO_STACK_STATIONARY 8
@@ -138,15 +142,15 @@ j4:         ----                ----
 j3:         drive               fb
 j1:         turn                ----
 j2:         ----                drfb
-btn7L:      ----                resetFbUp
-btn7U:      ----                incFbUp
+btn7L:      ----                flipCone
+btn7U:      pipeDrive2                incFbUp
 btn7R:      ----                resetFbUp
 btn7D:      pipeDrive           decFbUp
 btn8L:      mglAutoMid          ----
 btn8U:      mglManualUp         ----
 btn8R:      mglAutoUp           ----
 btn8D:      mglManualDown       limitDrive
-btn5U:      mglAutoMid          fbAutoUp
+btn5U:      stopMglPid          fbAutoUp
 btn5D:      setDownStack        fbAutoMid
 btn6U:      mglAutoUp           ----
 btn6D:      mglAutoDown         ----

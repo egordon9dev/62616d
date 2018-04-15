@@ -48,7 +48,7 @@ void setDR(int n) {  //	set left drive motors
     motorSet(M0, -n);
     motorSet(M1_2, -n);
 }
-void setDRFB(int n) {  //	set main 4 bar lift
+void setDRFB(int n) {  //	set main drfb lift
     limMotorVal(&n);
     int max = 50;
     double drfbA = drfbGet();
@@ -59,8 +59,7 @@ void setDRFB(int n) {  //	set main 4 bar lift
         if (n < -max) n = -max;
     }
     n = updateSlew(&drfb_slew, n);
-    n *= -1;
-    motorSet(M8_9, n);
+    motorSet(M8_9, -n);
 }
 
 void setFB(int n) {
@@ -264,13 +263,23 @@ void autoSelect() {
 
 unsigned long pipeDriveT0 = 0;
 void pipeDrive() {
-    if (usPredict(2) > 3 || millis() - pipeDriveT0 < 800) {
+    if (usPredict(2) > 3 || millis() - pipeDriveT0 < 500) {
         setDL(127);
         setDR(127);
-    } else if (usPredict(2) > 2) {
-        setDL(45);
-        setDR(45);
+    } else {
+        setDL(40);
+        setDR(40);
     }
+}
+void pipeDrive2() {
+    double tgt = (usPredict(2) - 12) * 2.54 * DRIVE_TICKS_PER_IN;
+
+    // D/L_pid.target = tgt;
+    DR_pid.target = tgt;
+    DL_pid.sensVal = eDLGet();
+    DR_pid.sensVal = eDRGet();
+    setDL(updatePID(&DL_pid));
+    setDR(updatePID(&DR_pid));
 }
 /*
    ###    ##     ## ########  #######      ######  ########    ###     ######  ##    ##
@@ -328,6 +337,7 @@ bool liftConeQ(int q) {
 int asi;  // auto stack index
 int loaderGrabAndStack(int q, bool firstCone, bool lastCone) {
     static int u, prevU, prevAsi;  // auto stack sub-index
+
     static unsigned long prevT;
     int driveT = 200;
     double driveDist = 7.0;
@@ -462,18 +472,17 @@ void opctrlDrive() {
         pipeDriving = true;
         pipeDriveT0 = millis();
     }
-    lcdPrint(LCD, 1, "%d", (int)usPredict(2));
     if (pipeDriving) pipeDrive();
     DL_brake.kd = 0;
     DR_brake.kd = 0;
 
-    const int td = 17;
     int drv = joystickGetAnalog(1, 3);
-    int trn = joystickGetAnalog(1, 1) * DRIVE_TURN_MAX / 127.0;
-    if (drv > DRIVE_DRIVE_MAX) drv = DRIVE_DRIVE_MAX;
-    if (drv < -DRIVE_DRIVE_MAX) drv = -DRIVE_DRIVE_MAX;
-    if (abs(drv) < td) drv = 0;
-    if (abs(trn) < td) trn = 0;
+    int trn = joystickGetAnalog(1, 1);
+    if (abs(drv) > 80) settingDownStack = false;
+    if (abs(drv) < 70) trn *= DRIVE_TURN_MAX / 127.0;
+    drv = limInt(drv, -DRIVE_DRIVE_MAX, DRIVE_DRIVE_MAX);
+    if (abs(drv) < JOY_THRESHOLD) drv = 0;
+    if (abs(trn) < JOY_THRESHOLD) trn = 0;
     if (drv != 0 || trn != 0) pipeDriving = false;
     /*
 double lvel = 0.0, rvel = 0.0;
@@ -503,3 +512,4 @@ DR_brake_out = rvel * DR_brake.kd;*/
     if (dt > 300) dt = 20;
     prevT = millis();*/
 }
+///////////////////////////////////
