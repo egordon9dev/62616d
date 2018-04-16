@@ -117,6 +117,7 @@ bool scoreMG(bool leftSide, int zone) {
     unsigned long breakT = 3000;
     double driveD = 0;
     bool usDone;
+    pipeDriveT0 = millis() - 200UL;
     while (true) {
         bool allowRepeat = true;
         while (allowRepeat) {
@@ -125,9 +126,9 @@ bool scoreMG(bool leftSide, int zone) {
             int j = 0;
             if (i == j++) {  // score MG
                 if (zone == 20) {
-                    setDR(30);
-                    setDL(30);
+                    pipeDrive();
                     if (setDownStack()) i++;
+                    printf("setdownstk ");
                 } else if (zone == 10) {
                     setDR(20);
                     setDL(20);
@@ -154,7 +155,7 @@ bool scoreMG(bool leftSide, int zone) {
                     } else {
                         setMGL(20);
                     }
-                    if (driveD < -15) i++;
+                    if (driveD < -8.0) i++;
                 } else if (zone == 10) {
                     int h = 0;
                     if (u == h++) {
@@ -878,6 +879,7 @@ endLoop:
 ##     ## ##     ##    ##    ##     ## ##   ###       ##
 ##     ##  #######     ##     #######  ##    ##       ##
 */
+// claw in front of cone when scoring
 // grab wall field cones
 void auton4(bool leftSide, int stackH, bool loaderSide, int zone) {
     unsigned long prevT = millis(), funcT0 = millis(), t0 = millis();
@@ -909,8 +911,8 @@ void auton4(bool leftSide, int stackH, bool loaderSide, int zone) {
                 pidFB(FB_UP_POS, 999999, true);
                 pidMGL(MGL_UP_POS, 999999);
                 if (mglGet() < 30) {
-                    pidTurnSweep(10.5, 13.5, true, true, false, 999999);
-                    if (driveDL > 9.5 && driveDR > 12.5) {
+                    pidTurnSweep(10.5, 11, true, true, false, 999999);
+                    if (driveDL > 9.5 && driveDR > 10.0) {
                         u = 0;
                         t0 = LONG_MAX;
                         i++;
@@ -926,22 +928,24 @@ void auton4(bool leftSide, int stackH, bool loaderSide, int zone) {
                 }
             } else if (i == j++) {  // grb c2
                 printf("grb c2 ");
-                pidTurnSweep(10.5, 13.5, true, true, false, 999999);
+                pidTurnSweep(10.5, 11, true, true, false, 999999);
                 pidMGL(MGL_UP_POS, 999999);
-                if (drfbGet() > 5) {
-                    pidFB(FB_MID_POS + 20, 999999, true);
-                } else if (fbGet() < FB_MID_POS - 2) {
+                if (fbGet() < FB_MID_POS - 2.5) {
                     pidFB(FB_MID_POS, 999999, true);
                 } else {
-                    setFB(-127);
+                    if (drfbGet() > 2) {
+                        pidFB(FB_MID_POS + 20, 999999, true);
+                    } else {
+                        setFB(-127);
+                    }
                 }
-                if (fbGet() < FB_MID_POS + 40) {
-                    setDRFB(-127);
+                if (fbGet() < FB_UP_POS - 25) {
+                    setDRFBUnlim(-127);
                 } else {
                     setDRFB(-30);
                 }
-                if (fbGet() < FB_MID_POS + 3 && drfbGet() < 1.5 && t0 > millis()) t0 = millis();
-                if ((long)millis() - (long)t0 > 150L) {
+                if (fbGet() < FB_MID_POS + 1 && drfbGet() < 1.5 && t0 > millis()) t0 = millis();
+                if ((long)millis() - (long)t0 > 200) {
                     u = 0;
                     y = 0;
                     DL_pid.doneTime = LONG_MAX;
@@ -966,13 +970,13 @@ void auton4(bool leftSide, int stackH, bool loaderSide, int zone) {
                 int g = 0;
                 bool yDone = false;
                 if (y == g++) {
-                    if (pidTurnSweep(-22, -7, true, driveDL < -0.6, false, driveT)) {
+                    if (pidTurnSweep(-22, -7.5, true, driveDL < -0.6, false, driveT)) {
                         resetDriveEnc();
                         y++;
                     }
                 } else if (y == g++) {
-                    pidTurnSweep(3, 4, driveDR > 0.5, true, true, 999999);
-                    if (driveDL > 2 && driveDR > 3) yDone = true;
+                    pidTurnSweep(1, 2.5, driveDR > 0.5, true, true, 999999);
+                    if (driveDL > 0.5 && driveDR > 1.75) yDone = true;
                 }
                 if (uDone && yDone) {
                     t0 = LONG_MAX;
@@ -980,17 +984,15 @@ void auton4(bool leftSide, int stackH, bool loaderSide, int zone) {
                 }
             } else if (i == j++) {  // grb c3
                 printf("grb c3 ");
-                pidTurnSweep(3, 4, driveDR > 0.5, true, true, 999999);
-                setDRFB(-127);
-                if (drfbGet() > 4.5) {
-                    pidFB(FB_MID_POS + 20, 999999, true);
-                } else if (fbGet() > FB_MID_POS - 2) {
+                pidTurnSweep(1, 2.5, driveDR > 0.5, true, true, 999999);
+                setDRFBUnlim(-127);
+                if (fbGet() > FB_MID_POS - 2.5) {
                     setFB(-127);
                 } else {
                     pidFB(FB_MID_POS, 999999, true);
                 }
-                if (fbGet() < FB_MID_POS + 2 && drfbGet() < 1.5 && t0 > millis()) t0 = millis();
-                if ((long)millis() - (long)t0 > 150L) {
+                if (fbGet() < FB_MID_POS + 1 && drfbGet() < 1 && t0 > millis()) t0 = millis();
+                if ((long)millis() - (long)t0 > 200L) {
                     i++;
                     resetDriveEnc();
                     DL_pid.doneTime = LONG_MAX;
@@ -1019,20 +1021,20 @@ void auton4(bool leftSide, int stackH, bool loaderSide, int zone) {
                         y++;
                     }
                 } else if (y == g++) {
-                    if (pidTurn(103, driveT)) {
+                    if (pidTurn(111.5, driveT)) {
                         resetDriveEnc();
                         y++;
                     }
                 } else if (y == g++) {
                     pidDrive(999, 999999);
-                    if (driveDL > 48.0 && driveDR > 48.0) {
+                    if (driveDL > 32.0 && driveDR > 32.0) {
                         resetDriveEnc();
                         DL_pid.doneTime = LONG_MAX;
                         DR_pid.doneTime = LONG_MAX;
                         y++;
                     }
                 } else if (y == g++) {
-                    if (pidTurnSweep(12, 0, true, true, false, driveT)) {
+                    if (pidTurnSweep(10, 0, true, true, false, driveT)) {
                         resetDriveEnc();
                         yDone = true;
                     }
@@ -1040,17 +1042,12 @@ void auton4(bool leftSide, int stackH, bool loaderSide, int zone) {
                 if (uDone && yDone) i++;
             } else if (i == j++) {  // get into MG scoring position
                 pidDRFB(drfba[stackH - 1][1], 999999, true);
-                prevSens[0] = prevSens[1];
-                prevSens[1] = prevSens[2];
-                prevSens[2] = eDLGet() + eDRGet();
                 if (zone == 20) {
-                    setDL(127);
-                    setDR(127);
                     pidMGL(MGL_MID_POS, 999999);
                     fb_pid_auto.target = 69;
                     fb_pid_auto.sensVal = fbGet();
-                    setFB(limInt(updatePID(&fb_pid_auto), -30, 30));
-                    if (eDLGet() + eDRGet() - prevSens[1] <= 4 && driveD > 20.0) { i++; }
+                    setFB(limInt(updatePID(&fb_pid_auto), -30, 127));
+                    if (pipeDrive()) { i++; }
                 } else if (zone == 10) {
                     pidFB(69, 999999, true);
                     pidMGL(MGL_MID_POS, 999999);
@@ -1063,7 +1060,11 @@ void auton4(bool leftSide, int stackH, bool loaderSide, int zone) {
                 i++;
                 resetDriveEnc();
             } else if (i == j++) {
-                if (scoreMG(leftSide, zone)) mgl_pid.doneTime = LONG_MAX;
+                if (scoreMG(leftSide, zone)) {
+                    i++;
+                } else {
+                    goto endLoop;
+                }
             } else if (i == j++) {
                 if (zone == 20) {
                     pidMGL(104, 999999);

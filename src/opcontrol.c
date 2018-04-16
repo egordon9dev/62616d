@@ -23,6 +23,7 @@ todo:
 unsigned long opT0;
 bool prev7u = false, prev7d = false, liftingDrfbMgl = false;
 void updateLift() {
+    if (curSetDownStack) return;
     lcdPrint(LCD, 1, "fb %d drfb %d", (int)fbGet(), (int)drfbGet());
     if (joystickGetDigital(2, 8, JOY_DOWN)) {
         DL_slew.a = 0.3;
@@ -232,7 +233,7 @@ void controllerTest() {
 */
 #include "auto.h"
 void operatorControl() {
-    if (1) {
+    if (0) {
         while (0) {
             lcdPrint(LCD, 1, "%d %d %d %d", joystickGetAnalog(1, 4), joystickGetAnalog(1, 3), joystickGetAnalog(1, 1), joystickGetAnalog(1, 2));
             lcdPrint(LCD, 2, "%d %d %d %d", joystickGetAnalog(2, 4), joystickGetAnalog(2, 3), joystickGetAnalog(2, 1), joystickGetAnalog(2, 2));
@@ -266,9 +267,12 @@ void operatorControl() {
             delay(5);
         }
         if (0) { test(4); }
-        if (1) {
+        if (0) {
             settingDownStack = false;
-            while (!setDownStack()) delay(5);
+            while (!setDownStack()) {
+                printEnc();
+                delay(5);
+            }
             resetMotors();
             while (true) delay(5);
         }
@@ -281,9 +285,8 @@ void operatorControl() {
     printf("\n\nOPERATOR CONTROL\n\n");
     DL_slew.a = 1.0;
     DR_slew.a = 1.0;
-    bool curSetDownStack = false, prevSetDownStack = false;
+    bool prevSetDownStack = false;
     while (true) {
-        // if (!curSetDownStack) {
         // printEnc();
         updateLift();
         //----- mobile-goal lift -----//
@@ -319,18 +322,17 @@ void operatorControl() {
             curSetDownStack = false;
             tMglOff = LONG_MAX;
         } else if (joystickGetDigital(1, 5, JOY_DOWN) || curSetDownStack) {
-            if (drfbGet() > DRFB_MGL_ACTIVE + 5 && drfbGet() > drfba[2][1] + 3) {
-                if (!prevSetDownStack) curSetDownStack = true;
-                if (setDownStack()) curSetDownStack = false;
-                mglPidRunning = true;
-                mglHoldAngle = MGL_DOWN_POS;
-                fbPidRunning = true;
-                fbHoldAngle = fbGet();
-                drfbPidRunning = true;
-                drfbHoldAngle = drfbGet();
-            } else {
-                curSetDownStack = false;
+            if (drfbGet() > DRFB_MGL_ACTIVE + 5 && drfbGet() > drfba[2][1] + 3 && !prevSetDownStack) {
+                settingDownStack = false;
+                curSetDownStack = true;
             }
+            if (setDownStack()) curSetDownStack = false;
+            mglPidRunning = true;
+            mglHoldAngle = MGL_DOWN_POS;
+            fbPidRunning = true;
+            fbHoldAngle = fbGet();
+            drfbPidRunning = true;
+            drfbHoldAngle = drfbGet();
         } else if (!mglPidRunning && (long)millis() - (long)tMglOff > 350L) {
             mglPidRunning = true;
             mglHoldAngle = mglGet();

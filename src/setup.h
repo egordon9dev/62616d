@@ -44,7 +44,7 @@
 extern double fbUpP;
 #define FB_UP_P0 149.5  // 154
 #define FB_HALF_UP_POS (fbUpP - 38)
-#define FB_UP_POS (fbUpP + drfbGet() * (4.0 / 70.0))
+#define FB_UP_POS (limDouble(fbUpP + drfbGet() * (4.0 / 70.0), 0.0, 154.0))
 #define FB_MID_POS 65
 #define FB_FLIP_POS 78
 #define DRFB_FLIP_POS 5
@@ -54,7 +54,7 @@ extern double fbUpP;
 #define DRFB_ENDPT_DOWN 0
 #define DRFB_MAX1 119
 #define DRFB_MAX2 121.5  // 124, 105
-#define DRFB_MIN 20
+#define DRFB_MIN 10
 #define MGL_MAX 118  // 120
 #define MGL_MIN 6    // 1
 #define MGL_DOWN_POS 121
@@ -90,6 +90,7 @@ double limDouble(double n, double min, double max);
 void setDL(int n);
 void setDR(int n);
 void setDRFB(int n);
+void setDRFBUnlim(int n);
 void setFB(int n);
 void setMGL(int n);
 void stopMGL();
@@ -105,8 +106,9 @@ int eDRGet();
 int lt1Get();
 int lt2Get();
 void opctrlDrive();
-
-extern bool autoStacking;
+extern unsigned long pipeDriveT0;
+bool pipeDrive();
+extern bool curSetDownStack, autoStacking;
 bool stackConeQ(int q);
 bool liftConeQ(int q);
 bool autoStack(int start, int end);

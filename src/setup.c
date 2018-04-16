@@ -61,6 +61,17 @@ void setDRFB(int n) {  //	set main drfb lift
     n = updateSlew(&drfb_slew, n);
     motorSet(M8_9, -n);
 }
+void setDRFBUnlim(int n) {  //	set main drfb lift
+    limMotorVal(&n);
+    int max = 50;
+    double drfbA = drfbGet();
+    if ((drfbA < DRFB_MIN / 2.0 && n < 0) || (drfbA > DRFB_MAX1 && n > 0)) {
+        if (n > max) n = max;
+        if (n < -max) n = -max;
+    }
+    n = updateSlew(&drfb_slew, n);
+    motorSet(M8_9, -n);
+}
 
 void setFB(int n) {
     limMotorVal(&n);
@@ -262,25 +273,27 @@ void autoSelect() {
 */
 
 unsigned long pipeDriveT0 = 0;
-void pipeDrive() {
+bool pipeDrive() {
     if (usPredict(2) > 3 || millis() - pipeDriveT0 < 500) {
         setDL(127);
         setDR(127);
+        return false;
     } else {
         setDL(40);
         setDR(40);
+        return true;
     }
-}
-void pipeDrive2() {
-    double tgt = (usPredict(2) - 12) * 2.54 * DRIVE_TICKS_PER_IN;
+} /*
+ void pipeDrive2() {
+     double tgt = (usPredict(2) - 12) * 2.54 * DRIVE_TICKS_PER_IN;
 
-    // D/L_pid.target = tgt;
-    DR_pid.target = tgt;
-    DL_pid.sensVal = eDLGet();
-    DR_pid.sensVal = eDRGet();
-    setDL(updatePID(&DL_pid));
-    setDR(updatePID(&DR_pid));
-}
+     // D/L_pid.target = tgt;
+     DR_pid.target = tgt;
+     DL_pid.sensVal = eDLGet();
+     DR_pid.sensVal = eDRGet();
+     setDL(updatePID(&DL_pid));
+     setDR(updatePID(&DR_pid));
+ }*/
 /*
    ###    ##     ## ########  #######      ######  ########    ###     ######  ##    ##
   ## ##   ##     ##    ##    ##     ##    ##    ##    ##      ## ##   ##    ## ##   ##
@@ -467,6 +480,7 @@ bool autoStack(int start, int end) {
 unsigned long dt = 0, prevT = 0;
 int DL_brake_out = 0, DR_brake_out = 0;
 bool pipeDriving = false;
+bool curSetDownStack = false;
 void opctrlDrive() {
     if (joystickGetDigital(1, 7, JOY_DOWN)) {
         pipeDriving = true;
@@ -478,7 +492,7 @@ void opctrlDrive() {
 
     int drv = joystickGetAnalog(1, 3);
     int trn = joystickGetAnalog(1, 1);
-    if (abs(drv) > 80) settingDownStack = false;
+    if (abs(drv) > 80) curSetDownStack = false;
     if (abs(drv) < 70) trn *= DRIVE_TURN_MAX / 127.0;
     drv = limInt(drv, -DRIVE_DRIVE_MAX, DRIVE_DRIVE_MAX);
     if (abs(drv) < JOY_THRESHOLD) drv = 0;

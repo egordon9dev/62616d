@@ -226,16 +226,18 @@ bool setDownStack() {
             prevI = i;
             da = DRFB_HORIZONTAL + (180.0 / M_PI) * asin(h - 0.03);
             if (da < DRFB_MGL_ACTIVE + 5) da = DRFB_MGL_ACTIVE + 5;
+            mgl_pid.doneTime = LONG_MAX;
             i++;
         } else if (i == j++) {
+            printf("lwrMgl ");
             fb_pid_auto.target = FB_MID_POS - 15;
             fb_pid_auto.sensVal = fbGet();
             // sync up fb and mgl
-            if ((FB_UP_POS - fbGet()) * 118.0 / 85.0 < mglGet()) {
-                setFB(limInt((int)updatePID(&fb_pid_auto), -30, 30));  // limit fb to keep claw from going ahead of cone
-            } else {
+            // if ((FB_UP_P0 - fbGet()) * 118.0 / 85.0 < mglGet()) {
+            setFB(limInt((int)updatePID(&fb_pid_auto), -35, 35));  // limit fb to keep claw from going ahead of cone
+            /*} else {
                 setFB(10);
-            }
+            }*/
             pidDRFB(da, 999999, true);
             if (strictPidMGL(MGL_DOWN_POS, 0)) {
                 da = DRFB_HORIZONTAL + (180.0 / M_PI) * asin(h - 0.65);
@@ -251,10 +253,12 @@ bool setDownStack() {
                 } else {
                     setDRFB(-127);
                 }
-            } else if (drfbGet() > da + 10) {
-                setDRFB(-127);
+            } else if (drfbGet() > da + 5) {
+                setDRFBUnlim(-127);
             } else {
-                pidDRFB(da, 999999, true);
+                drfb_pid_auto.sensVal = drfbGet();
+                drfb_pid_auto.target = da;
+                setDRFBUnlim(updatePID(&drfb_pid_auto));
             }
             if (fbGet() < FB_UP_POS - 10) {
                 setFB(127);
@@ -265,7 +269,10 @@ bool setDownStack() {
             fb_pid_auto.target = FB_UP_POS;  // 22
             fb_pid_auto.sensVal = fbGet();
             setFB(limInt((int)updatePID(&fb_pid_auto), -127, 127));*/
-            if ((fbGet() > FB_UP_POS - 21 && drfbGet() < da + 5)) return true;
+            if (fbGet() > FB_UP_POS - 21 && drfbGet() < da + 8) {
+                printf("stkDwn ");
+                return true;
+            }
         }
 
         if (i != prevI) {
