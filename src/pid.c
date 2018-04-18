@@ -162,9 +162,17 @@ bool pidFB(double a, unsigned long wait, bool auton) {  // set fb angle with PID
     setFB(2 + updatePID(pid));
     if (pid->doneTime + wait < millis()) return true;
     return false;
+}
+void syncFB() {
+    double fa = FB_UP_POS - (180.0 / M_PI) * myAsin((6.5 / 9.0) * (sin((M_PI / 180.0) * (mglGet() - MGL_VERT)) + 0.656059));
+    pidFB(fa, 999999, true);
 } /*
- bool syncDRFBFB(double a) {
-     pidFB(FB_UP_POS - (180.0/M_PI)*myAsin((6.5/9.0)*(sin((M_PI/180.0) * (mglGet() - MGL_VERT)) + 5.388744), 999999, true);
+ void syncDRFBFB() {
+     double fa = FB_UP_POS - (180.0 / M_PI) * myAsin((6.5 / 9.0) * (sin((M_PI / 180.0) * (mglGet() - MGL_VERT)) + 0.656059));
+     double da = DRFB_HORIZONTAL + (180.0 / M_PI) * myAsin((6.5 / 21.0) * (cos((M_PI / 180.0) * (mglGet() - MGL_VERT)) - 0.7547096) - 0.819152);
+     pidFB(fa, 999999, true);
+     pidDRFB(da, 999999, true);
+     printf("fa %d da %d ", (int)fa, (int)da);
  }*/
 bool pidDRFB(double a, unsigned long wait, bool auton) {  // set drfb angle with PID
     PidVars *pid = auton ? &drfb_pid_auto : &drfb_pid;
@@ -209,9 +217,13 @@ bool settingDownStack = false;
 -settingDownStack set to false before starting
 -at least 3 cones stacked on MG in robot
 */
-double da = 0;
+double daSDS = 0;
 bool setDownStack() {
-    if (joystickGetDigital(2, 8, JOY_LEFT)) return true;
+    if (joystickGetDigital(2, 8, JOY_LEFT)) {
+        setDRFB(0);
+        setFB(0);
+        return true;
+    }
     static int i = 0, prevI;
     static unsigned long prevT, t0 = 0;
     static double h = 0.0;
@@ -228,8 +240,8 @@ bool setDownStack() {
         int j = 0;
         if (i == j++) {
             prevI = i;
-            da = DRFB_HORIZONTAL + (180.0 / M_PI) * myAsin(h - 0.03);
-            if (da < DRFB_MGL_ACTIVE + 5) da = DRFB_MGL_ACTIVE + 5;
+            daSDS = DRFB_HORIZONTAL + (180.0 / M_PI) * myAsin(h - 0.03);
+            if (daSDS < DRFB_MGL_ACTIVE + 5) daSDS = DRFB_MGL_ACTIVE + 5;
             mgl_pid.doneTime = LONG_MAX;
             i++;
         } else if (i == j++) {
@@ -237,11 +249,11 @@ bool setDownStack() {
             fb_pid_auto.target = FB_MID_POS - 15;
             fb_pid_auto.sensVal = fbGet();
             // sync up fb and mgl
-
-            pidDRFB(da, 999999, true);
+            syncFB();
+            pidDRFB(daSDS, 999999, true);
             if (strictPidMGL(MGL_DOWN_POS, 0)) {
-                da = DRFB_HORIZONTAL + (180.0 / M_PI) * myAsin(h - 0.65);
-                if (da < DRFB_ENDPT_DOWN) da = DRFB_ENDPT_DOWN;
+                daSDS = DRFB_HORIZONTAL + (180.0 / M_PI) * myAsin(h - 0.65);
+                if (daSDS < DRFB_ENDPT_DOWN) daSDS = DRFB_ENDPT_DOWN;
                 t0 = millis();
                 i++;
             }
@@ -253,11 +265,11 @@ bool setDownStack() {
                 } else {
                     setDRFB(-127);
                 }
-            } else if (drfbGet() > da + 5) {
+            } else if (drfbGet() > daSDS + 5) {
                 setDRFBUnlim(-127);
             } else {
                 drfb_pid_auto.sensVal = drfbGet();
-                drfb_pid_auto.target = da;
+                drfb_pid_auto.target = daSDS;
                 setDRFBUnlim(updatePID(&drfb_pid_auto));
             }
             if (fbGet() < FB_UP_POS - 10) {
@@ -269,7 +281,7 @@ bool setDownStack() {
             fb_pid_auto.target = FB_UP_POS;  // 22
             fb_pid_auto.sensVal = fbGet();
             setFB(limInt((int)updatePID(&fb_pid_auto), -127, 127));*/
-            if (drfbGet() < da + 8.0 && fbGet() > FB_UP_POS - 21) {
+            if (drfbGet() < daSDS + 8.0 && fbGet() > FB_UP_POS - 21) {
                 printf("stkDwn ");
                 return true;
             }

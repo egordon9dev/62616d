@@ -111,6 +111,7 @@ int eDLGet();
 int eDRGet();
 int lt1Get();
 int lt2Get();
+extern int prevDrv;
 void opctrlDrive();
 extern unsigned long pipeDriveT0;
 bool pipeDrive();

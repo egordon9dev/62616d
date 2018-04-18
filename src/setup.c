@@ -284,17 +284,7 @@ bool pipeDrive() {
         setDR(40);
         return true;
     }
-} /*
- void pipeDrive2() {
-     double tgt = (usPredict(2) - 12) * 2.54 * DRIVE_TICKS_PER_IN;
-
-     // D/L_pid.target = tgt;
-     DR_pid.target = tgt;
-     DL_pid.sensVal = eDLGet();
-     DR_pid.sensVal = eDRGet();
-     setDL(updatePID(&DL_pid));
-     setDR(updatePID(&DR_pid));
- }*/
+}
 /*
    ###    ##     ## ########  #######      ######  ########    ###     ######  ##    ##
   ## ##   ##     ##    ##    ##     ##    ##    ##    ##      ## ##   ##    ## ##   ##
@@ -483,6 +473,7 @@ unsigned long dt = 0, prevT = 0;
 int DL_brake_out = 0, DR_brake_out = 0;
 bool pipeDriving = false;
 bool curSetDownStack = false;
+int prevDrv = 0;
 void opctrlDrive() {
     if (joystickGetDigital(1, 7, JOY_DOWN)) { pipeDriving = true; }
     if (pipeDriving) pipeDrive();
@@ -490,8 +481,10 @@ void opctrlDrive() {
     DR_brake.kd = 0;
 
     int drv = joystickGetAnalog(1, 3);
+    prevDrv = drv;
     int trn = joystickGetAnalog(1, 1);
-    if (abs(drv) > 80) curSetDownStack = false;
+
+    // if (abs(drv) > 80) curSetDownStack = false;
     if (abs(drv) < 70) trn *= DRIVE_TURN_MAX / 127.0;
     drv = limInt(drv, -DRIVE_DRIVE_MAX, DRIVE_DRIVE_MAX);
     if (abs(drv) < JOY_THRESHOLD) drv = 0;

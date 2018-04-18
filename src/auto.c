@@ -209,273 +209,6 @@ bool scoreMG(bool leftSide, int zone) {
     }
 }
 /*
-   ###    ##     ## ########  #######  ##    ##       ##
-  ## ##   ##     ##    ##    ##     ## ###   ##     ####
- ##   ##  ##     ##    ##    ##     ## ####  ##       ##
-##     ## ##     ##    ##    ##     ## ## ## ##       ##
-######### ##     ##    ##    ##     ## ##  ####       ##
-##     ## ##     ##    ##    ##     ## ##   ###       ##
-##     ##  #######     ##     #######  ##    ##     ######
-*/
-
-// 15, 20
-void auton1(bool leftSide, int stackH, bool loaderSide, int zone) {
-    unsigned long lastT = millis();
-    unsigned long funcT0 = millis();
-    int i = 0, prevI = 0, u = 0;
-    double prevSens[3] = {0, 0, 0};
-    unsigned long breakTime = 5000;
-    int driveT = 200;
-    static double drfba1, drfba2;
-    double driveD = 0;
-    while (millis() - funcT0 < 15000) {
-        driveD = (eDLGet() + eDRGet()) * 0.5 / DRIVE_TICKS_PER_IN;
-        if (i != prevI) lastT = millis();
-        if (millis() - lastT > breakTime) break;
-        prevI = i;
-        int j = 0;
-        if (i == j++) {  // deploy
-            if (grabMGAuton(driveT)) {
-                if (stackH > 1) {
-                    DL_pid.doneTime = LONG_MAX;
-                    DR_pid.doneTime = LONG_MAX;
-                    resetDriveEnc();
-                    u = 0;
-                    i++;
-                } else {
-                    i++;
-                }
-            } else {
-                goto endLoop;
-            }
-        } else if (i == j++) {
-            if (stackH > 1) {
-                pidMGL(MGL_UP_POS, 0);
-                int h = 0, umax = -1;
-                if (u == h++) {  // stack cone 1
-                    pidFB(FB_UP_POS, 999999, true);
-                    pidDRFB(0, 999999, true);
-                    if (drfbGet() < 5) { u++; }
-                } else if (u == h++) {  // hover cone 2
-                    pidDRFB(15, 999999, true);
-                    if (drfbGet() > 10) {
-                        pidFB(FB_MID_POS, 999999, true);
-                    } else {
-                        pidFB(FB_UP_POS, 999999, true);
-                    }
-                    if (fbGet() < FB_UP_POS - 15) u++;
-                } else if (u == h++) {
-                    umax = u;
-                }
-                if (pidDrive(10, umax == -1 ? 999999 : driveT)) {  // drive to cone 2
-                    i++;
-                } else {  // continue hover cone 2
-                    pidFB(FB_MID_POS, 999999, true);
-                    pidDRFB(15, 999999, true);
-                }
-            } else {
-                i++;
-            }
-        } else if (i == j++) {  // grab cone 2
-            if (stackH > 1) {
-                pidFB(FB_MID_POS - 12, 999999, true);
-                pidDRFB(0, 999999, true);
-                if (fbGet() < FB_MID_POS - 9 && drfbGet() < 3) {
-                    resetDriveEnc();
-                    DL_pid.doneTime = LONG_MAX;
-                    DR_pid.doneTime = LONG_MAX;
-                    u = 0;
-                    i++;
-                }
-            } else {
-                i++;
-            }
-        } else if (i == j++) {
-            if (stackH > 2) {
-                int h = 0, umax = -1;
-                if (u == h++) {  // lift cone 2
-                    pidDRFB(20, 999999, true);
-                    pidFB(FB_UP_POS, 999999, true);
-                    if (drfbGet() > 16 && fbGet() > FB_UP_POS - 5) { u++; }
-                } else if (u == h++) {  // stack cone 2
-                    pidFB(FB_UP_POS, 999999, true);
-                    pidDRFB(0, 999999, true);
-                    if (drfbGet() < 2) u++;
-                } else if (u == h++) {  // hover cone 3
-                    pidDRFB(20, 999999, true);
-                    if (drfbGet() > 15) pidFB(FB_MID_POS, 999999, true);
-                    if (fbGet() < FB_UP_POS - 15) { u++; }
-                } else if (u == h++) {
-                    pidFB(FB_MID_POS, 999999, true);
-                    pidDRFB(20, 999999, true);
-                    umax = u;
-                }
-                if (u > 0) {
-                    if (pidDrive(7, u == umax ? driveT : 999999)) {  // drive to cone 3
-                        i++;
-                    }
-                }
-            } else {
-                i++;
-            }
-        } else if (i == j++) {  // grab cone 3
-            if (stackH > 2) {
-                pidDRFB(0, 999999, true);
-                pidFB(FB_MID_POS - 12, 999999, true);
-                if (fbGet() < FB_MID_POS - 9 && drfbGet() < 2) { i++; }
-            } else {
-                i++;
-            }
-        } else if (i == j++) {
-            resetDriveEnc();
-            DL_pid.doneTime = LONG_MAX;
-            DR_pid.doneTime = LONG_MAX;
-            drfb_pid_auto.doneTime = LONG_MAX;
-            fb_pid_auto.doneTime = LONG_MAX;
-            mgl_pid.doneTime = LONG_MAX;
-            i++;
-            u = 0;
-        } else if (i == j++) {
-            int h = 0;
-            double d;
-            if (stackH > 2) {
-                d = -48.0;
-                drfba1 = 28.0;
-                drfba2 = 10.0;
-            } else if (stackH > 1) {
-                d = -41.0;
-                drfba1 = 20.0;
-                drfba2 = 5.0;
-            } else {
-                d = -31.0;
-                drfba1 = 15.0;
-                drfba2 = 0.0;
-            }
-            pidMGL(MGL_UP_POS, 0);
-            if (u == h++) {  // lift cone 1|2|3
-                bool drfbDone = pidDRFB(drfba1, 200, true), fbDone = pidFB(FB_UP_POS, 200, true);
-                if (drfbDone) pidDRFB(drfba1, 999999, true);
-                if (fbDone) pidFB(FB_UP_POS, 999999, true);
-                if (drfbDone && fbDone) {
-                    drfb_pid_auto.doneTime = LONG_MAX;
-                    u++;
-                }
-            } else if (u == h++) {
-                pidFB(FB_UP_POS, 999999, true);
-                if (pidDRFB(drfba2, 0, true)) {
-                    u++;
-                    drfb_pid_auto.doneTime = LONG_MAX;
-                }
-            } else if (u == h++) {
-                pidFB(FB_UP_POS, 999999, true);
-                if (pidDRFB(drfba1, 0, true)) { u++; }
-            } else if (u == h++) {
-                pidFB(FB_UP_POS, 999999, true);
-                pidDRFB(drfba1, 999999, true);
-            }
-            if (pidDrive(d, driveT)) {
-                i++;
-                DLturn_pid.doneTime = LONG_MAX;
-                DRturn_pid.doneTime = LONG_MAX;
-                resetDriveEnc();
-            }
-        } else if (i == j++) {
-            pidFB(FB_UP_POS, 999999, true);
-            pidDRFB(drfba1, 999999, true);
-            double a;
-            if (zone == 20) {
-                a = leftSide ? -157 : 157;
-            } else if (zone == 10) {
-                a = leftSide ? -168 : 168;
-            } else {
-                a = leftSide ? -190 : 190;
-            }
-            if (zone == 5) {
-                double da = (eDRGet() - eDLGet()) * 0.5 / DRIVE_TICKS_PER_DEG;
-                if (fabs(da) > 130) {
-                    pidMGL(MGL_MID_POS - 10, 999999);
-                } else {
-                    pidMGL(MGL_UP_POS, 999999);
-                }
-            } else {
-                pidMGL(MGL_UP_POS, 0);
-            }
-            if (pidTurn(a, driveT)) {
-                resetDriveEnc();
-                DL_pid.doneTime = LONG_MAX;
-                DR_pid.doneTime = LONG_MAX;
-                i++;
-            }
-        } else if (i == j++) {
-            pidFB(FB_UP_POS, 999999, true);
-            pidDRFB(drfba1, 999999, true);
-            double d;
-            if (zone == 20) {
-                d = 37;
-            } else {
-                d = 18;
-            }
-            if (zone == 5 || pidDrive(d, driveT)) {
-                resetDriveEnc();
-                DLturn_pid.doneTime = LONG_MAX;
-                DRturn_pid.doneTime = LONG_MAX;
-                i++;
-            }
-        } else if (i == j++) {
-            pidFB(FB_UP_POS, 999999, true);
-            pidDRFB(drfba1, 999999, true);
-            double a = 0.0;
-            if (zone == 20) {
-                a = leftSide ? -70.0 : 70.0;
-            } else if (zone == 10) {
-                pidMGL(MGL_MID_POS - 10, 999999);
-                a = leftSide ? -54 : 54;
-            }
-            if (zone == 5 || pidTurn(a, driveT)) {
-                resetDriveEnc();
-                DL_pid.doneTime = LONG_MAX;
-                DR_pid.doneTime = LONG_MAX;
-                mgl_pid.doneTime = LONG_MAX;
-                breakTime = 3000;
-                i++;
-            }
-        } else if (i == j++) {  // score MG
-            if (stackH > 2) {
-                pidDRFB(drfba[stackH - 1][1], 999999, true);
-            } else {
-                pidDRFB(30, 999999, true);
-            }
-            prevSens[0] = prevSens[1];
-            prevSens[1] = prevSens[2];
-            prevSens[2] = eDLGet() + eDRGet();
-            if (zone == 20) {
-                setDL(127);
-                setDR(127);
-                pidMGL(MGL_MID_POS, 999999);
-                pidFB(69, 999999, true);
-                if (eDLGet() + eDRGet() - prevSens[1] <= 10 && driveD > 18.0) { i++; }
-            } else if (zone == 10) {
-                pidFB(69, 999999, true);
-                pidMGL(MGL_MID_POS, 999999);
-                setDL(80);
-                setDR(80);
-                if ((eDLGet() + eDRGet() - prevSens[1] <= 15 && driveD > 3.0)) { i++; }
-            } else {
-                i++;
-            }
-        } else if (i == j++) {  // lower MG into 20|10 pt zone
-            scoreMG(leftSide, zone);
-            goto endLoop;
-        }
-        printEnc_all();
-        delay(5);
-    }
-endLoop:
-    resetMotors();
-    printf("\n\nTIME: %lf\n", (millis() - funcT0) / 1000.0);
-}
-
-/*
    ###    ##     ## ########  #######  ##    ##     #######
   ## ##   ##     ##    ##    ##     ## ###   ##    ##     ##
  ##   ##  ##     ##    ##    ##     ## ####  ##           ##
@@ -484,7 +217,7 @@ endLoop:
 ##     ## ##     ##    ##    ##     ## ##   ###    ##
 ##     ##  #######     ##     #######  ##    ##    #########
 */
-
+// loader cones
 void auton2(bool leftSide, int stackH, int zone) {
     unsigned long prevT = millis(), funcT0 = millis(), t0 = millis();
     int i = 0, prevI = 0, u = 0, prevU = 0, y = 0, prevY = 0;
@@ -1074,7 +807,7 @@ void auton4(bool leftSide, int stackH, bool loaderSide, int zone) {
                 }
             } else if (i == j++) {
                 if (zone == 20) {
-                    pidMGL(104, 999999);
+                    pidMGL(80, 999999);  // fix this wrong angle
                     setDL(0);
                     setDR(0);
                     pidFB(FB_UP_POS, 999999, true);
@@ -1124,7 +857,7 @@ void autonSkills() {
     int i = 0;
     unsigned long funcT0 = millis(), t0 = millis();
     double prevSens[3] = {0, 0, 0};
-    auton1(true, 1, true, 20);
+    auton4(true, 1, true, 20);
     resetDriveEnc();
     DLturn_pid.doneTime = LONG_MAX;
     DRturn_pid.doneTime = LONG_MAX;

@@ -31,6 +31,8 @@ bool pidFB(double a, unsigned long wait, bool auton);
 // set arm angle with PID
 bool pidDRFB(double a, unsigned long wait, bool auton);
 
+void syncDRFBFB();
+
 bool pidMGL(double a, unsigned long wait);
 
 // dist: inches
