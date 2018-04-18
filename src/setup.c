@@ -143,7 +143,7 @@ void shutdownSens() {
 #define POT_SENSITIVITY 0.06105006105
 double drfbGet() { return (2727 - analogRead(DRFB_POT)) * POT_SENSITIVITY; }
 double fbGet() { return (503 - analogRead(FB_POT)) * POT_SENSITIVITY + 140; }
-double mglGet() { return (4095 - analogRead(MGL_POT)) * POT_SENSITIVITY; }
+double mglGet() { return (2550 - analogRead(MGL_POT)) * POT_SENSITIVITY; }
 int eDLGet() { return encoderGet(eDL); }
 int eDRGet() { return encoderGet(eDR); }
 int us1Get() { return myUltrasonicGet(us1); }
@@ -274,7 +274,8 @@ void autoSelect() {
 
 unsigned long pipeDriveT0 = 0;
 bool pipeDrive() {
-    if (usPredict(2) > 3 || millis() - pipeDriveT0 < 500) {
+    if (usPredict(2) > 5) pipeDriveT0 = millis();
+    if (millis() - pipeDriveT0 < 100) {
         setDL(127);
         setDR(127);
         return false;
@@ -331,6 +332,7 @@ bool stackConeQ(int q) {
     }
     return false;
 }
+double myAsin(double d) { return asin(limDouble(d, -1.0, 1.0)); }
 bool liftConeQ(int q) {
     double a1 = drfba[q][0];
     pidDRFB(a1 + 7, 999999, true);
@@ -482,10 +484,7 @@ int DL_brake_out = 0, DR_brake_out = 0;
 bool pipeDriving = false;
 bool curSetDownStack = false;
 void opctrlDrive() {
-    if (joystickGetDigital(1, 7, JOY_DOWN)) {
-        pipeDriving = true;
-        pipeDriveT0 = millis();
-    }
+    if (joystickGetDigital(1, 7, JOY_DOWN)) { pipeDriving = true; }
     if (pipeDriving) pipeDrive();
     DL_brake.kd = 0;
     DR_brake.kd = 0;

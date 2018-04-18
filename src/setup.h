@@ -38,6 +38,7 @@
 #define M0 8
 #define M4_5 9
 
+// fb angles
 #define FB_MAX 145                                         // 152
 #define FB_MIN 15                                          // -13
 #define FB_MIN_HOLD_ANGLE (drfbGet() <= 7 ? 20 : -999999)  // <------ keep these parentheses!
@@ -47,6 +48,9 @@ extern double fbUpP;
 #define FB_UP_POS (limDouble(fbUpP + drfbGet() * (4.0 / 70.0), 0.0, 154.0))
 #define FB_MID_POS 65
 #define FB_FLIP_POS 78
+#define FB_CLEAR_OF_STACK 105
+
+// drfb angles
 #define DRFB_FLIP_POS 5
 #define DRFB_HORIZONTAL 55
 #define DRFB_MAX_HOLD_ANGLE 999
@@ -55,21 +59,23 @@ extern double fbUpP;
 #define DRFB_MAX1 119
 #define DRFB_MAX2 121.5  // 124, 105
 #define DRFB_MIN 10
-#define MGL_MAX 118  // 120
-#define MGL_MIN 6    // 1
-#define MGL_DOWN_POS 121
-#define MGL_MID_POS 88
-#define MGL_UP_POS 1
+#define DRFB_LDR_UP 66
+#define DRFB_LDR_DOWN 38
+#define DRFB_MGL_ACTIVE 19
 
+// mgl angles
+#define MGL_MAX 109  // 120
+#define MGL_MIN 6    // 1
+#define MGL_DOWN_POS 113
+#define MGL_MID_POS 75
+#define MGL_UP_POS 0
+#define MGL_VERT 41
+// mgl max put down s0ft = 123.5
 #define LT_LIGHT -1000
 /*
 MG_MID - 10 -->  fb:    91
 MG_MID      -->         69
 */
-#define FB_CLEAR_OF_STACK 105
-#define DRFB_LDR_UP 66
-#define DRFB_LDR_DOWN 38
-#define DRFB_MGL_ACTIVE 19
 
 #define JOY_THRESHOLD 22
 
@@ -126,6 +132,8 @@ void setupLCD();
 // extern unsigned long us1Predicted, us2Predicted;
 double usPredict(int sensNum);
 
+double myAsin(double d);
+
 void autoSelect();
 typedef struct AutoSel {
     int stackH, zone, nAuton;
@@ -135,10 +143,7 @@ extern AutoSel autoSel;
 extern int ldrGrabI, ldrStackI;
 extern int drfba[][2];
 extern int drfbDownA[];
-#define DM 2
-/*
-
------   DM 2: "Rahul, Erik"   -----
+/*          Rahul               Erik
             joy1                joy2
 j4:         ----                ----
 j3:         drive               fb
