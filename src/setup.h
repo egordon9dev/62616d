@@ -151,7 +151,7 @@ j3:         drive               fb
 j1:         turn                ----
 j2:         ----                drfb
 btn7L:      ----                flipCone
-btn7U:      pipeDrive2                incFbUp
+btn7U:      pipeDrive2          incFbUp
 btn7R:      ----                resetFbUp
 btn7D:      pipeDrive           decFbUp
 btn8L:      mglAutoMid          ----

@@ -163,17 +163,20 @@ bool pidFB(double a, unsigned long wait, bool auton) {  // set fb angle with PID
     if (pid->doneTime + wait < millis()) return true;
     return false;
 }
-void syncFB() {
+bool syncingDRFBFB = false;
+// PRECONDITION syncingDRFB set to false
+void syncDRFBFB() {
+    static double da0 = 0.0;
+    if (!syncingDRFBFB) {
+        syncingDRFBFB = true;
+        da0 = drfbGet();
+    }
     double fa = FB_UP_POS - (180.0 / M_PI) * myAsin((6.5 / 9.0) * (sin((M_PI / 180.0) * (mglGet() - MGL_VERT)) + 0.656059));
+    double da = DRFB_HORIZONTAL + (180.0 / M_PI) * myAsin((6.5 / 21.0) * (cos((M_PI / 180.0) * (mglGet() - MGL_VERT)) - 0.7547096) + sin((M_PI / 180.0) * (da0 - DRFB_HORIZONTAL)));
     pidFB(fa, 999999, true);
-} /*
- void syncDRFBFB() {
-     double fa = FB_UP_POS - (180.0 / M_PI) * myAsin((6.5 / 9.0) * (sin((M_PI / 180.0) * (mglGet() - MGL_VERT)) + 0.656059));
-     double da = DRFB_HORIZONTAL + (180.0 / M_PI) * myAsin((6.5 / 21.0) * (cos((M_PI / 180.0) * (mglGet() - MGL_VERT)) - 0.7547096) - 0.819152);
-     pidFB(fa, 999999, true);
-     pidDRFB(da, 999999, true);
-     printf("fa %d da %d ", (int)fa, (int)da);
- }*/
+    pidDRFB(da, 999999, true);
+    printf("fa %d da %d ", (int)fa, (int)da);
+}
 bool pidDRFB(double a, unsigned long wait, bool auton) {  // set drfb angle with PID
     PidVars *pid = auton ? &drfb_pid_auto : &drfb_pid;
     pid->target = a;
@@ -243,14 +246,14 @@ bool setDownStack() {
             daSDS = DRFB_HORIZONTAL + (180.0 / M_PI) * myAsin(h - 0.03);
             if (daSDS < DRFB_MGL_ACTIVE + 5) daSDS = DRFB_MGL_ACTIVE + 5;
             mgl_pid.doneTime = LONG_MAX;
+            syncingDRFBFB = false;
             i++;
         } else if (i == j++) {
             printf("lwrMgl ");
             fb_pid_auto.target = FB_MID_POS - 15;
             fb_pid_auto.sensVal = fbGet();
             // sync up fb and mgl
-            syncFB();
-            pidDRFB(daSDS, 999999, true);
+            syncDRFBFB();
             if (strictPidMGL(MGL_DOWN_POS, 0)) {
                 daSDS = DRFB_HORIZONTAL + (180.0 / M_PI) * myAsin(h - 0.65);
                 if (daSDS < DRFB_ENDPT_DOWN) daSDS = DRFB_ENDPT_DOWN;

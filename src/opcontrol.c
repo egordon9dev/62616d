@@ -47,6 +47,8 @@ void updateLift() {
     } else if (joystickGetDigital(2, 7, JOY_LEFT) || joystickGetDigital(2, 7, JOY_RIGHT)) {
         fbUpP = FB_UP_P0;
     }
+    prev7u = cur7u;
+    prev7d = cur7d;
     if (joystickGetDigital(2, 8, JOY_UP)) {
         autoStack(1, 12);
         fbHoldAngle = FB_UP_POS;
@@ -59,9 +61,6 @@ void updateLift() {
             setFB(j3);
             tFbOff = millis();
             fbPidRunning = false;
-        } else if (joystickGetDigital(2, 6, JOY_UP)) {
-            fbHoldAngle = FB_HALF_UP_POS;
-            fbPidRunning = true;
         } else if (joystickGetDigital(2, 6, JOY_DOWN)) {
             setFB(-127);
             tFbOff = millis();
@@ -72,7 +71,10 @@ void updateLift() {
         } else if (joystickGetDigital(2, 5, JOY_DOWN)) {
             fbHoldAngle = FB_MID_POS;
             fbPidRunning = true;
-        } else if (joystickGetDigital(2, 7, JOY_DOWN)) {
+        } else if (joystickGetDigital(2, 6, JOY_UP)) {
+            fbHoldAngle = FB_HALF_UP_POS;
+            fbPidRunning = true;
+        } else if (joystickGetDigital(2, 7, JOY_LEFT)) {
             fbHoldAngle = FB_FLIP_POS;
             fbPidRunning = true;
             drfbHoldAngle = DRFB_FLIP_POS;
