@@ -21,22 +21,8 @@ todo:
  #######  ##        ########  ##     ##    ##    ########    ######## #### ##          ##
 */
 unsigned long opT0;
-bool prev7u = false, prev7d = false, liftingDrfbMgl = false; /*
- unsigned long prevFbT = 0;
- double prevFb = -1;*/
-void updateLift() {                                          /*
-                                              if (curSetDownStack) return;
-                                              double fbDt = millis() - prevFbT, fbVel;
-                                              prevFbT = millis();
-                                              double curFb = fbGet();
-                                              if (fbDt == 0 || fbDt > 30 || prevFb < 0) {
-                                                  fbVel = 0.0;
-                                              } else {
-                                                  fbVel = (curFb - prevFb) / fbDt;
-                                              }
-                                              prevFb = curFb;*/
-
-    lcdPrint(LCD, 1, "fb %d drfb %d", (int)fbGet(), (int)drfbGet());
+bool prev7u = false, prev7d = false, liftingDrfbMgl = false;
+void updateLift() {
     if (joystickGetDigital(2, 8, JOY_DOWN)) {
         DL_slew.a = 0.3;
         DR_slew.a = 0.3;
@@ -249,6 +235,12 @@ void controllerTest() {
 void operatorControl() {
     if (1) {
         while (1) {
+            setDL(127);
+            setDR(127);
+            printf("DL' %lf DR' %lf\n", (DL_pid.deriv) / (DL_pid.kd), (DR_pid.deriv) / (DR_pid.kd));
+            delay(5);
+        }
+        while (1) {
             pidMGL(MGL_DOWN_POS, 999999);
             printf("mgl %d mgl' %lf\n", (int)mglGet(), (mgl_pid.deriv) / (mgl_pid.kd));
             delay(5);
@@ -302,6 +294,7 @@ void operatorControl() {
     while (true) {
         // printEnc();
         updateLift();
+        lcdPrint(LCD, 1, "DL' %3.2f DR' %3.2f\n", (DL_pid.deriv) / (DL_pid.kd), (DR_pid.deriv) / (DR_pid.kd));
         //----- mobile-goal lift -----//
         if (joystickGetDigital(1, 8, JOY_RIGHT) || joystickGetDigital(1, 6, JOY_UP)) {
             mglPidRunning = true;

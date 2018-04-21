@@ -193,8 +193,7 @@ bool pidMGL(double a, unsigned long wait) {  // set mgl angle with PID
     double out = limInt(updatePID(&mgl_pid), -127, 127);  // KEEP this HERE: it updates mgl_pid.deriv so we can use it elswhere even if not really using pid
     if (fabs(a - prevTarget) > 0.001) t0 = millis();
     prevTarget = a;
-    bool mglStall = false;
-    if (millis() - t0 > 350 && fabs((mgl_pid.deriv) / (mgl_pid.kd)) < 0.06) mglStall = true;
+    bool mglStall = millis() - t0 > 350 && fabs((mgl_pid.deriv) / (mgl_pid.kd)) < 0.06;
     if (a <= 8) {
         setMGL(mglStall ? -40 : -127);
     } else if (a >= MGL_DOWN_POS - 8) {

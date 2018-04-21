@@ -37,14 +37,36 @@ double limDouble(double n, double min, double max) {
     return n;
 }
 void setDL(int n) {  //	set right drive motors
-    limMotorVal(&n);
+    static unsigned long t0;
+    static int prevN = -999;
+    DL_pid.sensVal = eDLGet();
+    updatePID(&DL_pid);
+    if (abs(n - prevN) > 10) {
+        t0 = millis();
+        prevN = n;
+    }
+    bool stall = millis() - t0 > 350 && fabs((DL_pid.deriv) / (DL_pid.kd)) < 0.2;
+    int max = stall ? 35 : 127;
+    n = limInt(n, -max, max);
     n = updateSlew(&DL_slew, n);
+    printf("DL %d ", n);
     motorSet(M3, n);
     motorSet(M4_5, n);
 }
 void setDR(int n) {  //	set left drive motors
-    limMotorVal(&n);
+    static unsigned long t0;
+    static int prevN = -999;
+    DR_pid.sensVal = eDRGet();
+    updatePID(&DR_pid);
+    if (abs(n - prevN) > 10) {
+        t0 = millis();
+        prevN = n;
+    }
+    bool stall = millis() - t0 > 350 && fabs((DR_pid.deriv) / (DR_pid.kd)) < 0.2;
+    int max = stall ? 35 : 127;
+    n = limInt(n, -max, max);
     n = updateSlew(&DR_slew, n);
+    printf("DR %d ", n);
     motorSet(M0, -n);
     motorSet(M1_2, -n);
 }
