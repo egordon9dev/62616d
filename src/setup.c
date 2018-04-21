@@ -95,6 +95,7 @@ void setMGL(int n) {  //	set mobile goal lift
         if (n <= 0) n = -maxU;
     }
     n = updateSlew(&mgl_slew, n);
+    printf("mgl %d ", n);
     motorSet(M6_7, n);
 }
 void stopMGL() { motorSet(M6_7, updateSlew(&mgl_slew, 0)); }
@@ -123,7 +124,7 @@ void resetDriveEnc() {
     encoderReset(eDR);
 }
 PidVars DL_brake, DR_brake;
-Ultrasonic us1, us2;
+Ultrasonic us;
 void setupSens() {
     DL_brake = pidDef;
     DR_brake = pidDef;
@@ -131,14 +132,9 @@ void setupSens() {
     eDR = encoderInit(DRIVE_R_ENC_B, DRIVE_R_ENC_T, false);
     encoderReset(eDL);
     encoderReset(eDR);
-    us1 = myUltrasonicInit(US1_OUT, US1_IN);
-    us2 = myUltrasonicInit(US2_OUT, US2_IN);
+    us = myUltrasonicInit(US_OUT, US_IN);
     analogCalibrate(LT1);
     analogCalibrate(LT2);
-}
-void shutdownSens() {
-    myUltrasonicShutdown(us1);
-    myUltrasonicShutdown(us2);
 }
 #define POT_SENSITIVITY 0.06105006105
 double drfbGet() { return (2727 - analogRead(DRFB_POT)) * POT_SENSITIVITY; }
@@ -146,13 +142,11 @@ double fbGet() { return (503 - analogRead(FB_POT)) * POT_SENSITIVITY + 140; }
 double mglGet() { return (2550 - analogRead(MGL_POT)) * POT_SENSITIVITY; }
 int eDLGet() { return encoderGet(eDL); }
 int eDRGet() { return encoderGet(eDR); }
-int us1Get() { return myUltrasonicGet(us1); }
-int us2Get() { return myUltrasonicGet(us2); }
+int usGet() { return myUltrasonicGet(us); }
 int lt1Get() { return analogReadCalibrated(LT1); }
 int lt2Get() { return analogReadCalibrated(LT2); }
 
-void printEnc() { printf("dr4b %d fb %d mgl %d dDst %d %d dAng %d %d us %d %d lt %d %d t %ld\n", (int)drfbGet(), (int)fbGet(), (int)mglGet(), (int)(eDLGet() / DRIVE_TICKS_PER_IN), (int)(eDRGet() / DRIVE_TICKS_PER_IN), (int)(eDLGet() / DRIVE_TICKS_PER_DEG), (int)(eDRGet() / DRIVE_TICKS_PER_DEG), (int)usPredict(1), (int)usPredict(2), lt1Get(), lt2Get(), millis()); }
-void printUs() { printf("1) %d\t1P) %d\t2) %d\t2P) %d\t\n", us1Get(), (int)usPredict(1), us2Get(), (int)usPredict(2)); }
+void printEnc() { printf("dr4b %d fb %d mgl %d dDst %d %d dAng %d %d us %d lt %d %d t %ld\n", (int)drfbGet(), (int)fbGet(), (int)mglGet(), (int)(eDLGet() / DRIVE_TICKS_PER_IN), (int)(eDRGet() / DRIVE_TICKS_PER_IN), (int)(eDLGet() / DRIVE_TICKS_PER_DEG), (int)(eDRGet() / DRIVE_TICKS_PER_DEG), (int)usPredict(), lt1Get(), lt2Get(), millis()); }
 void printDrv() {
     printf("d %d/%d %d/%d dt %d/%d %d/%d ", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)DLturn_pid.sensVal, (int)DLturn_pid.target, (int)DRturn_pid.sensVal, (int)DRturn_pid.target);
     printf("ds %d/%d %d/%d t %ld ", (int)DLshort_pid.sensVal, (int)DLshort_pid.target, (int)DRshort_pid.sensVal, (int)DRshort_pid.target, millis());
@@ -172,7 +166,7 @@ void printEnc_all() {
     printDrv();
     printMGL();
     printDRFBFB();
-    printf("us %d %d lt %d\n", (int)usPredict(1), (int)usPredict(2), lt1Get());
+    printf("us %d lt %d\n", (int)usPredict(), lt1Get());
 }
 /*
 ##     ##  ######     ########  ########  ######## ########  ####  ######  ########
@@ -192,7 +186,7 @@ PRECONDITION: usPredicted set to 0 before first function call
 */
 double usPredict() {
     static int prevSens = 0;
-    int curSens = us2Get();
+    int curSens = usGet();
     if (curSens > 0) prevSens = curSens;
     return prevSens;
 }
@@ -259,7 +253,7 @@ void autoSelect() {
 
 unsigned long pipeDriveT0 = 0;
 bool pipeDrive() {
-    if (usPredict(2) > 5) pipeDriveT0 = millis();
+    if (usPredict() > 5) pipeDriveT0 = millis();
     if (millis() - pipeDriveT0 < 100) {
         setDL(127);
         setDR(127);

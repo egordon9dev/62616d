@@ -11,10 +11,8 @@
 #define DRIVE_L_ENC_B 2
 #define DRIVE_R_ENC_B 3
 #define DRIVE_R_ENC_T 4
-#define US1_IN 5
-#define US1_OUT 6
-#define US2_IN 7
-#define US2_OUT 8
+#define US_IN 7
+#define US_OUT 8
 
 //------- Analog -------
 #define MGL_POT 1
@@ -74,8 +72,8 @@ extern double fbUpP;
 #define MGL_ACTIVE2 47
 // mgl max put down s0ft = 123.5
 #define LT_LIGHT -1000
-#define US2_CONE_GRAB_DIST 13
-#define US2_MGL 9
+#define US_CONE_GRAB_DIST 13
+#define US_MGL 9
 /*
 MG_MID - 10 -->  fb:    91
 MG_MID      -->         69
@@ -132,10 +130,8 @@ void printEnc_pidDrive();
 void printEnc_pidDriveShort();
 void printEnc_pidDRFBFB();
 void printEnc_all();
-void printUs();
 void setupLCD();
-// extern unsigned long us1Predicted, us2Predicted;
-double usPredict(int sensNum);
+double usPredict();
 
 double myAsin(double d);
 

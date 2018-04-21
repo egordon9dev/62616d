@@ -32,7 +32,7 @@ Slew DR_slew = {.a = 1.2, .out = 0.0, .prevTime = 0}; /*
   Slew DL_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};
   Slew DR_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};*/
 PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX, .iActiveZone = 0.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
-PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 127, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 6.0, .ki = 0.01, .kd = 80.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
+PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 127, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 6.0, .ki = 0.01, .kd = 400.0 /*80*/, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 // agressive PID mostly for autonomous
 PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 40, .iActiveZone = 12.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.01, .kd = 420, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 // weaker PID for opcontrol
@@ -186,15 +186,21 @@ bool pidDRFB(double a, unsigned long wait, bool auton) {  // set drfb angle with
     return false;
 }
 bool pidMGL(double a, unsigned long wait) {  // set mgl angle with PID
+    static unsigned long t0;
+    static double prevTarget = -999;
     mgl_pid.target = a;
     mgl_pid.sensVal = mglGet();
-    double out = limInt(updatePID(&mgl_pid), -127, 127);
+    double out = limInt(updatePID(&mgl_pid), -127, 127);  // KEEP this HERE: it updates mgl_pid.deriv so we can use it elswhere even if not really using pid
+    if (fabs(a - prevTarget) > 0.001) t0 = millis();
+    prevTarget = a;
+    bool mglStall = false;
+    if (millis() - t0 > 350 && fabs((mgl_pid.deriv) / (mgl_pid.kd)) < 0.06) mglStall = true;
     if (a <= 8) {
-        setMGL(-80);
+        setMGL(mglStall ? -40 : -127);
     } else if (a >= MGL_DOWN_POS - 8) {
-        setMGL(127);
+        setMGL(mglStall ? 40 : 127);
     } else {
-        setMGL(out);
+        setMGL(mglStall ? limInt(out, -40, 40) : out);
     }
     if (mgl_pid.doneTime + wait < millis()) return true;
     return false;

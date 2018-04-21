@@ -248,13 +248,14 @@ void controllerTest() {
 #include "auto.h"
 void operatorControl() {
     if (1) {
-        while (0) {
-            lcdPrint(LCD, 1, "%d %d %d %d", joystickGetAnalog(1, 4), joystickGetAnalog(1, 3), joystickGetAnalog(1, 1), joystickGetAnalog(1, 2));
-            lcdPrint(LCD, 2, "%d %d %d %d", joystickGetAnalog(2, 4), joystickGetAnalog(2, 3), joystickGetAnalog(2, 1), joystickGetAnalog(2, 2));
+        while (1) {
+            pidMGL(MGL_DOWN_POS, 999999);
+            printf("mgl %d mgl' %lf\n", (int)mglGet(), (mgl_pid.deriv) / (mgl_pid.kd));
             delay(5);
         }
         while (0) {
-            printUs();
+            lcdPrint(LCD, 1, "%d %d %d %d", joystickGetAnalog(1, 4), joystickGetAnalog(1, 3), joystickGetAnalog(1, 1), joystickGetAnalog(1, 2));
+            lcdPrint(LCD, 2, "%d %d %d %d", joystickGetAnalog(2, 4), joystickGetAnalog(2, 3), joystickGetAnalog(2, 1), joystickGetAnalog(2, 2));
             delay(5);
         }
         while (1) {
