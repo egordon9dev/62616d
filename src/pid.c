@@ -32,14 +32,14 @@ Slew DR_slew = {.a = 1.2, .out = 0.0, .prevTime = 0}; /*
   Slew DL_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};
   Slew DR_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};*/
 PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX, .iActiveZone = 0.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
-// weaker PID for opcontrol
-PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 30, .iActiveZone = 10.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 2.2, .ki = 0.006, .kd = 100, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 127, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 6.0, .ki = 0.01, .kd = 80.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 // agressive PID mostly for autonomous
 PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 40, .iActiveZone = 12.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.01, .kd = 420, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
+// weaker PID for opcontrol
+PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 40, .iActiveZone = 12.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.01, .kd = 420, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 #define FBKP 3.0
 #define FBKI 0.03
-#define FBKD 200
+#define FBKD 270  // 200
 #define FBDZ 8
 #define FBIA 10
 PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = FBDZ, .maxIntegral = 40, .iActiveZone = FBIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = FBKP, .ki = FBKI, .kd = FBKD, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};  // 1.8, 0.01, 175.0

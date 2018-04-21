@@ -21,9 +21,21 @@ todo:
  #######  ##        ########  ##     ##    ##    ########    ######## #### ##          ##
 */
 unsigned long opT0;
-bool prev7u = false, prev7d = false, liftingDrfbMgl = false;
-void updateLift() {
-    if (curSetDownStack) return;
+bool prev7u = false, prev7d = false, liftingDrfbMgl = false; /*
+ unsigned long prevFbT = 0;
+ double prevFb = -1;*/
+void updateLift() {                                          /*
+                                              if (curSetDownStack) return;
+                                              double fbDt = millis() - prevFbT, fbVel;
+                                              prevFbT = millis();
+                                              double curFb = fbGet();
+                                              if (fbDt == 0 || fbDt > 30 || prevFb < 0) {
+                                                  fbVel = 0.0;
+                                              } else {
+                                                  fbVel = (curFb - prevFb) / fbDt;
+                                              }
+                                              prevFb = curFb;*/
+
     lcdPrint(LCD, 1, "fb %d drfb %d", (int)fbGet(), (int)drfbGet());
     if (joystickGetDigital(2, 8, JOY_DOWN)) {
         DL_slew.a = 0.3;
@@ -235,7 +247,7 @@ void controllerTest() {
 */
 #include "auto.h"
 void operatorControl() {
-    if (0) {
+    if (1) {
         while (0) {
             lcdPrint(LCD, 1, "%d %d %d %d", joystickGetAnalog(1, 4), joystickGetAnalog(1, 3), joystickGetAnalog(1, 1), joystickGetAnalog(1, 2));
             lcdPrint(LCD, 2, "%d %d %d %d", joystickGetAnalog(2, 4), joystickGetAnalog(2, 3), joystickGetAnalog(2, 1), joystickGetAnalog(2, 2));
@@ -245,7 +257,7 @@ void operatorControl() {
             printUs();
             delay(5);
         }
-        while (0) {
+        while (1) {
             printEnc();
             delay(50);
         }

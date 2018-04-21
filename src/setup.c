@@ -190,27 +190,11 @@ this is meant to compensate for the 50 ms gap between us sensor updates
 
 PRECONDITION: usPredicted set to 0 before first function call
 */
-double usPredict(int sensNum) {
-    static int prevSens1 = 0, prevSens2 = 0;
-    static unsigned long prevT1 = 0, prevT2 = 0;
-    static double slope1 = 0.0, slope2 = 0.0;
-    int* prevSens = sensNum == 1 ? &prevSens1 : &prevSens2;
-    double* slope = sensNum == 1 ? &slope1 : &slope2;
-    unsigned long* prevT = sensNum == 1 ? &prevT1 : &prevT2;
-
-    int curSens = sensNum == 1 ? us1Get() : us2Get();
-    unsigned long curT = millis();
-    double dt = curT - (*prevT);
-    if ((curSens != *prevSens || dt >= 5) && curSens > 0 && dt > 0) {
-        *slope = dt > 200 ? 0.0 : (double)(curSens - (*prevSens)) / dt;
-        *prevSens = curSens;
-        *prevT = curT;
-    }
-    dt = curT - (*prevT);  // update afterwards
-    // sudden changes in us values mess up Euler's method
-    double predict = (*prevSens);  // + 0.5 * (*slope) * dt;
-    if (predict < 0.0) predict = 0.0;
-    return predict;
+double usPredict() {
+    static int prevSens = 0;
+    int curSens = us2Get();
+    if (curSens > 0) prevSens = curSens;
+    return prevSens;
 }
 /*
     ###    ##     ## ########  #######      ######  ######## ##       ########  ######  ########
