@@ -249,15 +249,7 @@ void operatorControl() {
             printEnc();
             delay(50);
         }
-        if (0) {
-            while (1) {
-                pidMGL(MGL_DOWN_POS, 999999);
-                // syncDRFBFB();
-                printEnc_pidDRFBFB();
-                delay(5);
-            }
-        }
-        if (0) {
+        if (1) {
             for (int i = 15; i > 0; i--) {
                 delay(200);
                 printf("%d\n", i);
@@ -272,12 +264,8 @@ void operatorControl() {
             }
             while (true) delay(5);
         }
-        while (0) {
-            printf("%d\n", (int)mglGet());
-            delay(5);
-        }
         if (0) { test(4); }
-        if (1) {
+        if (0) {
             settingDownStack = false;
             while (!setDownStack()) {
                 printEnc();
@@ -286,16 +274,13 @@ void operatorControl() {
             resetMotors();
             while (true) delay(5);
         }
-        if (0) {
-            while (!scoreMG(true, 20)) delay(5);
-            resetMotors();
-            while (true) delay(20);
-        }
     }
     // shutdownSens();
     opT0 = millis();
     unsigned long tMglOff = 0;
-    double mglHoldAngle = 0;
+    double mglHoldAngle = mglGet();
+    drfbHoldAngle = drfbGet();
+    fbHoldAngle = fbGet();
     bool mglPidRunning = false;
     printf("\n\nOPERATOR CONTROL\n\n");
     DL_slew.a = 1.0;
@@ -332,6 +317,10 @@ void operatorControl() {
             mglHoldAngle = MGL_DOWN_POS;
             drfbPidRunning = true;
             liftingDrfbMgl = true;
+        } else if (joystickGetDigital(1, 5, JOY_UP)) {
+            mglPidRunning = false;
+            curSetDownStack = false;
+            tMglOff = LONG_MAX;
         } else if (joystickGetDigital(1, 5, JOY_DOWN) || curSetDownStack) {
             if (prevDrv < 80) {
                 if (drfbGet() > DRFB_MGL_ACTIVE + 5 && drfbGet() > drfba[2][1] + 3 && !prevSetDownStack) {
@@ -346,10 +335,6 @@ void operatorControl() {
                 drfbPidRunning = true;
                 drfbHoldAngle = drfbGet();
             }
-        } else if (joystickGetDigital(1, 5, JOY_UP)) {
-            mglPidRunning = false;
-            curSetDownStack = false;
-            tMglOff = LONG_MAX;
         } else if (!mglPidRunning && (long)millis() - (long)tMglOff > 350L) {
             mglPidRunning = true;
             mglHoldAngle = mglGet();

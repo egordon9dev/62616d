@@ -215,12 +215,14 @@ bool strictPidMGL(double a, unsigned long wait) {  // set mgl angle with PID
 ##    ## ##          ##       ##     ## ##     ## ##  ##  ## ##   ###    ##    ##    ##    ##     ## ##    ## ##   ##
  ######  ########    ##       ########   #######   ###  ###  ##    ##     ######     ##    ##     ##  ######  ##    ##
 */
-bool settingDownStack = false;
-/* PRECONDITIONS:
+
+/*
+PRECONDITIONS:
 -settingDownStack set to false before starting
 -at least 3 cones stacked on MG in robot
 */
-double daSDS = 0;
+double daSDS = 0.0;
+bool settingDownStack = false;
 bool setDownStack() {
     if (joystickGetDigital(2, 8, JOY_LEFT)) {
         setDRFB(0);
@@ -229,12 +231,12 @@ bool setDownStack() {
     }
     static int i = 0, prevI;
     static unsigned long prevT, t0 = 0;
-    static double h = 0.0;
+    static double prevSens[3] = {0, 0, 0};
+    static unsigned long prevMGLVUpT = 0;
+    double h = 0.0;
     if (settingDownStack == false) {
         i = 0;
         settingDownStack = true;
-        h = sin((M_PI / 180.0) * (drfbGet() - DRFB_HORIZONTAL));
-        h = limDouble(h, -1.0, 1.0);
         mgl_pid.doneTime = LONG_MAX;
     }
     bool allowRepeat = true;
@@ -243,18 +245,30 @@ bool setDownStack() {
         int j = 0;
         if (i == j++) {
             prevI = i;
-            daSDS = DRFB_HORIZONTAL + (180.0 / M_PI) * myAsin(h - 0.03);
-            if (daSDS < DRFB_MGL_ACTIVE + 5) daSDS = DRFB_MGL_ACTIVE + 5;
             mgl_pid.doneTime = LONG_MAX;
             syncingDRFBFB = false;
+            h = sin((M_PI / 180.0) * (drfbGet() - DRFB_HORIZONTAL));
+            h = limDouble(h, -1.0, 1.0);
             i++;
         } else if (i == j++) {
             printf("lwrMgl ");
-            fb_pid_auto.target = FB_MID_POS - 15;
-            fb_pid_auto.sensVal = fbGet();
             // sync up fb and mgl
             syncDRFBFB();
-            if (strictPidMGL(MGL_DOWN_POS, 0)) {
+            double v1 = prevSens[1] - prevSens[0], v2 = prevSens[2] - prevSens[1], v3 = mglGet() - prevSens[2];
+            if (prevSens[0] == 0 || prevSens[1] == 0 || prevSens[2] == 0) {
+                v1 = 999;
+                v2 = 999;
+                v3 = 999;
+            }
+            double vAvg = (v1 + v2 + v3) / 3.0;
+            if (millis() - prevMGLVUpT > 25) {
+                prevSens[0] = prevSens[1];
+                prevSens[1] = prevSens[2];
+                prevSens[2] = mglGet();
+                prevMGLVUpT = millis();
+            }
+            printf("mglV %lf ", vAvg);
+            if (strictPidMGL(MGL_DOWN_POS, 0) || (mglGet() > MGL_MID_POS - 10 && vAvg < 0.5)) {
                 daSDS = DRFB_HORIZONTAL + (180.0 / M_PI) * myAsin(h - 0.65);
                 if (daSDS < DRFB_ENDPT_DOWN) daSDS = DRFB_ENDPT_DOWN;
                 t0 = millis();
@@ -262,20 +276,14 @@ bool setDownStack() {
             }
         } else if (i == j++) {
             pidMGL(MGL_DOWN_POS, 999999);
-            if (fbGet() < FB_UP_POS - 35) {
-                if (((millis() - t0) / 80UL) % 3 == 2) {
-                    setDRFB(127);
-                } else {
-                    setDRFB(-127);
-                }
-            } else if (drfbGet() > daSDS + 5) {
+            if (drfbGet() > daSDS + 5) {
                 setDRFBUnlim(-127);
             } else {
                 drfb_pid_auto.sensVal = drfbGet();
                 drfb_pid_auto.target = daSDS;
                 setDRFBUnlim(updatePID(&drfb_pid_auto));
             }
-            if (fbGet() < FB_UP_POS - 10) {
+            if (fbGet() < FB_UP_POS - 5) {
                 setFB(127);
             } else {
                 pidFB(FB_UP_POS, 999999, true);

@@ -85,8 +85,8 @@ void setFB(int n) {
 }
 void setMGL(int n) {  //	set mobile goal lift
     limMotorVal(&n);
-    // when drfb is down only allow holding MG up
-    if (drfbGet() < DRFB_MGL_ACTIVE && !(mglGet() < MGL_MIN && n < 0)) n = 0;
+    // when drfb is down limit mgl movement to certain cases
+    if (drfbGet() < DRFB_MGL_ACTIVE && !(mglGet() < MGL_MIN && n < 0) && !(mglGet() > MGL_ACTIVE2 && drfbGet() > DRFB_MGL_ACTIVE2 && n > 0)) n = 0;
     int maxD = 24, maxU = 22;
     if (mglGet() > MGL_MAX) {
         if (n >= 0) n = maxD;
@@ -201,13 +201,14 @@ double usPredict(int sensNum) {
     int curSens = sensNum == 1 ? us1Get() : us2Get();
     unsigned long curT = millis();
     double dt = curT - (*prevT);
-    if ((curSens != *prevSens || dt >= 100) && curSens > 0) {
+    if ((curSens != *prevSens || dt >= 5) && curSens > 0 && dt > 0) {
         *slope = dt > 200 ? 0.0 : (double)(curSens - (*prevSens)) / dt;
         *prevSens = curSens;
         *prevT = curT;
     }
     dt = curT - (*prevT);  // update afterwards
-    double predict = (*prevSens) + 0.8 * (*slope) * dt;
+    // sudden changes in us values mess up Euler's method
+    double predict = (*prevSens);  // + 0.5 * (*slope) * dt;
     if (predict < 0.0) predict = 0.0;
     return predict;
 }

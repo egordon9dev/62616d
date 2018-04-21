@@ -62,6 +62,7 @@ extern double fbUpP;
 #define DRFB_LDR_UP 66
 #define DRFB_LDR_DOWN 38
 #define DRFB_MGL_ACTIVE 19
+#define DRFB_MGL_ACTIVE2 16
 
 // mgl angles
 #define MGL_MAX 109  // 120
@@ -70,8 +71,10 @@ extern double fbUpP;
 #define MGL_MID_POS 75
 #define MGL_UP_POS 0
 #define MGL_VERT 41
+#define MGL_ACTIVE2 47
 // mgl max put down s0ft = 123.5
 #define LT_LIGHT -1000
+#define US2_CONE_GRAB_DIST 13
 /*
 MG_MID - 10 -->  fb:    91
 MG_MID      -->         69
@@ -154,7 +157,7 @@ btn7L:      ----                flipCone
 btn7U:      pipeDrive2          incFbUp
 btn7R:      ----                resetFbUp
 btn7D:      pipeDrive           decFbUp
-btn8L:      mglAutoMid          ----
+btn8L:      mglAutoMid          canclSetDwnStk
 btn8U:      mglManualUp         ----
 btn8R:      mglAutoUp           ----
 btn8D:      mglManualDown       limitDrive
