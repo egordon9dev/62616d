@@ -23,6 +23,7 @@ todo:
 unsigned long opT0;
 bool prev7u = false, prev7d = false, liftingDrfbMgl = false;
 void updateLift() {
+    if (curSetDownStack) return;
     if (joystickGetDigital(2, 8, JOY_DOWN)) {
         DL_slew.a = 0.3;
         DR_slew.a = 0.3;
@@ -47,7 +48,7 @@ void updateLift() {
     }
     prev7u = cur7u;
     prev7d = cur7d;
-    if (joystickGetDigital(2, 8, JOY_UP)) {
+    if (0) {
         autoStack(1, 12);
         fbHoldAngle = FB_UP_POS;
         fbPidRunning = true;
@@ -72,11 +73,6 @@ void updateLift() {
         } else if (joystickGetDigital(2, 6, JOY_UP)) {
             fbHoldAngle = FB_HALF_UP_POS;
             fbPidRunning = true;
-        } else if (joystickGetDigital(2, 7, JOY_LEFT)) {
-            fbHoldAngle = FB_FLIP_POS;
-            fbPidRunning = true;
-            drfbHoldAngle = DRFB_FLIP_POS;
-            drfbPidRunning = true;
         } else if (millis() - tFbOff > 300) {
             if (!fbPidRunning) {
                 fbHoldAngle = fbGet();
@@ -86,7 +82,7 @@ void updateLift() {
             setFB(0);
         }
         if (fbPidRunning) {
-            if (fbHoldAngle < FB_MIN_HOLD_ANGLE) fbHoldAngle = FB_MIN_HOLD_ANGLE;
+            // if (fbHoldAngle < FB_MIN_HOLD_ANGLE) fbHoldAngle = FB_MIN_HOLD_ANGLE;
             fb_pid.sensVal = fbGet();
             fb_pid.target = fbHoldAngle;
             setFB(updatePID(&fb_pid));
@@ -212,12 +208,21 @@ void test(int n) {
     }
     while (true) { delay(999); }
 }
-void controllerTest() {
+void testStall() {
     while (true) {
-        if (joystickGetDigital(1, 8, JOY_UP)) {
-            lcdSetText(LCD, 1, "    1    \n");
-        } else if (joystickGetDigital(2, 8, JOY_UP)) {
-            lcdSetText(LCD, 1, "    2    \n");
+        if (0) {
+            setFB(-127);
+            printf("fb %d fb' %lf\n", (int)fbGet(), -(fb_pid_auto.deriv) / (fb_pid_auto.kd));
+        }
+        if (1) {
+            double us = usPredict();
+            setDL(45 + us);
+            setDR(45 + us);
+            printf("DL' %lf DR' %lf us %d\n", (DL_pid.deriv) / (DL_pid.kd), (DR_pid.deriv) / (DR_pid.kd), (int)us);
+        }
+        if (0) {
+            pidMGL(MGL_DOWN_POS, 999999);
+            printf("mgl %d mgl' %lf\n", (int)mglGet(), -(mgl_pid.deriv) / (mgl_pid.kd));
         }
         delay(5);
     }
@@ -233,17 +238,10 @@ void controllerTest() {
 */
 #include "auto.h"
 void operatorControl() {
-    if (1) {
-        while (1) {
-            setDL(127);
-            setDR(127);
-            printf("DL' %lf DR' %lf\n", (DL_pid.deriv) / (DL_pid.kd), (DR_pid.deriv) / (DR_pid.kd));
-            delay(5);
-        }
-        while (1) {
-            pidMGL(MGL_DOWN_POS, 999999);
-            printf("mgl %d mgl' %lf\n", (int)mglGet(), (mgl_pid.deriv) / (mgl_pid.kd));
-            delay(5);
+    if (0) {
+        if (0) {
+            testStall();
+            while (1) delay(50);
         }
         while (0) {
             lcdPrint(LCD, 1, "%d %d %d %d", joystickGetAnalog(1, 4), joystickGetAnalog(1, 3), joystickGetAnalog(1, 1), joystickGetAnalog(1, 2));
@@ -254,7 +252,7 @@ void operatorControl() {
             printEnc();
             delay(50);
         }
-        if (1) {
+        if (0) {
             for (int i = 15; i > 0; i--) {
                 delay(200);
                 printf("%d\n", i);
@@ -270,7 +268,7 @@ void operatorControl() {
             while (true) delay(5);
         }
         if (0) { test(4); }
-        if (0) {
+        if (1) {
             settingDownStack = false;
             while (!setDownStack()) {
                 printEnc();
@@ -294,7 +292,7 @@ void operatorControl() {
     while (true) {
         // printEnc();
         updateLift();
-        lcdPrint(LCD, 1, "DL' %3.2f DR' %3.2f\n", (DL_pid.deriv) / (DL_pid.kd), (DR_pid.deriv) / (DR_pid.kd));
+        // lcdPrint(LCD, 1, "DL' %3.2f DR' %3.2f\n", (DL_pid.deriv) / (DL_pid.kd), (DR_pid.deriv) / (DR_pid.kd));
         //----- mobile-goal lift -----//
         if (joystickGetDigital(1, 8, JOY_RIGHT) || joystickGetDigital(1, 6, JOY_UP)) {
             mglPidRunning = true;
@@ -327,20 +325,19 @@ void operatorControl() {
             mglPidRunning = false;
             curSetDownStack = false;
             tMglOff = LONG_MAX;
+            stopMGL();
         } else if (joystickGetDigital(1, 5, JOY_DOWN) || curSetDownStack) {
-            if (prevDrv < 80) {
-                if (drfbGet() > DRFB_MGL_ACTIVE + 5 && drfbGet() > drfba[2][1] + 3 && !prevSetDownStack) {
-                    settingDownStack = false;
-                    curSetDownStack = true;
-                }
-                if (curSetDownStack && setDownStack()) curSetDownStack = false;
-                mglPidRunning = true;
-                mglHoldAngle = mglGet();
-                fbPidRunning = true;
-                fbHoldAngle = fbGet();
-                drfbPidRunning = true;
-                drfbHoldAngle = drfbGet();
+            if (drfbGet() > DRFB_MGL_ACTIVE + 5 && drfbGet() > drfba[2][1] + 3 && !prevSetDownStack) {
+                settingDownStack = false;
+                curSetDownStack = true;
             }
+            if (curSetDownStack && setDownStack()) curSetDownStack = false;
+            mglPidRunning = true;
+            mglHoldAngle = mglGet();
+            fbPidRunning = true;
+            fbHoldAngle = fbGet();
+            drfbPidRunning = true;
+            drfbHoldAngle = drfbGet();
         } else if (!mglPidRunning && (long)millis() - (long)tMglOff > 350L) {
             mglPidRunning = true;
             mglHoldAngle = mglGet();

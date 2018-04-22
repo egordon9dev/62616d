@@ -37,13 +37,13 @@
 #define M4_5 9
 
 // fb angles
-#define FB_MAX 145                                         // 152
-#define FB_MIN 15                                          // -13
-#define FB_MIN_HOLD_ANGLE (drfbGet() <= 7 ? 20 : -999999)  // <------ keep these parentheses!
+#define FB_MAX 145  // 152
+#define FB_MIN 15   // -13
+//#define FB_MIN_HOLD_ANGLE (drfbGet() <= 7 ? 20 : -999999)  // <------ keep these parentheses!
 extern double fbUpP;
 #define FB_UP_P0 146  // 154
 #define FB_HALF_UP_POS (fbUpP - 38)
-#define FB_UP_POS (limDouble(fbUpP + drfbGet() * (6.0 / 119.0), 0.0, 154.0))
+#define FB_UP_POS (limDouble(fbUpP + drfbGet() * 0.055, 0.0, 154.0))
 #define FB_MID_POS 65
 #define FB_FLIP_POS 78
 #define FB_CLEAR_OF_STACK 105
@@ -150,12 +150,12 @@ j4:         ----                ----
 j3:         drive               fb
 j1:         turn                ----
 j2:         ----                drfb
-btn7L:      ----                flipCone
-btn7U:      pipeDrive2          incFbUp
+btn7L:      ----                canclSetDwnStk
+btn7U:      ----                incFbUp
 btn7R:      ----                resetFbUp
 btn7D:      pipeDrive           decFbUp
 btn8L:      mglAutoMid          canclSetDwnStk
-btn8U:      mglManualUp         ----
+btn8U:      mglManualUp         boostDrive
 btn8R:      mglAutoUp           ----
 btn8D:      mglManualDown       limitDrive
 btn5U:      stopMglPid          fbAutoUp

@@ -32,7 +32,7 @@ Slew DR_slew = {.a = 1.2, .out = 0.0, .prevTime = 0}; /*
   Slew DL_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};
   Slew DR_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};*/
 PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX, .iActiveZone = 0.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
-PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 127, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 6.0, .ki = 0.01, .kd = 400.0 /*80*/, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
+PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 127, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 6.0, .ki = 0.01, .kd = 600.0 /*80*/, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 // agressive PID mostly for autonomous
 PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 40, .iActiveZone = 12.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.01, .kd = 420, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 // weaker PID for opcontrol
@@ -186,20 +186,15 @@ bool pidDRFB(double a, unsigned long wait, bool auton) {  // set drfb angle with
     return false;
 }
 bool pidMGL(double a, unsigned long wait) {  // set mgl angle with PID
-    static unsigned long t0;
-    static double prevTarget = -999;
     mgl_pid.target = a;
     mgl_pid.sensVal = mglGet();
     double out = limInt(updatePID(&mgl_pid), -127, 127);  // KEEP this HERE: it updates mgl_pid.deriv so we can use it elswhere even if not really using pid
-    if (fabs(a - prevTarget) > 0.001) t0 = millis();
-    prevTarget = a;
-    bool mglStall = millis() - t0 > 350 && fabs((mgl_pid.deriv) / (mgl_pid.kd)) < 0.06;
     if (a <= 8) {
-        setMGL(mglStall ? -40 : -127);
+        setMGL(-127);
     } else if (a >= MGL_DOWN_POS - 8) {
-        setMGL(mglStall ? 40 : 127);
+        setMGL(127);
     } else {
-        setMGL(mglStall ? limInt(out, -40, 40) : out);
+        setMGL(out);
     }
     if (mgl_pid.doneTime + wait < millis()) return true;
     return false;
@@ -229,15 +224,13 @@ PRECONDITIONS:
 double daSDS = 0.0;
 bool settingDownStack = false;
 bool setDownStack() {
-    if (joystickGetDigital(2, 8, JOY_LEFT)) {
+    if (joystickGetDigital(2, 8, JOY_LEFT) || joystickGetDigital(2, 7, JOY_LEFT)) {
         setDRFB(0);
         setFB(0);
         return true;
     }
     static int i = 0, prevI;
     static unsigned long prevT, t0 = 0;
-    static double prevSens[3] = {0, 0, 0};
-    static unsigned long prevMGLVUpT = 0;
     double h = 0.0;
     if (settingDownStack == false) {
         i = 0;
@@ -259,21 +252,9 @@ bool setDownStack() {
             printf("lwrMgl ");
             // sync up fb and mgl
             syncDRFBFB();
-            double v1 = prevSens[1] - prevSens[0], v2 = prevSens[2] - prevSens[1], v3 = mglGet() - prevSens[2];
-            if (prevSens[0] == 0 || prevSens[1] == 0 || prevSens[2] == 0) {
-                v1 = 999;
-                v2 = 999;
-                v3 = 999;
-            }
-            double vAvg = (v1 + v2 + v3) / 3.0;
-            if (millis() - prevMGLVUpT > 25) {
-                prevSens[0] = prevSens[1];
-                prevSens[1] = prevSens[2];
-                prevSens[2] = mglGet();
-                prevMGLVUpT = millis();
-            }
-            printf("mglV %lf ", vAvg);
-            if (strictPidMGL(MGL_DOWN_POS, 0) || (mglGet() > MGL_MID_POS - 10 && vAvg < 0.5)) {
+            mgl_pid.sensVal = mglGet();
+            updatePID(&mgl_pid);
+            if (strictPidMGL(MGL_DOWN_POS, 0) || (mglGet() > MGL_MID_POS - 10 && -(mgl_pid.deriv) / (mgl_pid.kd) < 0.06)) {
                 daSDS = DRFB_HORIZONTAL + (180.0 / M_PI) * myAsin(h - 0.65);
                 if (daSDS < DRFB_ENDPT_DOWN) daSDS = DRFB_ENDPT_DOWN;
                 t0 = millis();
@@ -281,8 +262,13 @@ bool setDownStack() {
             }
         } else if (i == j++) {
             pidMGL(MGL_DOWN_POS, 999999);
-            if (drfbGet() > daSDS + 5) {
-                setDRFBUnlim(-127);
+            int spin = ((millis() - t0) / 400) % 2;
+            if (fbGet() < FB_UP_POS - 10) {
+                if (spin == 0) {
+                    setDRFBUnlim(-50);
+                } else {
+                    setDRFBUnlim(-25);
+                }
             } else {
                 drfb_pid_auto.sensVal = drfbGet();
                 drfb_pid_auto.target = daSDS;
@@ -297,7 +283,7 @@ bool setDownStack() {
             fb_pid_auto.target = FB_UP_POS;  // 22
             fb_pid_auto.sensVal = fbGet();
             setFB(limInt((int)updatePID(&fb_pid_auto), -127, 127));*/
-            if (drfbGet() < daSDS + 8.0 && fbGet() > FB_UP_POS - 21) {
+            if (drfbGet() < daSDS + 8.0 && fbGet() > FB_UP_POS - 8) {
                 printf("stkDwn ");
                 return true;
             }
@@ -309,7 +295,7 @@ bool setDownStack() {
         }
         prevI = i;
         // safety first (ptc tripped or robot got stuck)
-        if (millis() - prevT > 2000) return true;
+        if (millis() - prevT > 3000) return true;
     }
     return false;
 } /*

@@ -45,11 +45,11 @@ void setDL(int n) {  //	set right drive motors
         t0 = millis();
         prevN = n;
     }
-    bool stall = millis() - t0 > 350 && fabs((DL_pid.deriv) / (DL_pid.kd)) < 0.2;
-    int max = stall ? 35 : 127;
+    bool stall = (isAutonomous() ? true : !joystickGetDigital(2, 8, JOY_UP)) && millis() - t0 > 800 && fabs((DL_pid.deriv) / (DL_pid.kd)) < 0.2;
+    int max = stall ? 45 : 127;
     n = limInt(n, -max, max);
     n = updateSlew(&DL_slew, n);
-    printf("DL %d ", n);
+    printf("L%d ", n);
     motorSet(M3, n);
     motorSet(M4_5, n);
 }
@@ -62,11 +62,11 @@ void setDR(int n) {  //	set left drive motors
         t0 = millis();
         prevN = n;
     }
-    bool stall = millis() - t0 > 350 && fabs((DR_pid.deriv) / (DR_pid.kd)) < 0.2;
-    int max = stall ? 35 : 127;
+    bool stall = (isAutonomous() ? true : !joystickGetDigital(2, 8, JOY_UP)) && millis() - t0 > 800 && fabs((DR_pid.deriv) / (DR_pid.kd)) < 0.2;
+    int max = stall ? 45 : 127;
     n = limInt(n, -max, max);
     n = updateSlew(&DR_slew, n);
-    printf("DR %d ", n);
+    printf("R%d ", n);
     motorSet(M0, -n);
     motorSet(M1_2, -n);
 }
@@ -96,17 +96,41 @@ void setDRFBUnlim(int n) {  //	set main drfb lift
 }
 
 void setFB(int n) {
-    limMotorVal(&n);
+    static unsigned long t0;
+    static int prevN = -999;
+    fb_pid_auto.sensVal = fbGet();
+    updatePID(&fb_pid_auto);
+    if (abs(n - prevN) > 10) {
+        t0 = millis();
+        prevN = n;
+    }
+    double fbVel = -(fb_pid_auto.deriv) / (fb_pid_auto.kd);
+    bool stall = millis() - t0 > 400 && ((n < 0 && fbVel > -0.12) || (n > 0 && fbVel < 0.12));
+    int maxStall = stall ? 30 : 127;
+    n = limInt(n, -maxStall, maxStall);
     int max = 20;
+    lcdPrint(LCD, 1, "f%d ", n);
     double fbA = fbGet();
     if (fbA > FB_MAX && n > max) n = max;
     if (fbA < FB_MIN && n < -max) n = -max;
-    if (fbA < FB_MIN_HOLD_ANGLE && n < 0) n = 0;
+    // if (fbA < FB_MIN_HOLD_ANGLE && n < 0) n = 0;
     n = updateSlew(&fb_slew, n);
+    printf("f%d ", n);
     motorSet(M10, -n);
 }
 void setMGL(int n) {  //	set mobile goal lift
-    limMotorVal(&n);
+    static unsigned long t0;
+    static int prevN = -999;
+    mgl_pid.sensVal = mglGet();
+    updatePID(&mgl_pid);
+    if (abs(n - prevN) > 10) {
+        t0 = millis();
+        prevN = n;
+    }
+    double mglVel = -(mgl_pid.deriv) / (mgl_pid.kd);
+    bool stall = millis() - t0 > 350 && ((n < 0 && mglVel > -0.06) || (n > 0 && mglVel < 0.06));
+    int maxStall = stall ? 30 : 127;
+    n = limInt(n, -maxStall, maxStall);
     // when drfb is down limit mgl movement to certain cases
     if (drfbGet() < DRFB_MGL_ACTIVE && !(mglGet() < MGL_MIN && n < 0) && !(mglGet() > MGL_ACTIVE2 && drfbGet() > DRFB_MGL_ACTIVE2 && n > 0)) n = 0;
     int maxD = 24, maxU = 22;
@@ -117,7 +141,7 @@ void setMGL(int n) {  //	set mobile goal lift
         if (n <= 0) n = -maxU;
     }
     n = updateSlew(&mgl_slew, n);
-    printf("mgl %d ", n);
+    printf("m%d ", n);
     motorSet(M6_7, n);
 }
 void stopMGL() { motorSet(M6_7, updateSlew(&mgl_slew, 0)); }
@@ -275,14 +299,15 @@ void autoSelect() {
 
 unsigned long pipeDriveT0 = 0;
 bool pipeDrive() {
+    int pwr = 45 + usPredict();
     if (usPredict() > 5) pipeDriveT0 = millis();
     if (millis() - pipeDriveT0 < 100) {
-        setDL(127);
-        setDR(127);
+        setDL(pwr);
+        setDR(pwr);
         return false;
     } else {
-        setDL(40);
-        setDR(40);
+        setDL(pwr);
+        setDR(pwr);
         return true;
     }
 }
