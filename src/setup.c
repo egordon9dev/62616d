@@ -119,6 +119,9 @@ void setFB(int n) {
     motorSet(M10, -n);
 }
 void setMGL(int n) {  //	set mobile goal lift
+    // when drfb is down limit mgl movement to certain cases
+    if (drfbGet() < DRFB_MGL_ACTIVE && !(mglGet() < MGL_MIN && n < 0) && !(mglGet() > MGL_ACTIVE2 && drfbGet() > DRFB_MGL_ACTIVE2 && n > 0)) n = 0;
+
     static unsigned long t0;
     static int prevN = -999;
     mgl_pid.sensVal = mglGet();
@@ -131,8 +134,7 @@ void setMGL(int n) {  //	set mobile goal lift
     bool stall = millis() - t0 > 350 && ((n < 0 && mglVel > -0.06) || (n > 0 && mglVel < 0.06));
     int maxStall = stall ? 30 : 127;
     n = limInt(n, -maxStall, maxStall);
-    // when drfb is down limit mgl movement to certain cases
-    if (drfbGet() < DRFB_MGL_ACTIVE && !(mglGet() < MGL_MIN && n < 0) && !(mglGet() > MGL_ACTIVE2 && drfbGet() > DRFB_MGL_ACTIVE2 && n > 0)) n = 0;
+
     int maxD = 24, maxU = 22;
     if (mglGet() > MGL_MAX) {
         if (n >= 0) n = maxD;
@@ -192,7 +194,7 @@ int usGet() { return myUltrasonicGet(us); }
 int lt1Get() { return analogReadCalibrated(LT1); }
 int lt2Get() { return analogReadCalibrated(LT2); }
 
-void printEnc() { printf("dr4b %d fb %d mgl %d dDst %d %d dAng %d %d us %d lt %d %d t %ld\n", (int)drfbGet(), (int)fbGet(), (int)mglGet(), (int)(eDLGet() / DRIVE_TICKS_PER_IN), (int)(eDRGet() / DRIVE_TICKS_PER_IN), (int)(eDLGet() / DRIVE_TICKS_PER_DEG), (int)(eDRGet() / DRIVE_TICKS_PER_DEG), (int)usPredict(), lt1Get(), lt2Get(), millis()); }
+void printEnc() { printf("dr4b %d fb %d mgl %d dDst %d %d dAng %d %d us %d lt %d %d t %ld\n", (int)drfbGet(), (int)fbGet(), (int)mglGet(), (int)(eDLGet() / DRIVE_TICKS_PER_IN), (int)(eDRGet() / DRIVE_TICKS_PER_IN), (int)(eDLGet() / DRIVE_TICKS_PER_DEG), (int)(eDRGet() / DRIVE_TICKS_PER_DEG), usPredict(), lt1Get(), lt2Get(), millis()); }
 void printDrv() {
     printf("d %d/%d %d/%d dt %d/%d %d/%d ", (int)DL_pid.sensVal, (int)DL_pid.target, (int)DR_pid.sensVal, (int)DR_pid.target, (int)DLturn_pid.sensVal, (int)DLturn_pid.target, (int)DRturn_pid.sensVal, (int)DRturn_pid.target);
     printf("ds %d/%d %d/%d t %ld ", (int)DLshort_pid.sensVal, (int)DLshort_pid.target, (int)DRshort_pid.sensVal, (int)DRshort_pid.target, millis());
@@ -230,7 +232,7 @@ this is meant to compensate for the 50 ms gap between us sensor updates
 
 PRECONDITION: usPredicted set to 0 before first function call
 */
-double usPredict() {
+int usPredict() {
     static int prevSens = 0;
     int curSens = usGet();
     if (curSens > 0) prevSens = curSens;
@@ -321,7 +323,7 @@ bool pipeDrive() {
 ##     ##  #######     ##     #######      ######     ##    ##     ##  ######  ##    ##
 */
 
-int drfba[][2] = {{20, 0}, {27, 6}, {36, 18}, {45, 28}, {52, 37}, {61, 45}, {68, 53}, {77, 62}, {84, 69}, {92, 77}, {102, 85}, {115, 94}, {124, 103}};
+int drfba[][2] = {{23, 0}, {28, 10}, {38, 19}, {47, 29}, {55, 39}, {62, 47}, {70, 55}, {77, 62}, {86, 70}, {95, 78}, {105, 86}, {118, 95}, {124, 105}};
 /* PRECONDITIONS:
 -DRFB up
 -fb at FB_UP_POS
@@ -352,11 +354,15 @@ double myAsin(double d) { return asin(limDouble(d, -1.0, 1.0)); }
 bool liftConeQ(int q) {
     double a1 = drfba[q][0];
     pidDRFB(a1 + 7, 999999, true);
-    if (drfbGet() > a1 + 2) {
+    if (drfbGet() > a1 - 3) {
         pidFB(FB_UP_POS, 999999, true);
         if (fbGet() > FB_UP_POS - 6) return true;
     } else {
-        pidFB(FB_MID_POS, 999999, true);
+        if (drfbGet() > 5) {
+            pidFB(FB_HALF_UP_POS, 999999, true);
+        } else {
+            pidFB(FB_MID_POS, 999999, true);
+        }
     }
     return false;
 }
@@ -510,7 +516,6 @@ void opctrlDrive() {
     prevDrv = drv;
     int trn = joystickGetAnalog(1, 1);
 
-    // if (abs(drv) > 80) curSetDownStack = false;
     if (abs(drv) < 70) trn *= DRIVE_TURN_MAX / 127.0;
     drv = limInt(drv, -DRIVE_DRIVE_MAX, DRIVE_DRIVE_MAX);
     if (abs(drv) < JOY_THRESHOLD) drv = 0;

@@ -61,6 +61,7 @@ extern double fbUpP;
 #define DRFB_LDR_DOWN 38
 #define DRFB_MGL_ACTIVE 19
 #define DRFB_MGL_ACTIVE2 16
+#define DRFB_CONE_UP 28
 
 // mgl angles
 #define MGL_MAX 109  // 120
@@ -74,6 +75,7 @@ extern double fbUpP;
 #define LT_LIGHT -1000
 #define US_CONE_GRAB_DIST 13
 #define US_MGL 9
+#define US_MGL_20PT_PIPE 13
 /*
 MG_MID - 10 -->  fb:    91
 MG_MID      -->         69
@@ -131,7 +133,7 @@ void printEnc_pidDriveShort();
 void printEnc_pidDRFBFB();
 void printEnc_all();
 void setupLCD();
-double usPredict();
+int usPredict();
 
 double myAsin(double d);
 

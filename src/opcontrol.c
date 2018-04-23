@@ -5,7 +5,7 @@
 //----- updates Arm and four-Bar -----//
 unsigned long tFbOff = 0, tDrfbOff = 0;
 double fbHoldAngle = 0, drfbHoldAngle = 0;
-bool fbPidRunning = false, drfbPidRunning = false;
+bool fbPidRunning = true, drfbPidRunning = true;
 /*
 todo:
 -put line follower under cortex
@@ -215,10 +215,10 @@ void testStall() {
             printf("fb %d fb' %lf\n", (int)fbGet(), -(fb_pid_auto.deriv) / (fb_pid_auto.kd));
         }
         if (1) {
-            double us = usPredict();
+            int us = usPredict();
             setDL(45 + us);
             setDR(45 + us);
-            printf("DL' %lf DR' %lf us %d\n", (DL_pid.deriv) / (DL_pid.kd), (DR_pid.deriv) / (DR_pid.kd), (int)us);
+            printf("DL' %lf DR' %lf us %d\n", (DL_pid.deriv) / (DL_pid.kd), (DR_pid.deriv) / (DR_pid.kd), us);
         }
         if (0) {
             pidMGL(MGL_DOWN_POS, 999999);
@@ -238,7 +238,7 @@ void testStall() {
 */
 #include "auto.h"
 void operatorControl() {
-    if (0) {
+    if (1) {
         if (0) {
             testStall();
             while (1) delay(50);
@@ -248,16 +248,16 @@ void operatorControl() {
             lcdPrint(LCD, 2, "%d %d %d %d", joystickGetAnalog(2, 4), joystickGetAnalog(2, 3), joystickGetAnalog(2, 1), joystickGetAnalog(2, 2));
             delay(5);
         }
-        while (1) {
+        while (0) {
             printEnc();
             delay(50);
         }
-        if (0) {
+        if (1) {
             for (int i = 15; i > 0; i--) {
                 delay(200);
                 printf("%d\n", i);
             }
-            auton4(true, 3, true, 20);
+            auton4(true, true, 20);
         }
         if (0) {
             autoStacking = false;
@@ -268,7 +268,7 @@ void operatorControl() {
             while (true) delay(5);
         }
         if (0) { test(4); }
-        if (1) {
+        if (0) {
             settingDownStack = false;
             while (!setDownStack()) {
                 printEnc();
@@ -284,7 +284,7 @@ void operatorControl() {
     double mglHoldAngle = mglGet();
     drfbHoldAngle = drfbGet();
     fbHoldAngle = fbGet();
-    bool mglPidRunning = false;
+    bool mglPidRunning = true;
     printf("\n\nOPERATOR CONTROL\n\n");
     DL_slew.a = 1.0;
     DR_slew.a = 1.0;

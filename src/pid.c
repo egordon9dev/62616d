@@ -33,13 +33,18 @@ Slew DR_slew = {.a = 1.2, .out = 0.0, .prevTime = 0}; /*
   Slew DR_slew_auto = {.a = 1.0, .out = 0.0, .prevTime = 0};*/
 PidVars pidDef = {.doneTime = LONG_MAX, .DONE_ZONE = 10, .maxIntegral = DBL_MAX, .iActiveZone = 0.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 0.0, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 PidVars mgl_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 3, .maxIntegral = 127, .iActiveZone = 8.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 6.0, .ki = 0.01, .kd = 600.0 /*80*/, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
+#define DRFBKP 3.5
+#define DRFBKI 0.01
+#define DRFBKD 420
+#define DRFBDZ 5
+#define DRFBIA 12
 // agressive PID mostly for autonomous
 PidVars drfb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 40, .iActiveZone = 12.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.01, .kd = 420, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 // weaker PID for opcontrol
 PidVars drfb_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 5, .maxIntegral = 40, .iActiveZone = 12.0, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 3.5, .ki = 0.01, .kd = 420, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 #define FBKP 3.0
 #define FBKI 0.03
-#define FBKD 270  // 200
+#define FBKD 300  // 270
 #define FBDZ 8
 #define FBIA 10
 PidVars fb_pid_auto = {.doneTime = LONG_MAX, .DONE_ZONE = FBDZ, .maxIntegral = 40, .iActiveZone = FBIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = FBKP, .ki = FBKI, .kd = FBKD, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};  // 1.8, 0.01, 175.0
@@ -57,7 +62,7 @@ PidVars DR_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 40, .iA
 #define DSKD 130     // 80
 PidVars DLshort_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 50, .iActiveZone = 30, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DSKP, .ki = DSKI, .kd = DSKD, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
 PidVars DRshort_pid = {.doneTime = LONG_MAX, .DONE_ZONE = DDZ, .maxIntegral = 50, .iActiveZone = 30, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = DSKP, .ki = DSKI, .kd = DSKD, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};
-PidVars driveCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 5, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};  // 6, 0, 0
+PidVars driveCurve_pid = {.doneTime = LONG_MAX, .DONE_ZONE = 4, .maxIntegral = 40, .iActiveZone = DIA, .target = 0.0, .sensVal = 0.0, .prevErr = 0.0, .errTot = 0.0, .kp = 6, .ki = 0.0, .kd = 0.0, .prevTime = 0, .unwind = 0, .prevDUpdateTime = 0, .deriv = 0.0};  // 6, 0, 0
 #define TIA 35
 #define TDZ 3
 #define TKP 1.575
@@ -253,7 +258,6 @@ bool setDownStack() {
             // sync up fb and mgl
             syncDRFBFB();
             mgl_pid.sensVal = mglGet();
-            updatePID(&mgl_pid);
             if (strictPidMGL(MGL_DOWN_POS, 0) || (mglGet() > MGL_MID_POS - 10 && -(mgl_pid.deriv) / (mgl_pid.kd) < 0.06)) {
                 daSDS = DRFB_HORIZONTAL + (180.0 / M_PI) * myAsin(h - 0.65);
                 if (daSDS < DRFB_ENDPT_DOWN) daSDS = DRFB_ENDPT_DOWN;
