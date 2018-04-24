@@ -41,7 +41,7 @@
 #define FB_MIN 15   // -13
 //#define FB_MIN_HOLD_ANGLE (drfbGet() <= 7 ? 20 : -999999)  // <------ keep these parentheses!
 extern double fbUpP;
-#define FB_UP_P0 146  // 154
+#define FB_UP_P0 147  // 154
 #define FB_HALF_UP_POS (fbUpP - 38)
 #define FB_UP_POS (limDouble(fbUpP + drfbGet() * 0.055, 0.0, 154.0))
 #define FB_MID_POS 65
@@ -75,7 +75,7 @@ extern double fbUpP;
 // mgl max put down soft = 123.5
 #define LT_LIGHT -1000
 #define US_CONE_GRAB_DIST 13
-#define US_MGL 9
+#define US_MGL 7
 #define US_MGL_20PT_PIPE 13
 /*
 MG_MID - 10 -->  fb:    91
