@@ -313,6 +313,19 @@ bool pipeDrive() {
         return true;
     }
 }
+unsigned long pipeDriveFastT0 = 0;
+bool pipeDriveFast() {
+    if (usPredict() > 5) pipeDriveFastT0 = millis();
+    if (millis() - pipeDriveFastT0 < 100) {
+        setDL(127);
+        setDR(127);
+        return false;
+    } else {
+        setDL(50);
+        setDR(50);
+        return true;
+    }
+}
 /*
    ###    ##     ## ########  #######      ######  ########    ###     ######  ##    ##
   ## ##   ##     ##    ##    ##     ##    ##    ##    ##      ## ##   ##    ## ##   ##

@@ -120,6 +120,8 @@ extern int prevDrv;
 void opctrlDrive();
 extern unsigned long pipeDriveT0;
 bool pipeDrive();
+extern unsigned long pipeDriveFastT0;
+bool pipeDriveFast();
 extern bool curSetDownStack, autoStacking;
 bool stackConeQ(int q);
 bool liftConeQ(int q);
