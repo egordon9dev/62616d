@@ -120,7 +120,7 @@ void setFB(int n) {
 }
 void setMGL(int n) {  //	set mobile goal lift
     // when drfb is down limit mgl movement to certain cases
-    if (drfbGet() < DRFB_MGL_ACTIVE && !(mglGet() < MGL_MIN && n < 0) && !(mglGet() > MGL_ACTIVE2 && drfbGet() > DRFB_MGL_ACTIVE2 && n > 0)) n = 0;
+    if (drfbGet() < DRFB_MGL_ACTIVE && !(mglGet() < MGL_MIN && n < 0) && !(mglGet() > MGL_ACTIVE2 && drfbGet() > DRFB_MGL_ACTIVE2 && n > 0) && (mglGet() < MGL_ACTIVE3)) n = 0;
 
     static unsigned long t0;
     static int prevN = -999;

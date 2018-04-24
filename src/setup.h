@@ -71,7 +71,8 @@ extern double fbUpP;
 #define MGL_UP_POS 0
 #define MGL_VERT 41
 #define MGL_ACTIVE2 47
-// mgl max put down s0ft = 123.5
+#define MGL_ACTIVE3 68
+// mgl max put down soft = 123.5
 #define LT_LIGHT -1000
 #define US_CONE_GRAB_DIST 13
 #define US_MGL 9

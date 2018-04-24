@@ -178,9 +178,9 @@ void syncDRFBFB() {
     }
     double fa = FB_UP_POS - (180.0 / M_PI) * myAsin((6.5 / 9.0) * (sin((M_PI / 180.0) * (mglGet() - MGL_VERT)) + 0.656059));
     double da = DRFB_HORIZONTAL + (180.0 / M_PI) * myAsin((6.5 / 21.0) * (cos((M_PI / 180.0) * (mglGet() - MGL_VERT)) - 0.7547096) + sin((M_PI / 180.0) * (da0 - DRFB_HORIZONTAL)));
+    if (mglGet() < MGL_ACTIVE2 + 3 && da < DRFB_MGL_ACTIVE2 + 7) da = DRFB_MGL_ACTIVE2 + 7;
     pidFB(fa, 999999, true);
     pidDRFB(da, 999999, true);
-    printf("fa %d da %d ", (int)fa, (int)da);
 }
 bool pidDRFB(double a, unsigned long wait, bool auton) {  // set drfb angle with PID
     PidVars *pid = auton ? &drfb_pid_auto : &drfb_pid;

@@ -128,13 +128,15 @@ bool scoreMG(bool leftSide, int zone) {
                 pidDRFB(da, 999999, true);
                 pidFB(FB_UP_POS, 999999, true);
                 if (zone == 20) {
+                    printf("bk20 ");
                     setDR(-127);
                     setDL(-127);
-                    if (usPredict() >= US_MGL_20PT_PIPE - 1) {
+                    if (usPredict() >= (US_MGL_20PT_PIPE - 1)) {
                         setMGL(-127);
-                    } else if (usPredict() >= US_MGL_20PT_PIPE - 4) {
+                    } else if (usPredict() >= (US_MGL_20PT_PIPE - 4)) {
                         stopMGL();
                     } else {
+                        printf("mgldown ");
                         setMGL(20);
                     }
                     if (driveD < -8.0) i++;
