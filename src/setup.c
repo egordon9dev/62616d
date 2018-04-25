@@ -255,22 +255,8 @@ void autoSelect() {
     if (btn == LCD_BTN_LEFT && !(prevBtn & LCD_BTN_LEFT)) {
         autoSel.leftSide = !autoSel.leftSide;
     } else if (btn == LCD_BTN_CENTER && !(prevBtn & LCD_BTN_CENTER)) {
-        autoSel.stackH++;
-        if (autoSel.nAuton == 1) {
-            if (autoSel.stackH > 3) autoSel.stackH = 1;
-        } else if (autoSel.nAuton == 2) {
-            if (autoSel.zone == 20 && autoSel.stackH > 4) autoSel.stackH = 1;
-            if (autoSel.zone == 10 && autoSel.stackH > 4) autoSel.stackH = 1;
-            if (autoSel.zone == 5 && autoSel.stackH > 5) autoSel.stackH = 1;
-        }
+        autoSel.nAuton = 4;
     } else if (btn == LCD_BTN_RIGHT && !(prevBtn & LCD_BTN_RIGHT)) {
-        autoSel.loaderSide = !autoSel.loaderSide;
-    }
-    if (btn == (LCD_BTN_LEFT | LCD_BTN_CENTER) && prevBtn != (LCD_BTN_LEFT | LCD_BTN_CENTER)) {
-        autoSel.nAuton++;
-        if (autoSel.nAuton > 2) autoSel.nAuton = 0;
-    }
-    if (btn == (LCD_BTN_RIGHT | LCD_BTN_CENTER) && prevBtn != (LCD_BTN_RIGHT | LCD_BTN_CENTER)) {
         if (autoSel.zone == 5) {
             autoSel.zone = 10;
         } else if (autoSel.zone == 10) {
@@ -284,8 +270,8 @@ void autoSelect() {
         lcdPrint(LCD, 1, "AUTON SELECT");
         lcdSetText(LCD, 2, "--- NONE ---");
     } else {
-        lcdPrint(LCD, 1, "A %d:%d %s", autoSel.nAuton, autoSel.zone, autoSel.nAuton == 1 ? "Field" : "Loader");
-        lcdPrint(LCD, 2, " %s    C:%d    L:%s", autoSel.leftSide ? "L" : "R", autoSel.stackH, autoSel.loaderSide ? "Y" : "N");
+        lcdPrint(LCD, 1, "A %d:%d", autoSel.nAuton, autoSel.zone);
+        lcdPrint(LCD, 2, " %s", autoSel.leftSide ? "L" : "R");
     }
     prevBtn = btn;
 }

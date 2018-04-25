@@ -289,7 +289,7 @@ void operatorControl() {
     printf("\n\nOPERATOR CONTROL\n\n");
     DL_slew.a = 1.0;
     DR_slew.a = 1.0;
-    bool prevSetDownStack = false;
+    bool prevSetDownStack = false, mglSubD = false;
     while (true) {
         // printEnc();
         updateLift();
@@ -300,28 +300,33 @@ void operatorControl() {
             mglHoldAngle = MGL_UP_POS;
             drfbPidRunning = true;
             liftingDrfbMgl = true;
+            mglSubD = false;
         } else if (joystickGetDigital(1, 8, JOY_LEFT)) {
             mglPidRunning = true;
             mglHoldAngle = MGL_MID_POS - 10;
             drfbPidRunning = true;
             liftingDrfbMgl = true;
+            mglSubD = true;
         } else if (joystickGetDigital(1, 8, JOY_UP)) {
             tMglOff = millis();
             mglPidRunning = false;
             setMGL(-127);
             drfbPidRunning = true;
             liftingDrfbMgl = true;
+            mglSubD = true;
         } else if (joystickGetDigital(1, 8, JOY_DOWN)) {
             tMglOff = millis();
             mglPidRunning = false;
             setMGL(127);
             drfbPidRunning = true;
             liftingDrfbMgl = true;
+            mglSubD = true;
         } else if (joystickGetDigital(1, 6, JOY_DOWN)) {
             mglPidRunning = true;
             mglHoldAngle = MGL_DOWN_POS;
             drfbPidRunning = true;
             liftingDrfbMgl = true;
+            mglSubD = false;
         } else if (joystickGetDigital(1, 5, JOY_UP)) {
             mglPidRunning = false;
             curSetDownStack = false;
@@ -339,6 +344,7 @@ void operatorControl() {
             fbHoldAngle = fbGet();
             drfbPidRunning = true;
             drfbHoldAngle = drfbGet();
+            mglSubD = false;
         } else if (!mglPidRunning && (long)millis() - (long)tMglOff > 350L) {
             mglPidRunning = true;
             mglHoldAngle = mglGet();
@@ -349,7 +355,13 @@ void operatorControl() {
                 setMGL(-5);
             }
         }
-        if (mglPidRunning && !curSetDownStack) { pidMGL(mglHoldAngle, 999999); }
+        if (mglPidRunning && !curSetDownStack) {
+            mgl_pid.taget = mglHoldAngle;
+            mgl_pid.sensVal = mglGet();
+            double out = updatePID(&mgl_pid);
+            if (mglSubD) out -= mgl_pid.deriv;
+            setMGL(out);
+        }
         prevSetDownStack = curSetDownStack;
         opctrlDrive();
         delay(5);

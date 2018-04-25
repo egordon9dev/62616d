@@ -829,7 +829,7 @@ void auton4(bool leftSide, int zone) {
                     if (zone == 20) {
                         d = 34;
                     } else if (zone == 10) {
-                        d = 52;
+                        d = 48;
                     } else {
                         d = 40;
                     }
@@ -883,7 +883,7 @@ void auton4(bool leftSide, int zone) {
                     }
                 } else if (y == g++) {
                     if (zone != 20) {
-                        i++;
+                        y++;
                     } else {
                         printf("swp ");
                         PidVars* pid = leftSide ? &DRturn_pid : &DLturn_pid;
@@ -896,12 +896,12 @@ void auton4(bool leftSide, int zone) {
                             setDL(updatePID(pid));
                             setDR(127);
                         }
-                        if ((leftSide ? driveAL : driveAR) > 150) {
-                            resetDriveEnc();
-                            y++;
-                            t0 = millis();
-                        }
+                        if ((leftSide ? driveAL : driveAR) > 150) { y++; }
                     }
+                } else if (y == g++) {
+                    resetDriveEnc();
+                    t0 = millis();
+                    y++;
                 } else if (y == g++) {
                     if (zone == 20) {
                         if (driveD < 10) {
