@@ -665,7 +665,7 @@ void auton4(bool leftSide, int zone) {
                     if (fbGet() > FB_MID_POS - 3) {
                         setFB(-127);
                     } else {
-                        pidFB(FB_MID_POS - 3, 999999, true);
+                        setFB(-20);
                     }
                     setDRFBUnlim(-127);
                 }
@@ -722,15 +722,15 @@ void auton4(bool leftSide, int zone) {
                    d1 = -15;  //-24;   //-26.5;
                    d2 = -11;  //-8.5;  //-10.5;
                    if (pidTurnSweep(leftSide ? d1 : d2, leftSide ? d2 : d1, / *leftSide ? true : driveDR < -2, leftSide ? driveDL < -2 : true*/
-                    if (fabs(leftSide ? driveAL : driveAR) > 2) {
+                    if (fabs(leftSide ? driveAL : driveAR) > 3) {
                         resetDriveEnc();
                         DL_pid.doneTime = LONG_MAX;
                         DR_pid.doneTime = LONG_MAX;
                         y++;
                     }
                 } else if (y == g++) {
-                    d1 = -26.5;  //-24;   //-26.5;
-                    d2 = -10.5;  //-8.5;  //-10.5;
+                    d1 = -22;  //-24;   //-26.5;
+                    d2 = -4;   //-8.5;  //-10.5;
                     if (pidTurnSweep(leftSide ? d1 : d2, leftSide ? d2 : d1, true, true, false, DRIVE_T)) {
                         resetDriveEnc();
                         DLshort_pid.doneTime = LONG_MAX;
@@ -739,8 +739,8 @@ void auton4(bool leftSide, int zone) {
                     } /*leftSide ? true : driveDR < -2, leftSide ? driveDL < -2 : true*/
                 } else if (y == g++) {
                     // a0 = 76;
-                    d1 = 2;
-                    d2 = 6;
+                    d1 = 1;
+                    d2 = 2.5;
                     pidTurnSweep(leftSide ? d1 : d2, leftSide ? d2 : d1, true, true, true, 999999);
                     if (fabs(leftSide ? driveDL : driveDR) > fabs(d1) - 1 && fabs(leftSide ? driveDR : driveDL) > fabs(d2) - 1) yDone = true;
                 }
@@ -753,10 +753,10 @@ void auton4(bool leftSide, int zone) {
                 pidTurnSweep(leftSide ? d1 : d2, leftSide ? d2 : d1, true, true, true, 999999);
                 setMGL(-20);
                 if (drfbGet() < 3) {
-                    if (fbGet() > FB_MID_POS - 5) {
+                    if (fbGet() > FB_MID_POS - 3) {
                         setFB(-127);
                     } else {
-                        pidFB(FB_MID_POS - 5, 999999, true);
+                        setFB(-20);
                     }
                     setDRFBUnlim(-40);
                 } else {
@@ -771,7 +771,6 @@ void auton4(bool leftSide, int zone) {
                     DRshort_pid.doneTime = LONG_MAX;
                     u = 0;
                     y = 0;
-                    goto endLoop;
                 }
             } else if (i == j++) {
                 setMGL(-20);
@@ -802,7 +801,7 @@ void auton4(bool leftSide, int zone) {
                     }
                 } else if (y == g++) {
                     printf("trn1 ");
-                    if (pidTurn(turnFac * 92, DRIVE_T)) {
+                    if (pidTurn(turnFac * 95, DRIVE_T)) {
                         resetDriveEnc();
                         breakTime = 5000;
                         y++;
@@ -834,7 +833,7 @@ void auton4(bool leftSide, int zone) {
                             setDL(127);
                             setDR(updatePID(pid));
                         }
-                        if ((leftSide ? driveAR : driveAL) > 80 /*pidTurnSweep(leftSide ? d1 : d2, leftSide ? d2 : d1, true, true, false, 0)*/) {
+                        if ((leftSide ? driveAR : driveAL) > 90) {
                             y++;
                             resetDriveEnc();
                         }
@@ -872,7 +871,7 @@ void auton4(bool leftSide, int zone) {
                             setDL(updatePID(pid));
                             setDR(127);
                         }
-                        if ((leftSide ? driveAL : driveAR) > 145 /*pidTurnSweep(leftSide ? d1 : d2, leftSide ? d2 : d1, true, true, false, 0)*/) {
+                        if ((leftSide ? driveAL : driveAR) > 150) {
                             resetDriveEnc();
                             y++;
                         }
