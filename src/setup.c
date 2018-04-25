@@ -374,8 +374,8 @@ bool liftConeQ(int q) {
     if (drfbGet() > a1 - 3) {
         pidFB(FB_UP_POS, 999999, true);
         if (fbGet() > FB_UP_POS - 6) return true;
-    } else if (drfbGet() > 8) {
-        pidFB(FB_HALF_UP_POS - 8, 999999, true);
+    } else if (drfbGet() > 28) {
+        pidFB(FB_HALF_UP_POS - 12, 999999, true);
     } else {
         pidFB(FB_MID_POS, 999999, true);
     }

@@ -586,7 +586,7 @@ endLoop:
 // 10 pt: 1 cone
 // grab wall field cones
 void auton4(bool leftSide, int zone) {
-    long prevT = millis(), funcT0 = millis(), t0 = millis();
+    long prevT = millis(), funcT0 = millis(), t0 = millis(), t02 = millis();
     int i = 0, prevI = 0, u = 0, prevU = 0, y = 0, prevY = 0;
     long breakTime = 5000;
     double da = 0;
@@ -612,6 +612,7 @@ void auton4(bool leftSide, int zone) {
                     drfb_pid_auto.doneTime = LONG_MAX;
                     // don't reset encoders
                     u = 0;
+                    t02 = LONG_MAX;
                     breakTime = 5000;
                     t0 = LONG_MAX;
                 } else {
@@ -659,18 +660,21 @@ void auton4(bool leftSide, int zone) {
                     printf("drv c2 ");
                     pidFB(FB_MID_POS + 2, 999999, true);
                     pidDRFB(DRFB_CONE_UP, 999999, true);
-                    if (fabs(leftSide ? driveDL : driveDR) > fabs(d1) - 1 && fabs(leftSide ? driveDR : driveDL) > fabs(d2) - 1) u++;
+                    if (fabs(leftSide ? driveDL : driveDR) > fabs(d1) - 1 && fabs(leftSide ? driveDR : driveDL) > fabs(d2) - 1) {
+                        t02 = millis();
+                        u++;
+                    }
                 } else if (u == h++) {
                     printf("grb c2 ");
-                    if (fbGet() > FB_MID_POS - 3) {
+                    if (fbGet() > FB_MID_POS - 1) {
                         setFB(-127);
                     } else {
-                        setFB(-20);
+                        setFB(-10);
                     }
                     setDRFBUnlim(-127);
                 }
-                if (fbGet() < FB_MID_POS - 2 && drfbGet() < 3 && t0 > (long)millis()) t0 = (long)millis();
-                if ((long)millis() - t0 > 100L) {
+                if (fbGet() < FB_MID_POS - 1 && drfbGet() < 3 && t0 > (long)millis()) t0 = (long)millis();
+                if ((long)millis() - t0 > 100L || (long)millis() - t02 > 700L) {
                     u = 0;
                     y = 0;
                     resetDriveEnc();
@@ -691,7 +695,7 @@ void auton4(bool leftSide, int zone) {
                 } else if (u == h++) {  // hvr c3
                     if (stackConeQ(1)) u++;
                 } else if (u == h++) {
-                    pidDRFB(DRFB_CONE_UP, 999999, true);
+                    pidDRFB(DRFB_CONE_UP + 10, 999999, true);
                     pidFB(FB_MID_POS + 2, 999999, true);
                     uDone = true;
                 }
@@ -722,15 +726,15 @@ void auton4(bool leftSide, int zone) {
                    d1 = -15;  //-24;   //-26.5;
                    d2 = -11;  //-8.5;  //-10.5;
                    if (pidTurnSweep(leftSide ? d1 : d2, leftSide ? d2 : d1, / *leftSide ? true : driveDR < -2, leftSide ? driveDL < -2 : true*/
-                    if (fabs(leftSide ? driveAL : driveAR) > 3) {
+                    if (fabs(leftSide ? driveAL : driveAR) > 4) {
                         resetDriveEnc();
                         DL_pid.doneTime = LONG_MAX;
                         DR_pid.doneTime = LONG_MAX;
                         y++;
                     }
                 } else if (y == g++) {
-                    d1 = -22;  //-24;   //-26.5;
-                    d2 = -4;   //-8.5;  //-10.5;
+                    d1 = -22.25;  //-24;   //-26.5;
+                    d2 = -4.25;   //-8.5;  //-10.5;
                     if (pidTurnSweep(leftSide ? d1 : d2, leftSide ? d2 : d1, true, true, false, DRIVE_T)) {
                         resetDriveEnc();
                         DLshort_pid.doneTime = LONG_MAX;
@@ -739,13 +743,14 @@ void auton4(bool leftSide, int zone) {
                     } /*leftSide ? true : driveDR < -2, leftSide ? driveDL < -2 : true*/
                 } else if (y == g++) {
                     // a0 = 76;
-                    d1 = 1;
-                    d2 = 2.5;
+                    d1 = 1.75;
+                    d2 = 3.25;
                     pidTurnSweep(leftSide ? d1 : d2, leftSide ? d2 : d1, true, true, true, 999999);
                     if (fabs(leftSide ? driveDL : driveDR) > fabs(d1) - 1 && fabs(leftSide ? driveDR : driveDL) > fabs(d2) - 1) yDone = true;
                 }
                 if (uDone && yDone) {
                     t0 = LONG_MAX;
+                    t02 = LONG_MAX;
                     i++;
                 }
             } else if (i == j++) {  // grb c3
@@ -753,18 +758,19 @@ void auton4(bool leftSide, int zone) {
                 pidTurnSweep(leftSide ? d1 : d2, leftSide ? d2 : d1, true, true, true, 999999);
                 setMGL(-20);
                 if (drfbGet() < 3) {
-                    if (fbGet() > FB_MID_POS - 3) {
+                    if (t02 > (long)millis()) t02 = millis();
+                    if (fbGet() > FB_MID_POS - 1) {
                         setFB(-127);
                     } else {
-                        setFB(-20);
+                        setFB(-10);
                     }
                     setDRFBUnlim(-40);
                 } else {
                     pidFB(FB_MID_POS + 2, 999999, true);
                     setDRFBUnlim(-127);
                 }
-                if (fbGet() < FB_MID_POS - 2 && drfbGet() < 3 && t0 > (long)millis()) t0 = millis();
-                if ((long)millis() - (long)t0 > 100L) {
+                if (fbGet() < FB_MID_POS - 1 && drfbGet() < 3 && t0 > (long)millis()) t0 = millis();
+                if ((long)millis() - (long)t0 > 100L || (long)millis() - t02 > 700L) {
                     i++;
                     resetDriveEnc();
                     DLshort_pid.doneTime = LONG_MAX;
@@ -778,11 +784,11 @@ void auton4(bool leftSide, int zone) {
                 int h = 0;
                 bool uDone = false;
                 if (u == h++) {
-                    if (y != 0 || driveD < -1.5) {
+                    if (y != 0 || driveD < -1) {
                         if (liftConeQ(2)) u++;
                     } else {
-                        setFB(-15);
-                        setDRFB(-15);
+                        setFB(10);
+                        setDRFB(10);
                     }
                 } else if (u == h++) {
                     pidFB(FB_UP_POS, 999999, true);
@@ -793,7 +799,7 @@ void auton4(bool leftSide, int zone) {
                 bool yDone = false;
                 if (y == g++) {
                     printf("drvBkwd ");
-                    if (pidDriveShort(-2, DRIVE_T)) {
+                    if (pidDriveShort(-5, DRIVE_T)) {
                         resetDriveEnc();
                         DLturn_pid.doneTime = LONG_MAX;
                         DRturn_pid.doneTime = LONG_MAX;
@@ -801,7 +807,7 @@ void auton4(bool leftSide, int zone) {
                     }
                 } else if (y == g++) {
                     printf("trn1 ");
-                    if (pidTurn(turnFac * 95, DRIVE_T)) {
+                    if (pidTurn(turnFac * 93, DRIVE_T)) {
                         resetDriveEnc();
                         breakTime = 5000;
                         y++;
@@ -833,7 +839,7 @@ void auton4(bool leftSide, int zone) {
                             setDL(127);
                             setDR(updatePID(pid));
                         }
-                        if ((leftSide ? driveAR : driveAL) > 90) {
+                        if ((leftSide ? driveAR : driveAL) > 98) {
                             y++;
                             resetDriveEnc();
                         }
@@ -845,7 +851,7 @@ void auton4(bool leftSide, int zone) {
                         printf("drv ");
                         pidDrive(999, 999999);
                         if (zone == 20) {
-                            d0 = 19;
+                            d0 = 15.5;
                         } else {
                             d0 = 0;
                         }

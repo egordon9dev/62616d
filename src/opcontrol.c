@@ -258,7 +258,7 @@ void operatorControl() {
                 printf("%d\n", i);
             }
             // scoreMG(true, 20);
-            auton4(true, 20);
+            auton4(false, 20);
         }
         if (0) {
             autoStacking = false;
