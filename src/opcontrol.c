@@ -140,14 +140,14 @@ void test(int n) {
             DLturn_pid.doneTime = LONG_MAX;
             DRturn_pid.doneTime = LONG_MAX;
             resetDriveEnc();
-            while (!pidTurn(90, 100)) {
+            while (!pidTurn(90, 1000)) {
                 printEnc_pidDrive();
                 delay(5);
             }
             DLturn_pid.doneTime = LONG_MAX;
             DRturn_pid.doneTime = LONG_MAX;
             resetDriveEnc();
-            while (!pidTurn(-90, 100)) {
+            while (!pidTurn(-90, 1000)) {
                 printEnc_pidDrive();
                 delay(5);
             }
@@ -238,7 +238,7 @@ void testStall() {
 */
 #include "auto.h"
 void operatorControl() {
-    if (0) {
+    if (1) {
         if (0) {
             testStall();
             while (1) delay(50);
@@ -258,7 +258,7 @@ void operatorControl() {
                 printf("%d\n", i);
             }
             // scoreMG(true, 20);
-            auton4(true, true, 20);
+            auton4(true, 20);
         }
         if (0) {
             autoStacking = false;
@@ -268,7 +268,7 @@ void operatorControl() {
             }
             while (true) delay(5);
         }
-        if (0) { test(4); }
+        if (0) { test(1); }
         if (0) {
             settingDownStack = false;
             while (!setDownStack()) {
