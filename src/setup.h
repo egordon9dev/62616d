@@ -68,6 +68,7 @@ extern double fbUpP;
 #define MGL_MIN 6    // 1
 #define MGL_DOWN_POS 113
 #define MGL_MID_POS 75
+#define MGL_LWR_MID_POS 97
 #define MGL_UP_POS 0
 #define MGL_VERT 41
 #define MGL_ACTIVE2 47
