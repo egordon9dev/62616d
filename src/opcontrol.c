@@ -238,7 +238,7 @@ void testStall() {
 */
 #include "auto.h"
 void operatorControl() {
-    if (1) {
+    if (0) {
         if (0) {
             testStall();
             while (1) delay(50);
@@ -258,7 +258,7 @@ void operatorControl() {
                 printf("%d\n", i);
             }
             // scoreMG(true, 20);
-            auton4(true, 5);
+            auton4(true, 20);
         }
         if (0) {
             autoStacking = false;
@@ -356,7 +356,7 @@ void operatorControl() {
             }
         }
         if (mglPidRunning && !curSetDownStack) {
-            mgl_pid.taget = mglHoldAngle;
+            mgl_pid.target = mglHoldAngle;
             mgl_pid.sensVal = mglGet();
             double out = updatePID(&mgl_pid);
             if (mglSubD) out -= mgl_pid.deriv;
