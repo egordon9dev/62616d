@@ -355,13 +355,7 @@ void operatorControl() {
                 setMGL(-5);
             }
         }
-        if (mglPidRunning && !curSetDownStack) {
-            mgl_pid.target = mglHoldAngle;
-            mgl_pid.sensVal = mglGet();
-            double out = updatePID(&mgl_pid);
-            if (mglSubD) out -= mgl_pid.deriv;
-            setMGL(out);
-        }
+        if (mglPidRunning && !curSetDownStack) pidMGLSubD(mglHoldAngle, 999999, mglSubD);
         prevSetDownStack = curSetDownStack;
         opctrlDrive();
         delay(5);

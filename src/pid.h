@@ -34,6 +34,7 @@ bool pidDRFB(double a, unsigned long wait, bool auton);
 void syncDRFBFB();
 
 bool pidMGL(double a, unsigned long wait);
+bool pidMGLSubD(double a, unsigned long wait, bool subD);
 
 // dist: inches
 bool pidDumbDrive(double dist, unsigned long wait);

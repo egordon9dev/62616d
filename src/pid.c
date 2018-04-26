@@ -204,6 +204,21 @@ bool pidMGL(double a, unsigned long wait) {  // set mgl angle with PID
     if (mgl_pid.doneTime + wait < millis()) return true;
     return false;
 }
+bool pidMGLSubD(double a, unsigned long wait, bool subD) {  // set mgl angle with PID
+    mgl_pid.target = a;
+    mgl_pid.sensVal = mglGet();
+    double out = limInt(updatePID(&mgl_pid), -127, 127);  // KEEP this HERE: it updates mgl_pid.deriv so we can use it elswhere even if not really using pid
+    if (a <= 8) {
+        setMGL(-127);
+    } else if (a >= MGL_DOWN_POS - 8) {
+        setMGL(127);
+    } else {
+        setMGL(out);
+    }
+    if (subD) out -= mgl_pid.deriv;
+    if (mgl_pid.doneTime + wait < millis()) return true;
+    return false;
+}
 bool strictPidMGL(double a, unsigned long wait) {  // set mgl angle with PID
     mgl_pid.target = a;
     mgl_pid.sensVal = mglGet();

@@ -64,9 +64,9 @@ extern double fbUpP;
 #define DRFB_CONE_UP 28
 
 // mgl angles
-#define MGL_MAX 109  // 120
+#define MGL_MAX 111  // 120
 #define MGL_MIN 6    // 1
-#define MGL_DOWN_POS 113
+#define MGL_DOWN_POS 114
 #define MGL_MID_POS 75
 #define MGL_LWR_MID_POS 97
 #define MGL_UP_POS 0
