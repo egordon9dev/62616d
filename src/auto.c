@@ -622,8 +622,8 @@ void auton4(bool leftSide, int zone) {
                 pidMGL(MGL_UP_POS, 999999);
                 if (mglGet() < 5 && fbGet() < 120) {
                     printf("drv c2 ");
-                    d1 = 62.75;
-                    d2 = 64.75;
+                    d1 = 64.5;  // 63.75;
+                    d2 = 64.5;  // 63.75;
                     pidTurnSweep(leftSide ? d1 : d2, leftSide ? d2 : d1, true, true, true, 999999);
                 } else {
                     int curDL = eDLGet(), curDR = eDRGet();
@@ -752,8 +752,8 @@ void auton4(bool leftSide, int zone) {
                     } /*leftSide ? true : driveDR < -2, leftSide ? driveDL < -2 : true*/
                 } else if (y == g++) {
                     // a0 = 76;
-                    d1 = 3.7;  // 2.75;
-                    d2 = 3.5;  // 5;
+                    d1 = 4.0;  // 4.5;  // 2.75;
+                    d2 = 3.8;  // 4.2;  // 5;
                     pidTurnSweep(leftSide ? d1 : d2, leftSide ? d2 : d1, true, true, true, 999999);
                     if (fabs(leftSide ? driveDL : driveDR) > fabs(d1) - 1 && fabs(leftSide ? driveDR : driveDL) > fabs(d2) - 1) yDone = true;
                 }
@@ -817,7 +817,7 @@ void auton4(bool leftSide, int zone) {
                 bool yDone = false;
                 if (y == g++) {
                     printf("drvBkwd ");
-                    if (pidDriveShort(-4.5, DRIVE_T)) {
+                    if (pidDriveShort(-3.5, DRIVE_T)) {
                         resetDriveEnc();
                         DLturn_pid.doneTime = LONG_MAX;
                         DRturn_pid.doneTime = LONG_MAX;
@@ -825,7 +825,7 @@ void auton4(bool leftSide, int zone) {
                     }
                 } else if (y == g++) {
                     printf("trn1 ");
-                    if (pidTurn(turnFac * (zone == 5 ? 98 : 98), DRIVE_T)) {
+                    if (pidTurn(98 * turnFac, DRIVE_T)) {
                         resetDriveEnc();
                         breakTime = 5000;
                         y++;
@@ -839,7 +839,7 @@ void auton4(bool leftSide, int zone) {
                     } else if (zone == 10) {
                         d = 25;
                     } else {
-                        d = 21;
+                        d = 17;
                     }
                     if (driveD > d) {
                         y++;

@@ -238,7 +238,7 @@ void testStall() {
 */
 #include "auto.h"
 void operatorControl() {
-    if (0) {
+    if (1) {
         if (0) {
             testStall();
             while (1) delay(50);
