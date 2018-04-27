@@ -120,8 +120,10 @@ bool scoreMG(bool leftSide, int zone) {
                 da = drfbGet();
                 i++;
             } else if (i == j++) {  // get rid of MG
-                pidDRFB(da, 999999, true);
-                pidFB(FB_UP_POS, 999999, true);
+                if (zone != 5) {
+                    pidDRFB(da, 999999, true);
+                    pidFB(FB_UP_POS, 999999, true);
+                }
                 printf("bk ");
                 if (zone == 20) {
                     setDR(-127);
@@ -742,8 +744,8 @@ void auton4(bool leftSide, int zone) {
                     }
                 } */
                 else if (y == g++) {
-                    d1 = -23.5;//-24.75;   //-21.5    //-24;   //-26.5;
-                    d2 = -7;//-3.5;  //-3.5     //-8.5;  //-10.5;
+                    d1 = -23.5;  //-24.75;   //-21.5    //-24;   //-26.5;
+                    d2 = -7;     //-3.5;  //-3.5     //-8.5;  //-10.5;
                     if (pidTurnSweep(leftSide ? d1 : d2, leftSide ? d2 : d1, true, true, false, DRIVE_T)) {
                         resetDriveEnc();
                         DLshort_pid.doneTime = LONG_MAX;
@@ -752,8 +754,8 @@ void auton4(bool leftSide, int zone) {
                     } /*leftSide ? true : driveDR < -2, leftSide ? driveDL < -2 : true*/
                 } else if (y == g++) {
                     // a0 = 76;
-                    d1 = 1.6;    // 4.5;  // 2.75;
-                    d2 = 5.45;  // 4.2;  // 5;
+                    d1 = 1.35;  // 4.5;  // 2.75;
+                    d2 = 5.2;   // 4.2;  // 5;
                     pidTurnSweep(leftSide ? d1 : d2, leftSide ? d2 : d1, true, true, true, 999999);
                     if (fabs(leftSide ? driveDL : driveDR) > fabs(d1) - 1 && fabs(leftSide ? driveDR : driveDL) > fabs(d2) - 1) yDone = true;
                 }
@@ -835,7 +837,7 @@ void auton4(bool leftSide, int zone) {
                     pidDrive(999, 999999);
                     double d;
                     if (zone == 20) {
-                        d = 39;
+                        d = 38;
                     } else if (zone == 10) {
                         d = 25;
                     } else {
@@ -881,7 +883,7 @@ void auton4(bool leftSide, int zone) {
                     } else {
                         printf("drv ");
                         pidDrive(999, 999999);
-                        d0 = 12.5;
+                        d0 = 11.5;
                         if (driveD > d0) {
                             y++;
                             resetDriveEnc();

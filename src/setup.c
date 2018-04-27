@@ -353,15 +353,15 @@ double myAsin(double d) { return asin(limDouble(d, -1.0, 1.0)); }
 bool liftConeQ(int q) {
     double a1 = drfba[q][0];
     if (fabs(fbGet() - FB_MID_POS) < 4 || drfbGet() > 8) {
-        pidDRFB(a1 + 7, 999999, true);
+        pidDRFB(a1 + 8, 999999, true);
     } else {
         setDRFB(0);
     }
-    if (drfbGet() > a1) {
+    if (drfbGet() > a1 + 3) {
         pidFB(FB_UP_POS, 999999, true);
         if (fbGet() > FB_UP_POS - 6) return true;
     } else if (drfbGet() > 28) {
-        pidFB(FB_HALF_UP_POS - 12, 999999, true);
+        pidFB(FB_HALF_UP_POS - 15, 999999, true);
     } else {
         pidFB(FB_MID_POS, 999999, true);
     }
