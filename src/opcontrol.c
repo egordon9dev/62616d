@@ -25,8 +25,8 @@ bool prev7u = false, prev7d = false, liftingDrfbMgl = false;
 void updateLift() {
     if (curSetDownStack) return;
     if (joystickGetDigital(2, 8, JOY_DOWN)) {
-        DL_slew.a = 0.3;
-        DR_slew.a = 0.3;
+        DL_slew.a = 0.3;  // 0.15;  // 0.3;
+        DR_slew.a = 0.3;  // 0.15;  // 0.3;
         DRIVE_DRIVE_MAX = 80;
         DRIVE_TURN_MAX = 75;
 
