@@ -284,9 +284,9 @@ bool setDownStack() {
             int spin = ((millis() - t0) / 400) % 2;
             if (fbGet() < FB_UP_POS - 10) {
                 if (spin == 0) {
-                    setDRFBUnlim(-50);
+                    setDRFBUnlim(-127);
                 } else {
-                    setDRFBUnlim(-25);
+                    setDRFBUnlim(-35);
                 }
             } else {
                 drfb_pid_auto.sensVal = drfbGet();

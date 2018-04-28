@@ -106,7 +106,7 @@ void updateLift() {
             if (liftingDrfbMgl) {
                 if (drfbGet() < DRFB_MGL_ACTIVE + 5) {
                     setDRFB(127);
-                    drfbHoldAngle = DRFB_MGL_ACTIVE + 5;
+                    if (drfbHoldAngle < DRFB_MGL_ACTIVE + 5) drfbHoldAngle = DRFB_MGL_ACTIVE + 5;
                 } else {
                     liftingDrfbMgl = false;
                 }
@@ -258,7 +258,7 @@ void operatorControl() {
                 printf("%d\n", i);
             }
             // scoreMG(true, 20);
-            auton4(false, 20);
+            auton4(true, 20);
         }
         if (0) {
             autoStacking = false;
