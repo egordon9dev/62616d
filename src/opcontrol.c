@@ -91,7 +91,7 @@ void updateLift() {
         if (abs(js) > JOY_THRESHOLD) {
             tDrfbOff = millis();
             drfbPidRunning = false;
-            liftingDrfbMgl = false;
+            /////////////////BUG:    liftingDrfbMgl = false;
             setDRFB(js);
         } else if (millis() - tDrfbOff > 300) {
             if (!drfbPidRunning) {
@@ -101,14 +101,15 @@ void updateLift() {
         } else if (!drfbPidRunning) {
             setDRFB(0);
         }
+        // this is buggy cus the drfb sometimes goes down after mgl up button is pressed
         if (drfbPidRunning) {
             if (drfbHoldAngle > DRFB_MAX_HOLD_ANGLE) drfbHoldAngle = DRFB_MAX_HOLD_ANGLE;
             if (liftingDrfbMgl) {
                 if (drfbGet() < DRFB_MGL_ACTIVE + 5) {
                     setDRFB(127);
-                    if (drfbHoldAngle < DRFB_MGL_ACTIVE + 5) drfbHoldAngle = DRFB_MGL_ACTIVE + 5;
                 } else {
                     liftingDrfbMgl = false;
+                    if (drfbHoldAngle < DRFB_MGL_ACTIVE + 5) drfbHoldAngle = DRFB_MGL_ACTIVE + 5;
                 }
             }
             // don't combine these !!!!!!!
