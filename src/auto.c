@@ -304,6 +304,7 @@ bool scoreMG(bool leftSide, int zone) {
 ##     ##  #######     ##     #######  ##    ##    #########
 */
 // loader cones
+// **************** out of use ********
 void auton2(bool leftSide, int stackH, int zone) {
     unsigned long prevT = millis(), funcT0 = millis(), t0 = millis();
     int i = 0, prevI = 0, u = 0, prevU = 0, y = 0, prevY = 0;
@@ -516,6 +517,7 @@ endLoop:
 ##     ##  #######     ##     #######  ##    ##     #######
 */
 // grab wall field cones
+// **************** out of use ********
 void auton3(bool leftSide, int stackH, bool loaderSide, int zone) {
     unsigned long prevT = millis(), funcT0 = millis(), t0 = millis();
     int i = 0, prevI = 0, u = 0, prevU = 0, y = 0, prevY = 0;
@@ -697,6 +699,7 @@ endLoop:
 // 20 pt: 3 cones
 // 10 pt: 1 cone
 // grab wall field cones
+// * this works *
 void auton4(bool leftSide, int zone) {
     long prevT = millis(), funcT0 = millis(), t0 = millis(), t02 = millis();
     int i = 0, prevI = 0, u = 0, prevU = 0, y = 0, prevY = 0;
@@ -1113,6 +1116,7 @@ endLoop:
 */
 
 // 1 cone other mg
+// **************** out of use ********
 void auton5(bool leftSide, int zone) {
     long prevT = millis(), funcT0 = millis(), t0 = millis(), t02 = millis();
     int i = 0, prevI = 0, u = 0, prevU = 0, y = 0, prevY = 0;
@@ -1464,6 +1468,7 @@ endLoop:
     printf("\n\nTIME: %lf\n", (millis() - funcT0) / 1000.0);
 }
 // 5 pt zone
+// **************** out of use ********
 void auton6(bool leftSide, int zone) {
     long prevT = millis(), funcT0 = millis(), t0 = millis(), t02 = millis();
     int i = 0, prevI = 0, u = 0, prevU = 0, y = 0, prevY = 0;
@@ -1831,6 +1836,7 @@ endLoop:
 ##    ## ##   ##   ##  ##       ##       ##    ##
  ######  ##    ## #### ######## ########  ######
 */
+// **************** out of use ********
 void autonSkills() { /*
      int i = 0;
      unsigned long funcT0 = millis(), t0 = millis();
